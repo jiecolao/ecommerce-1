@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/integrations/prisma/prisma.service';
+import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { CreateProductDto, ListCatalogQueryDto } from './catalog.dto';
-import { MockDB } from '@/integrations/prisma/mock-db';
+import { MockDB } from '../../integrations/prisma/mock-db';
 
 @Injectable()
 export class CatalogService {

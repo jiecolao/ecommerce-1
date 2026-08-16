@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@/integrations/prisma/prisma.service';
+import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { CheckoutDto } from './buyer.dto';
-import { MockDB } from '@/integrations/prisma/mock-db';
+import { MockDB } from '../../integrations/prisma/mock-db';
 
 @Injectable()
 export class BuyerService {

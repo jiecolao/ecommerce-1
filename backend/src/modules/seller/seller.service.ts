@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '@/integrations/prisma/prisma.service';
-import { BlobService } from '@/integrations/blob/blob.service';
+import { PrismaService } from '../../integrations/prisma/prisma.service';
+import { BlobService } from '../../integrations/blob/blob.service';
 import { CreateSellerProductDto, UpdateSellerProductDto } from './seller.dto';
-import { MockDB } from '@/integrations/prisma/mock-db';
+import { MockDB } from '../../integrations/prisma/mock-db';
 
 @Injectable()
 export class SellerService {
