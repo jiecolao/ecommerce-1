@@ -1,0 +1,22 @@
+{
+  "name": "cse3-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@11.6.0",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "predev": "npx kill-port 3000 5173",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "kill-port": "^2.0.1",
+    "turbo": "^2.0.0"
+  }
+}
