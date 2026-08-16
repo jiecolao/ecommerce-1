@@ -19,6 +19,8 @@ async function bootstrap() {
     }),
   );
 
+  app.setGlobalPrefix('api');
+
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
   console.log(`E-commerce NestJS API running on http://localhost:${port}`);

@@ -22,6 +22,8 @@ async function bootstrap() {
       }),
     );
 
+    app.setGlobalPrefix('api');
+
     await app.init();
     cachedServer = app.getHttpAdapter().getInstance();
   }
