@@ -7,7 +7,7 @@ import { API_URL } from '../../lib/api';
 
 const fetchReport = async () => {
   const { data } = await axios.get<SellerReport>(`${API_URL}/seller/reports`, {
-    headers: { 'x-actor-id': 'demo-seller' }
+    headers: { 'x-actor-id': '22222222-2222-2222-2222-222222222222' }
   });
   return data;
 };

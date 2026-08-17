@@ -1,57 +1,105 @@
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsInt, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+
+export class CreateProductVariantDto {
+  @IsInt()
+  storeId!: number;
+
+  @IsInt()
+  typeId!: number;
+
+  @IsString()
+  @MaxLength(255)
+  name!: string;
+
+  @IsInt()
+  region!: number;
+
+  @IsArray()
+  @IsString({ each: true })
+  languageSupport!: string[];
+
+  @IsOptional()
+  @IsString()
+  storePage?: string;
+
+  @IsInt()
+  price!: number;
+}
 
 export class CreateSellerProductDto {
   @IsString()
-  @MaxLength(120)
+  @MaxLength(255)
   title!: string;
 
   @IsString()
-  @MaxLength(5000)
+  @MaxLength(255)
+  type!: string;
+
+  @IsString()
   description!: string;
-
-  @IsInt()
-  @Min(1)
-  priceCents!: number;
-
-  @IsInt()
-  @Min(0)
-  inventoryCount!: number;
-
-  @IsOptional()
-  @IsBoolean()
-  isFeatured?: boolean;
 
   @IsOptional()
   @IsString()
-  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  developer?: string;
+
+  @IsOptional()
+  @IsString()
+  publisher?: string;
+
+  @IsOptional()
+  @IsString()
+  systemRequirements?: string;
+
+  @IsOptional()
+  @IsString()
+  tags?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  media?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProductVariantDto)
+  variants?: CreateProductVariantDto[];
 }
 
 export class UpdateSellerProductDto {
   @IsOptional()
   @IsString()
-  @MaxLength(120)
+  @MaxLength(255)
   title?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(5000)
-  description?: string;
-
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  priceCents?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  inventoryCount?: number;
-
-  @IsOptional()
-  @IsBoolean()
-  isFeatured?: boolean;
+  @MaxLength(255)
+  type?: string;
 
   @IsOptional()
   @IsString()
-  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  developer?: string;
+
+  @IsOptional()
+  @IsString()
+  publisher?: string;
+
+  @IsOptional()
+  @IsString()
+  systemRequirements?: string;
+
+  @IsOptional()
+  @IsString()
+  tags?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  media?: string[];
 }

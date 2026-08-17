@@ -8,31 +8,31 @@ export class SellerController {
 
   @Get('products')
   getProducts(@Req() req: any) {
-    const sellerId = req.headers['x-actor-id'] ?? 'demo-seller';
+    const sellerId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
     return this.sellerService.getProducts(sellerId);
   }
 
   @Post('products')
   createProduct(@Body() dto: CreateSellerProductDto, @Req() req: any) {
-    const sellerId = req.headers['x-actor-id'] ?? 'demo-seller';
+    const sellerId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
     return this.sellerService.createProduct(sellerId, dto);
   }
 
   @Patch('products/:id')
   updateProduct(@Param('id') id: string, @Body() dto: UpdateSellerProductDto, @Req() req: any) {
-    const sellerId = req.headers['x-actor-id'] ?? 'demo-seller';
-    return this.sellerService.updateProduct(id, sellerId, dto);
+    const sellerId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+    return this.sellerService.updateProduct(parseInt(id, 10), sellerId, dto);
   }
 
   @Delete('products/:id')
   deleteProduct(@Param('id') id: string, @Req() req: any) {
-    const sellerId = req.headers['x-actor-id'] ?? 'demo-seller';
-    return this.sellerService.deleteProduct(id, sellerId);
+    const sellerId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+    return this.sellerService.deleteProduct(parseInt(id, 10), sellerId);
   }
 
   @Get('reports')
   getReports(@Req() req: any) {
-    const sellerId = req.headers['x-actor-id'] ?? 'demo-seller';
+    const sellerId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
     return this.sellerService.getSellerReport(sellerId);
   }
 }

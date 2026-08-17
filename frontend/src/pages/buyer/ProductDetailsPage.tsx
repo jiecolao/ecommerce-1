@@ -13,6 +13,7 @@ const fetchProduct = async (id: string) => {
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
+
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: () => fetchProduct(id as string),
@@ -26,11 +27,17 @@ export default function ProductDetailsPage() {
     <div className="max-w-4xl mx-auto py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="bg-slate-200 rounded-xl aspect-square flex items-center justify-center p-8">
-          <KeyRound className="w-32 h-32 text-slate-400" />
+          {product.media && product.media.length > 0 ? (
+             <img src={product.media[0]} alt={product.title} className="w-full h-full object-cover rounded-xl" />
+          ) : (
+            <KeyRound className="w-32 h-32 text-slate-400" />
+          )}
         </div>
         <div className="flex flex-col justify-center">
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{product.title}</h1>
-          <p className="mt-4 text-3xl text-slate-900 font-bold">${(product.priceCents / 100).toFixed(2)}</p>
+          <p className="mt-4 text-3xl text-slate-900 font-bold">
+            ${((product.productVariants?.[0]?.price ?? 1000) / 100).toFixed(2)}
+          </p>
           
           <div className="mt-8">
             <h3 className="text-sm font-medium text-slate-900">Description</h3>
@@ -40,16 +47,16 @@ export default function ProductDetailsPage() {
           </div>
           
           <div className="mt-8">
-            <div className="flex items-center space-x-2">
-              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${product.inventoryCount > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {product.inventoryCount > 0 ? `${product.inventoryCount} keys in stock` : 'Out of stock'}
-              </span>
+            <div className="flex flex-col space-y-2">
+              <span className="text-sm">Type: <span className="font-semibold">{product.type}</span></span>
+              {product.developer && <span className="text-sm">Developer: <span className="font-semibold">{product.developer}</span></span>}
+              {product.publisher && <span className="text-sm">Publisher: <span className="font-semibold">{product.publisher}</span></span>}
             </div>
           </div>
 
           <div className="mt-10 flex space-x-4">
             <Link to={`/checkout/${product.id}`} className="flex-1">
-              <Button size="lg" className="w-full flex items-center justify-center space-x-2" disabled={product.inventoryCount <= 0}>
+              <Button size="lg" className="w-full flex items-center justify-center space-x-2">
                 <ShoppingCart className="w-5 h-5" />
                 <span>Buy Now</span>
               </Button>

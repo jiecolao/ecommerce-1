@@ -1,20 +1,14 @@
-import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Product, CheckoutDto } from 'shared';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../../components/ui/card';
 import { API_URL } from '../../lib/api';
 
 export default function CheckoutPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [name, setName] = useState('John Doe');
-  const [email, setEmail] = useState('john@example.com');
-  const [notes, setNotes] = useState('');
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
@@ -29,7 +23,7 @@ export default function CheckoutPage() {
     mutationFn: async (checkoutData: CheckoutDto) => {
       const { data } = await axios.post(`${API_URL}/buyer/checkout`, checkoutData, {
         headers: {
-          'x-actor-id': 'demo-buyer'
+          'x-actor-id': '11111111-1111-1111-1111-111111111111'
         }
       });
       return data;
@@ -47,15 +41,8 @@ export default function CheckoutPage() {
     if (!product) return;
 
     checkoutMutation.mutate({
-      billingName: name,
-      billingEmail: email,
-      notes,
-      items: [
-        {
-          productId: product.id,
-          quantity: 1,
-        }
-      ]
+      productId: product.id,
+      totalAmount: product.productVariants?.[0]?.price ?? 1000,
     });
   };
 
@@ -67,30 +54,18 @@ export default function CheckoutPage() {
       <Card>
         <CardHeader>
           <CardTitle>Checkout</CardTitle>
-          <CardDescription>Review your order and enter billing details.</CardDescription>
+          <CardDescription>Confirm your order details.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center py-4 border-b border-slate-200 mb-6">
             <div className="font-semibold text-slate-900">{product.title}</div>
-            <div className="font-bold">${(product.priceCents / 100).toFixed(2)}</div>
+            <div className="font-bold">${((product.productVariants?.[0]?.price ?? 1000) / 100).toFixed(2)}</div>
           </div>
           
           <form onSubmit={handleCheckout} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Order Notes (Optional)</Label>
-              <Input id="notes" value={notes} onChange={e => setNotes(e.target.value)} />
-            </div>
             <CardFooter className="px-0 pt-6">
               <Button type="submit" className="w-full" size="lg" disabled={checkoutMutation.isPending}>
-                {checkoutMutation.isPending ? 'Processing...' : `Pay ${(product.priceCents / 100).toFixed(2)}`}
+                {checkoutMutation.isPending ? 'Processing...' : `Pay ${((product.productVariants?.[0]?.price ?? 1000) / 100).toFixed(2)}`}
               </Button>
             </CardFooter>
           </form>

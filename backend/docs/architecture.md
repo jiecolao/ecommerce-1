@@ -6,7 +6,7 @@ This project is a backend-first e-commerce platform scaffold with a minimal mono
 
 - Next.js (App Router) on Vercel.
 - TypeScript for strict typing and maintainability.
-- Neon Postgres via Prisma ORM.
+- Supabase PostgreSQL via Prisma ORM.
 - Vercel Blob for product asset placeholders.
 
 ## Functional Domains

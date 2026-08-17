@@ -8,7 +8,7 @@ import { API_URL } from '../../lib/api';
 
 const fetchOrders = async () => {
   const { data } = await axios.get<Order[]>(`${API_URL}/buyer/orders`, {
-    headers: { 'x-actor-id': 'demo-buyer' }
+    headers: { 'x-actor-id': '11111111-1111-1111-1111-111111111111' }
   });
   return data;
 };
@@ -38,29 +38,26 @@ export default function OrdersPage() {
           orders?.map(order => (
             <Card key={order.id}>
               <CardHeader>
-                <CardTitle>Order #{order.id.slice(0, 8)}</CardTitle>
+                <CardTitle>Order #{order.id}</CardTitle>
                 <CardDescription>
-                  Placed on {new Date(order.createdAt).toLocaleDateString()} • Total: ${(order.totalCents / 100).toFixed(2)}
+                  Placed on {new Date(order.createdAt).toLocaleDateString()} • Total: ${(order.totalAmount / 100).toFixed(2)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {order.items.map(item => (
-                    <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-slate-200 p-3 rounded-md">
-                          <KeyRound className="w-6 h-6 text-slate-500" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-slate-900">{item.product?.title || 'Unknown Game'}</div>
-                          <div className="text-sm text-slate-500">Qty: {item.quantity}</div>
-                        </div>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-slate-200 p-3 rounded-md">
+                        <KeyRound className="w-6 h-6 text-slate-500" />
                       </div>
-                      <Button variant="outline" onClick={() => alert(`Your Game Key for ${item.product?.title}:\nXXXX-XXXX-XXXX-XXXX`)}>
-                        Reveal Key
-                      </Button>
+                      <div>
+                        <div className="font-semibold text-slate-900">{order.product?.title || 'Unknown Game'}</div>
+                      </div>
                     </div>
-                  ))}
+                    <Button variant="outline" onClick={() => alert(`Your Game Key for ${order.product?.title}:\nXXXX-XXXX-XXXX-XXXX`)}>
+                      Reveal Key
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { CatalogService } from './catalog.service';
-import { CreateProductDto, ListCatalogQueryDto } from './catalog.dto';
+import { ListCatalogQueryDto } from './catalog.dto';
 
 @Controller('catalog')
 export class CatalogController {
@@ -18,11 +18,6 @@ export class CatalogController {
 
   @Get('products/:id')
   getProduct(@Param('id') id: string) {
-    return this.catalogService.getProductById(id);
-  }
-
-  @Post('products')
-  createProduct(@Body() dto: CreateProductDto) {
-    return this.catalogService.createProduct(dto);
+    return this.catalogService.getProductById(parseInt(id, 10));
   }
 }

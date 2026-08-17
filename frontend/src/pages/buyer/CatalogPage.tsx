@@ -17,14 +17,16 @@ export default function CatalogPage() {
     queryFn: fetchProducts,
   });
 
+  const dummyPrice = 1000;
+
   if (isLoading) return <div className="text-center py-10">Loading game keys...</div>;
   if (error) return <div className="text-center py-10 text-red-500">Failed to load catalog. Is the backend running?</div>;
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Featured Games</h1>
-        <p className="mt-2 text-lg text-slate-600">Discover the best game keys at unbeatable prices.</p>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Featured Products</h1>
+        <p className="mt-2 text-lg text-slate-600">Discover the best products at unbeatable prices.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -36,10 +38,8 @@ export default function CatalogPage() {
             </CardHeader>
             <CardContent className="flex-1">
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-2xl font-bold text-slate-900">${(product.priceCents / 100).toFixed(2)}</span>
-                <span className={`text-sm ${product.inventoryCount > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {product.inventoryCount > 0 ? 'In Stock' : 'Out of Stock'}
-                </span>
+                <span className="text-2xl font-bold text-slate-900">${(dummyPrice / 100).toFixed(2)}</span>
+                <span className="text-sm font-semibold">{product.type}</span>
               </div>
             </CardContent>
             <CardFooter>
@@ -51,7 +51,7 @@ export default function CatalogPage() {
         ))}
         {products?.length === 0 && (
           <div className="col-span-full text-center py-12 text-slate-500">
-            No games available right now. Check back later!
+            No products available right now. Check back later!
           </div>
         )}
       </div>
