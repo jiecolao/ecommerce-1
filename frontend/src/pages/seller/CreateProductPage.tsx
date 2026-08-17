@@ -17,6 +17,7 @@ export default function CreateProductPage() {
   const [type, setType] = useState('Game');
   const [developer, setDeveloper] = useState('');
   const [publisher, setPublisher] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
   
   // Variant fields
   const [variantName, setVariantName] = useState('Standard Edition');
@@ -27,9 +28,20 @@ export default function CreateProductPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: CreateProductDto) => {
-      await axios.post(`${API_URL}/seller/products`, dto, {
+      const res = await axios.post(`${API_URL}/seller/products`, dto, {
         headers: { 'x-actor-id': '22222222-2222-2222-2222-222222222222' }
       });
+      
+      if (imageFile && res.data.id) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        
+        await axios.post(`${API_URL}/seller/products/${res.data.id}/image`, formData, {
+          headers: { 
+            'x-actor-id': '22222222-2222-2222-2222-222222222222'
+          }
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seller-products'] });
@@ -78,6 +90,11 @@ export default function CreateProductPage() {
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input id="description" value={description} onChange={e => setDescription(e.target.value)} required />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="imageFile">Product Image</Label>
+              <Input id="imageFile" type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
             </div>
             
             <div className="grid grid-cols-2 gap-4">

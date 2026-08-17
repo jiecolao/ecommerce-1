@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { SellerService } from './seller.service';
 import { CreateSellerProductDto, UpdateSellerProductDto } from './seller.dto';
 
@@ -22,6 +23,19 @@ export class SellerController {
   updateProduct(@Param('id') id: string, @Body() dto: UpdateSellerProductDto, @Req() req: any) {
     const sellerId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
     return this.sellerService.updateProduct(parseInt(id, 10), sellerId, dto);
+  }
+
+  @Post('products/:id/image')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadImage(
+    @Param('id') id: string,
+    @UploadedFile() file: any,
+    @Req() req: any
+  ) {
+    console.log(`uploadImage called for product ${id}`);
+    console.log(`file received:`, file ? file.originalname : 'undefined');
+    const sellerId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+    return this.sellerService.uploadProductImage(parseInt(id, 10), sellerId, file.originalname, file.buffer, file.mimetype);
   }
 
   @Delete('products/:id')

@@ -66,8 +66,8 @@ export class SellerService {
     return this.prisma.product.delete({ where: { id } });
   }
 
-  async uploadProductImage(productId: number, sellerId: string, fileName: string, payload: string) {
-    const upload = await this.blobService.uploadPlaceholderAsset(`products/${productId}/${fileName}`, payload);
+  async uploadProductImage(productId: number, sellerId: string, fileName: string, payload: Buffer, mimeType: string) {
+    const upload = await this.blobService.uploadImage(`products/${productId}/${fileName}`, payload, mimeType);
 
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
     if (!product) throw new NotFoundException('Product not found.');
