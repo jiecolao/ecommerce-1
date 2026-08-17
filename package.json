@@ -14,7 +14,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "postinstall": "cd backend && npx prisma generate"
+    "postinstall": "cd backend && npx prisma@7.9.1 generate"
   },
   "devDependencies": {
     "kill-port": "^2.0.1",
