@@ -9,6 +9,55 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { API_URL } from '../../lib/api';
 
+const compressImage = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1024;
+        const MAX_HEIGHT = 1024;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Canvas to Blob failed'));
+            }
+          },
+          'image/jpeg',
+          0.8 // 80% quality
+        );
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
 export default function CreateProductPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -45,19 +94,12 @@ export default function CreateProductPage() {
       });
       
       if (imageFile && res.data.id) {
-        const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = error => reject(error);
-          reader.readAsDataURL(imageFile);
-        });
+        const compressedBlob = await compressImage(imageFile);
+        const formData = new FormData();
+        // Append as a File object with original name, but compressed payload
+        formData.append('file', new File([compressedBlob], imageFile.name, { type: 'image/jpeg' }));
         
-        const imageBase64 = await base64Promise;
-        
-        await axios.post(`${API_URL}/seller/products/${res.data.id}/image/base64`, {
-          fileName: imageFile.name,
-          imageBase64
-        }, {
+        await axios.post(`${API_URL}/seller/products/${res.data.id}/image`, formData, {
           headers: { 
             'x-actor-id': '22222222-2222-2222-2222-222222222222'
           }

@@ -30,6 +30,12 @@ async function bootstrap() {
   return cachedServer;
 }
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function (req: any, res: any) {
   const server = await bootstrap();
   server(req, res);
