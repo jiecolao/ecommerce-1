@@ -25,16 +25,17 @@ export class CreateProductVariantDto {
 
   @IsInt()
   price!: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  keys?: string[];
 }
 
 export class CreateSellerProductDto {
   @IsString()
   @MaxLength(255)
   title!: string;
-
-  @IsString()
-  @MaxLength(255)
-  type!: string;
 
   @IsString()
   description!: string;
@@ -72,11 +73,6 @@ export class UpdateSellerProductDto {
   @IsString()
   @MaxLength(255)
   title?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  type?: string;
 
   @IsOptional()
   @IsString()

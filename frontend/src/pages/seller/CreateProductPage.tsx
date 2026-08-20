@@ -14,7 +14,6 @@ export default function CreateProductPage() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState('Game');
   const [developer, setDeveloper] = useState('');
   const [publisher, setPublisher] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -25,6 +24,19 @@ export default function CreateProductPage() {
   const [storeId, setStoreId] = useState('1'); // Steam
   const [typeId, setTypeId] = useState('1'); // Key
   const [region, setRegion] = useState('1'); // Global
+  const [stagedKeys, setStagedKeys] = useState<string[]>([]);
+  const [currentKey, setCurrentKey] = useState('');
+
+  const handleAddKey = () => {
+    if (currentKey.trim() && !stagedKeys.includes(currentKey.trim())) {
+      setStagedKeys([...stagedKeys, currentKey.trim()]);
+      setCurrentKey('');
+    }
+  };
+
+  const handleRemoveKey = (keyToRemove: string) => {
+    setStagedKeys(stagedKeys.filter(k => k !== keyToRemove));
+  };
 
   const createMutation = useMutation({
     mutationFn: async (dto: CreateProductDto) => {
@@ -53,7 +65,6 @@ export default function CreateProductPage() {
     e.preventDefault();
     createMutation.mutate({
       title,
-      type,
       description,
       developer,
       publisher,
@@ -63,7 +74,8 @@ export default function CreateProductPage() {
         storeId: parseInt(storeId, 10),
         typeId: parseInt(typeId, 10),
         region: parseInt(region, 10),
-        languageSupport: ['English']
+        languageSupport: ['English'],
+        keys: stagedKeys
       }]
     });
   };
@@ -82,11 +94,6 @@ export default function CreateProductPage() {
               <Input id="title" value={title} onChange={e => setTitle(e.target.value)} required />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="type">Type (e.g. Game, Software)</Label>
-              <Input id="type" value={type} onChange={e => setType(e.target.value)} required />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input id="description" value={description} onChange={e => setDescription(e.target.value)} required />
@@ -142,6 +149,34 @@ export default function CreateProductPage() {
                     <option value="3">Europe</option>
                   </select>
                 </div>
+              </div>
+              
+              <div className="mt-6 space-y-4">
+                <Label>Product Keys</Label>
+                <div className="flex space-x-2">
+                  <Input 
+                    value={currentKey} 
+                    onChange={e => setCurrentKey(e.target.value)}
+                    placeholder="Enter a product key..."
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddKey();
+                      }
+                    }}
+                  />
+                  <Button type="button" onClick={handleAddKey} variant="outline">Add</Button>
+                </div>
+                {stagedKeys.length > 0 && (
+                  <div className="border border-slate-200 rounded-md p-4 bg-slate-50 space-y-2 max-h-48 overflow-y-auto">
+                    {stagedKeys.map(k => (
+                      <div key={k} className="flex justify-between items-center bg-white border border-slate-100 p-2 rounded shadow-sm text-sm">
+                        <span className="font-mono">{k}</span>
+                        <Button type="button" variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50" onClick={() => handleRemoveKey(k)}>✕</Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

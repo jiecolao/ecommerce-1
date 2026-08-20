@@ -36,7 +36,7 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-219",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-207",
-          "label": "INTEGER"
+          "label": "UUID"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-210",
@@ -81,8 +81,8 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-221",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-213",
-          "label": "VARCHAR(255)",
-          "html": "<span style=\"\">VARCHAR(255)</span>"
+          "label": "DB Auth",
+          "html": "<span style=\"\">DB Auth</span>"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-216",
@@ -223,7 +223,7 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-251",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-248",
-          "label": "INTEGER"
+          "label": "UUID"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-252",
@@ -268,8 +268,7 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-259",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-256",
-          "label": "VARCHAR(255)",
-          "html": "<span style=\"\">VARCHAR(255)</span>"
+          "label": "DB Auth"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-260",
@@ -502,28 +501,6 @@
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-461",
           "label": "TEXT[]"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-410",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-292"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-411",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-410"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-412",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-410",
-          "label": "type"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-413",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-410",
-          "label": "VARCHAR(255)"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-305",
@@ -868,6 +845,29 @@
           "type": "node",
           "parent": "1",
           "label": "Product_Variant"
+        },
+        {
+          "id": "5ThVSRgdGXeH_72jmp8c-1",
+          "type": "node",
+          "parent": "L2mE2fW-k_Jq8dcg_3Jt-424"
+        },
+        {
+          "id": "5ThVSRgdGXeH_72jmp8c-2",
+          "type": "node",
+          "parent": "5ThVSRgdGXeH_72jmp8c-1",
+          "label": "PK"
+        },
+        {
+          "id": "5ThVSRgdGXeH_72jmp8c-3",
+          "type": "node",
+          "parent": "5ThVSRgdGXeH_72jmp8c-1",
+          "label": "id"
+        },
+        {
+          "id": "5ThVSRgdGXeH_72jmp8c-4",
+          "type": "node",
+          "parent": "5ThVSRgdGXeH_72jmp8c-1",
+          "label": "INTEGER"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-425",
@@ -1302,6 +1302,131 @@
           "parent": "1",
           "source": "L2mE2fW-k_Jq8dcg_3Jt-425",
           "target": "L2mE2fW-k_Jq8dcg_3Jt-293"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-1",
+          "type": "node",
+          "parent": "1",
+          "label": "Key"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-2",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-1"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-3",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-2",
+          "label": "PK"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-4",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-2",
+          "label": "id"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-5",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-2",
+          "label": "INTEGER"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-22",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-1"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-23",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-22",
+          "label": "FK"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-24",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-22",
+          "label": "product_variant_id"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-25",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-22",
+          "label": "INTEGER"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-6",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-1"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-7",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-6"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-8",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-6",
+          "label": "code"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-9",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-6",
+          "label": "VARCHAR(255)"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-10",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-1"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-11",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-10"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-12",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-10",
+          "label": "created_at"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-13",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-10",
+          "label": "TIMESTAMPTZ"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-14",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-1"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-15",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-14"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-16",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-14",
+          "label": "updated_at"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-17",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-14",
+          "label": "TIMESTAMPTZ"
+        },
+        {
+          "id": "a6tu12li3iriKLEBhwRI-26",
+          "type": "edge",
+          "parent": "1",
+          "source": "a6tu12li3iriKLEBhwRI-22",
+          "target": "5ThVSRgdGXeH_72jmp8c-1"
         }
       ]
     }

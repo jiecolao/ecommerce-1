@@ -39,7 +39,6 @@ export default function CatalogPage() {
             <CardContent className="flex-1">
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-2xl font-bold text-slate-900">${(dummyPrice / 100).toFixed(2)}</span>
-                <span className="text-sm font-semibold">{product.type}</span>
               </div>
             </CardContent>
             <CardFooter>

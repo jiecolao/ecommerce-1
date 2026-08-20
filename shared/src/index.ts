@@ -10,7 +10,6 @@ export interface Product {
   sellerId: string;
   title: string;
   media: string[];
-  type: string;
   description: string;
   developer?: string;
   publisher?: string;
@@ -22,6 +21,7 @@ export interface Product {
 }
 
 export interface ProductVariant {
+  id: number;
   productId: number;
   storeId: number;
   typeId: number;
@@ -36,7 +36,6 @@ export interface ProductVariant {
 
 export interface CreateProductDto {
   title: string;
-  type: string;
   description: string;
   developer?: string;
   publisher?: string;
@@ -51,6 +50,7 @@ export interface CreateProductDto {
     languageSupport: string[];
     storePage?: string;
     price: number;
+    keys?: string[];
   }[];
 }
 

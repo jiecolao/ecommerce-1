@@ -23,7 +23,6 @@ export class SellerService {
       data: {
         sellerId,
         title: dto.title,
-        type: dto.type,
         description: dto.description,
         developer: dto.developer,
         publisher: dto.publisher,
@@ -38,7 +37,12 @@ export class SellerService {
             region: v.region,
             languageSupport: v.languageSupport,
             storePage: v.storePage,
-            price: v.price
+            price: v.price,
+            ...(v.keys && v.keys.length > 0 ? {
+              keys: {
+                create: v.keys.map(code => ({ code }))
+              }
+            } : {})
           }))
         } : undefined
       },

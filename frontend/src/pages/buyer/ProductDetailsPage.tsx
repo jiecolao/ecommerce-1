@@ -48,7 +48,6 @@ export default function ProductDetailsPage() {
           
           <div className="mt-8">
             <div className="flex flex-col space-y-2">
-              <span className="text-sm">Type: <span className="font-semibold">{product.type}</span></span>
               {product.developer && <span className="text-sm">Developer: <span className="font-semibold">{product.developer}</span></span>}
               {product.publisher && <span className="text-sm">Publisher: <span className="font-semibold">{product.publisher}</span></span>}
             </div>

@@ -36,7 +36,6 @@ model Product {
   sellerId           String   @map("seller_id") @db.Uuid
   title              String   @db.VarChar(255)
   media              String[]
-  type               String   @db.VarChar(255)
   description        String   @db.Text
   developer          String?  @db.VarChar(255)
   publisher          String?  @db.VarChar(255)
@@ -82,6 +81,7 @@ model Type {
 }
 
 model ProductVariant {
+  id              Int      @id @default(autoincrement())
   productId       Int      @map("product_id")
   storeId         Int      @map("store_id")
   typeId          Int      @map("type_id")
@@ -97,6 +97,19 @@ model ProductVariant {
   store   Store   @relation(fields: [storeId], references: [id])
   type    Type    @relation(fields: [typeId], references: [id])
 
-  @@id([productId, storeId, typeId])
   @@map("Product_Variant")
+  @@unique([productId, storeId, typeId])
+  @@index([storeId])
+  @@index([typeId])
+  keys Key[]
+}
+
+model Key {
+  id               Int      @id @default(autoincrement())
+  productvariantId Int      @map("product_variant_id")
+  code             String   @db.VarChar(255)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  productVariant ProductVariant @relation(fields: [productvariantId], references: [id], onDelete: Cascade)
 }

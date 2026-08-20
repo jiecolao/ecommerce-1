@@ -53,7 +53,6 @@ export default function ProductsPage() {
           <thead className="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
             <tr>
               <th scope="col" className="px-6 py-3">Title</th>
-              <th scope="col" className="px-6 py-3">Type</th>
               <th scope="col" className="px-6 py-3">Developer</th>
               <th scope="col" className="px-6 py-3">Publisher</th>
               <th scope="col" className="px-6 py-3 text-right">Actions</th>
@@ -65,7 +64,6 @@ export default function ProductsPage() {
                 <th scope="row" className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
                   {product.title}
                 </th>
-                <td className="px-6 py-4">{product.type}</td>
                 <td className="px-6 py-4">{product.developer || '-'}</td>
                 <td className="px-6 py-4">{product.publisher || '-'}</td>
                 <td className="px-6 py-4 text-right space-x-2">
