@@ -45,10 +45,19 @@ export default function CreateProductPage() {
       });
       
       if (imageFile && res.data.id) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = error => reject(error);
+          reader.readAsDataURL(imageFile);
+        });
         
-        await axios.post(`${API_URL}/seller/products/${res.data.id}/image`, formData, {
+        const imageBase64 = await base64Promise;
+        
+        await axios.post(`${API_URL}/seller/products/${res.data.id}/image/base64`, {
+          fileName: imageFile.name,
+          imageBase64
+        }, {
           headers: { 
             'x-actor-id': '22222222-2222-2222-2222-222222222222'
           }
