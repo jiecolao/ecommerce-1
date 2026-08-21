@@ -97,7 +97,7 @@ export default function CreateProductPage() {
         const compressedBlob = await compressImage(imageFile);
         const formData = new FormData();
         // Append as a File object with original name, but compressed payload
-        formData.append('file', new File([compressedBlob], imageFile.name, { type: 'image/jpeg' }));
+        formData.append('file', compressedBlob, imageFile.name);
         
         await axios.post(`${API_URL}/seller/products/${res.data.id}/image`, formData, {
           headers: { 
