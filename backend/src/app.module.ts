@@ -24,4 +24,4 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     AnalyticsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

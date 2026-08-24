@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../integrations/prisma/prisma.service';
-import { ListCatalogQueryDto } from './catalog.dto';
+import { ListCatalogQueryDto } from './dto/list-catalog-query.dto';
 
 @Injectable()
 export class CatalogService {

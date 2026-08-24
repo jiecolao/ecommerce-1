@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { BlobService } from '../../integrations/blob/blob.service';
-import { CreateSellerProductDto, UpdateSellerProductDto } from './seller.dto';
+import { CreateSellerProductDto } from './dto/create-seller-product.dto';
+import { UpdateSellerProductDto } from './dto/update-seller-product.dto';
 
 @Injectable()
 export class SellerService {

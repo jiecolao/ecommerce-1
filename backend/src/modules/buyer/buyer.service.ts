@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../integrations/prisma/prisma.service';
-import { CheckoutDto } from './buyer.dto';
+import { CheckoutDto } from './dto/checkout.dto';
 
 @Injectable()
 export class BuyerService {

@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { BuyerService } from './buyer.service';
-import { CheckoutDto } from './buyer.dto';
+import { CheckoutDto } from './dto/checkout.dto';
 
 @Controller('buyer')
 export class BuyerController {

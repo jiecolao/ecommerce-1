@@ -1,7 +1,8 @@
 import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SellerService } from './seller.service';
-import { CreateSellerProductDto, UpdateSellerProductDto } from './seller.dto';
+import { CreateSellerProductDto } from './dto/create-seller-product.dto';
+import { UpdateSellerProductDto } from './dto/update-seller-product.dto';
 
 @Controller('seller')
 export class SellerController {

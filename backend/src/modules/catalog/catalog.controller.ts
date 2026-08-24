@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { CatalogService } from './catalog.service';
-import { ListCatalogQueryDto } from './catalog.dto';
+import { ListCatalogQueryDto } from './dto/list-catalog-query.dto';
 
 @Controller('catalog')
 export class CatalogController {
