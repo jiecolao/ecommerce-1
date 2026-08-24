@@ -22,7 +22,8 @@
     "db:test": "npx ts-node src/scripts/test-db.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:setup": "prisma generate && prisma migrate dev"
+    "db:setup": "prisma generate && prisma migrate dev",
+    "db:clone": "npx ts-node src/scripts/clone-remote-db.ts"
   },
   "keywords": [
     "nestjs",

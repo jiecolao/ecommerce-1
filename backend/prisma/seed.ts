@@ -69,36 +69,6 @@ async function main() {
     create: { id: 3, name: 'Gift' },
   });
 
-  // Seed Products
-  const product = await prisma.product.upsert({
-    where: { id: 12 },
-    update: {},
-    create: {
-      id: 12,
-      sellerId: sellerId,
-      title: 'Tunic',
-      description: 'Explore a land filled with lost legends, ancient powers, and ferocious monsters in TUNIC.',
-      developer: 'TUNIC Team',
-      publisher: 'Finji',
-      media: [
-        'https://bxzoqhejt3zgkv9j.public.blob.vercel-storage.com/products/12/Tunic_Poster.jpg'
-      ],
-      productVariants: {
-        create: [
-          {
-            id: 11,
-            storeId: store1.id,
-            typeId: type1.id,
-            name: 'Standard Edition',
-            region: 1,
-            languageSupport: ['English'],
-            price: 5999,
-          },
-        ],
-      },
-    },
-  });
-
   console.log('Database seeded successfully.');
 }
 
