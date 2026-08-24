@@ -4,12 +4,7 @@ import { ListCatalogQueryDto } from './dto/list-catalog-query.dto';
 
 @Controller('catalog')
 export class CatalogController {
-  constructor(private readonly catalogService: CatalogService) {}
-
-  @Get('featured')
-  getFeatured() {
-    return this.catalogService.getFeaturedProducts();
-  }
+  constructor(private readonly catalogService: CatalogService) { }
 
   @Get('products')
   listProducts(@Query() query: ListCatalogQueryDto) {

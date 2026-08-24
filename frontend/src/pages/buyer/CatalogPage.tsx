@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import type { Product } from 'shared';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { API_URL } from '../../lib/api';
+import { KeyRound } from 'lucide-react';
 
 const fetchProducts = async () => {
   const { data } = await axios.get<Product[]>(`${API_URL}/catalog/products`);
@@ -16,8 +17,6 @@ export default function CatalogPage() {
     queryKey: ['products'],
     queryFn: fetchProducts,
   });
-
-  const dummyPrice = 1000;
 
   if (isLoading) return <div className="text-center py-10">Loading game keys...</div>;
   if (error) return <div className="text-center py-10 text-red-500">Failed to load catalog. Is the backend running?</div>;
@@ -34,12 +33,16 @@ export default function CatalogPage() {
           <Card key={product.id} className="flex flex-col h-full hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle>{product.title}</CardTitle>
-              <CardDescription className="line-clamp-2">{product.description}</CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-2xl font-bold text-slate-900">${(dummyPrice / 100).toFixed(2)}</span>
+                <span className="text-2xl font-bold text-slate-900">${product.productVariants[0].price}</span>
               </div>
+              {product.media && product.media.length > 0 ? (
+                <img src={product.media[0]} alt={product.title} className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                <KeyRound className="w-32 h-32 text-slate-400" />
+              )}
             </CardContent>
             <CardFooter>
               <Link to={`/product/${product.id}`} className="w-full">

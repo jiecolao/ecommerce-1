@@ -4,15 +4,7 @@ import { ListCatalogQueryDto } from './dto/list-catalog-query.dto';
 
 @Injectable()
 export class CatalogService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async getFeaturedProducts() {
-    return this.prisma.product.findMany({
-      take: 12,
-      include: { productVariants: true },
-      orderBy: { createdAt: 'desc' }
-    });
-  }
+  constructor(private readonly prisma: PrismaService) { }
 
   async listProducts(query: ListCatalogQueryDto) {
     const limit = query.limit ?? 20;
@@ -20,12 +12,12 @@ export class CatalogService {
     return this.prisma.product.findMany({
       where: query.search
         ? {
-            title: { contains: query.search, mode: 'insensitive' },
-          }
+          title: { contains: query.search, mode: 'insensitive' },
+        }
         : undefined,
       take: limit,
-      include: { productVariants: true },
-      orderBy: { createdAt: 'desc' },
+      select: { id: true, title: true, media: true, productVariants: { select: { price: true } } },
+      orderBy: { title: 'desc' },
     });
   }
 

@@ -25,11 +25,11 @@ describe('E-commerce API (e2e)', () => {
     expect(response.body).toHaveProperty('service');
   });
 
-  it('/catalog/featured (GET)', async () => {
-    const response = await request.default(app.getHttpServer()).get('/catalog/featured');
-    
+  it('/catalog/products (GET)', async () => {
+    const response = await request.default(app.getHttpServer()).get('/catalog/products');
+
     // Log the payload so you can observe the HTTP response object
-    console.log('--- /catalog/featured RESPONSE PAYLOAD ---');
+    console.log('--- /catalog/products RESPONSE PAYLOAD ---');
     console.log(JSON.stringify(response.body, null, 2));
 
     expect(response.status).toBe(200);
