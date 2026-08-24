@@ -36,7 +36,9 @@ export default function CatalogPage() {
             </CardHeader>
             <CardContent className="flex-1">
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-2xl font-bold text-slate-900">${product.productVariants[0].price}</span>
+                <span className="text-2xl font-bold text-slate-900">
+                  ${product.productVariants?.[0]?.price ?? 'N/A'}
+                </span>
               </div>
               {product.media && product.media.length > 0 ? (
                 <img src={product.media[0]} alt={product.title} className="w-full h-full object-cover rounded-xl" />
