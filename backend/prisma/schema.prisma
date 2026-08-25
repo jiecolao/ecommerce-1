@@ -6,12 +6,10 @@ datasource db {
   provider  = "postgresql"
 }
 
-model Seller {
+model Admin {
   id           String    @id @default(uuid()) @db.Uuid
   email        String    @unique @db.VarChar(255)
-  businessName String    @map("business_name") @db.VarChar(255)
-  phone        String?   @db.VarChar(16)
-  rating       Int?
+  name         String    @db.VarChar(255)
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -33,7 +31,7 @@ model Buyer {
 
 model Product {
   id                 Int      @id @default(autoincrement())
-  sellerId           String   @map("seller_id") @db.Uuid
+  adminId            String   @map("admin_id") @db.Uuid
   title              String   @db.VarChar(255)
   media              String[]
   description        String   @db.Text
@@ -44,7 +42,7 @@ model Product {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  seller          Seller           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  admin           Admin           @relation(fields: [adminId], references: [id], onDelete: Cascade)
   orders          Order[]
   productVariants ProductVariant[]
 }
@@ -59,7 +57,7 @@ model Order {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   buyer   Buyer   @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Store {
@@ -80,13 +78,22 @@ model Type {
   productVariants ProductVariant[]
 }
 
+model Region {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  productVariants ProductVariant[]
+}
+
 model ProductVariant {
   id              Int      @id @default(autoincrement())
   productId       Int      @map("product_id")
   storeId         Int      @map("store_id")
   typeId          Int      @map("type_id")
+  regionId        Int      @map("region_id")
   name            String   @db.VarChar(255)
-  region          Int
   languageSupport String[] @map("languange_support")
   storePage       String?  @map("store_page") @db.VarChar(255)
   price           Int
@@ -96,6 +103,7 @@ model ProductVariant {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   store   Store   @relation(fields: [storeId], references: [id])
   type    Type    @relation(fields: [typeId], references: [id])
+  region  Region  @relation(fields: [regionId], references: [id])
 
   @@map("Product_Variant")
   @@unique([productId, storeId, typeId])

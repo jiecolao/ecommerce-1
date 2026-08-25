@@ -1,6 +1,6 @@
 import { IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class UpdateSellerProductDto {
+export class UpdateAdminProductDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
@@ -31,3 +31,6 @@ export class UpdateSellerProductDto {
   @IsString({ each: true })
   media?: string[];
 }
+
+
+

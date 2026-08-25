@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsInt, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsInt, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 
 export class CreateProductVariantDto {
   @IsInt()
@@ -32,7 +32,7 @@ export class CreateProductVariantDto {
   keys?: string[];
 }
 
-export class CreateSellerProductDto {
+export class CreateAdminProductDto {
   @IsString()
   @MaxLength(255)
   title!: string;
@@ -56,10 +56,10 @@ export class CreateSellerProductDto {
   @IsString()
   tags?: string;
 
-  @IsOptional()
   @IsArray()
+  @ArrayMinSize(1, { message: 'Product must have at least one image.' })
   @IsString({ each: true })
-  media?: string[];
+  media!: string[];
 
   @IsOptional()
   @IsArray()
@@ -67,3 +67,6 @@ export class CreateSellerProductDto {
   @Type(() => CreateProductVariantDto)
   variants?: CreateProductVariantDto[];
 }
+
+
+

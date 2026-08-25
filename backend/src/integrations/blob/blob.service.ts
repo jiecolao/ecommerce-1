@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { put } from '@vercel/blob';
+import { put, del } from '@vercel/blob';
 
 @Injectable()
 export class BlobService {
@@ -20,5 +20,16 @@ export class BlobService {
     });
 
     return { url: result.url };
+  }
+
+  async deleteImages(urls: string[]) {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      this.logger.warn('BLOB_READ_WRITE_TOKEN is not defined in the environment. Skipping deletion.');
+      return;
+    }
+
+    if (urls.length > 0) {
+      await del(urls, { token: process.env.BLOB_READ_WRITE_TOKEN });
+    }
   }
 }

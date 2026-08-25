@@ -3,7 +3,7 @@ import { Gamepad2, ShoppingCart, LineChart } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
-  const isSeller = location.pathname.startsWith('/seller');
+  const isAdmin = location.pathname.startsWith('/admin');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -17,24 +17,24 @@ export default function Navbar() {
             <Link
               to="/"
               className={`transition-colors hover:text-slate-900 ${
-                !isSeller ? 'text-slate-900' : 'text-slate-500'
+                !isAdmin ? 'text-slate-900' : 'text-slate-500'
               }`}
             >
               Storefront
             </Link>
             <Link
-              to="/seller/dashboard"
+              to="/admin/dashboard"
               className={`transition-colors hover:text-slate-900 ${
-                isSeller ? 'text-slate-900' : 'text-slate-500'
+                isAdmin ? 'text-slate-900' : 'text-slate-500'
               }`}
             >
-              Seller Dashboard
+              Admin Dashboard
             </Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <nav className="flex items-center">
-            {!isSeller ? (
+            {!isAdmin ? (
               <>
                 <Link to="/buyer/orders" className="text-sm font-medium text-slate-600 hover:text-slate-900 mr-4">
                   My Games
@@ -46,18 +46,22 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link to="/seller/products" className="text-sm font-medium text-slate-600 hover:text-slate-900 mr-4">
+                <Link to="/admin/products" className="text-sm font-medium text-slate-600 hover:text-slate-900 mr-4">
                   Manage Keys
                 </Link>
-                <Link to="/seller/dashboard" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+                <Link to="/admin/dashboard" className="text-sm font-medium text-slate-600 hover:text-slate-900">
                   <LineChart className="h-5 w-5 inline mr-1" />
                   Metrics
                 </Link>
               </>
             )}
+            <Link to="/auth" className="ml-6 text-sm font-medium text-blue-600 hover:text-blue-700">
+              Login / Signup
+            </Link>
           </nav>
         </div>
       </div>
     </header>
   );
 }
+

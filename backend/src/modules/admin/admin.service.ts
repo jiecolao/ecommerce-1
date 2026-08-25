@@ -1,28 +1,28 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { BlobService } from '../../integrations/blob/blob.service';
-import { CreateSellerProductDto } from './dto/create-seller-product.dto';
-import { UpdateSellerProductDto } from './dto/update-seller-product.dto';
+import { CreateAdminProductDto } from './dto/create-admin-product.dto';
+import { UpdateAdminProductDto } from './dto/update-admin-product.dto';
 
 @Injectable()
-export class SellerService {
+export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly blobService: BlobService,
   ) {}
 
-  async getProducts(sellerId: string) {
+  async getProducts(adminId: string) {
     return this.prisma.product.findMany({
-      where: { sellerId },
+      where: { adminId },
       include: { productVariants: true },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async createProduct(sellerId: string, dto: CreateSellerProductDto) {
+  async createProduct(adminId: string, dto: CreateAdminProductDto) {
     return this.prisma.product.create({
       data: {
-        sellerId,
+        adminId,
         title: dto.title,
         description: dto.description,
         developer: dto.developer,
@@ -35,7 +35,7 @@ export class SellerService {
             storeId: v.storeId,
             typeId: v.typeId,
             name: v.name,
-            region: v.region,
+            regionId: v.region,
             languageSupport: v.languageSupport,
             storePage: v.storePage,
             price: v.price,
@@ -50,10 +50,10 @@ export class SellerService {
     });
   }
 
-  async updateProduct(id: number, sellerId: string, dto: UpdateSellerProductDto) {
+  async updateProduct(id: number, adminId: string, dto: UpdateAdminProductDto) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found.');
-    if (product.sellerId !== sellerId) throw new ForbiddenException('This product does not belong to the requesting seller.');
+    if (product.adminId !== adminId) throw new ForbiddenException('This product does not belong to the requesting admin.');
 
     return this.prisma.product.update({
       where: { id },
@@ -63,20 +63,28 @@ export class SellerService {
     });
   }
 
-  async deleteProduct(id: number, sellerId: string) {
+  async deleteProduct(id: number, adminId: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found.');
-    if (product.sellerId !== sellerId) throw new ForbiddenException('This product does not belong to the requesting seller.');
+    if (product.adminId !== adminId) throw new ForbiddenException('This product does not belong to the requesting admin.');
 
-    return this.prisma.product.delete({ where: { id } });
+    await this.prisma.$transaction(async (prisma) => {
+      await prisma.product.delete({ where: { id } });
+    });
+    
+    if (product.media && product.media.length > 0) {
+      await this.blobService.deleteImages(product.media);
+    }
+
+    return product;
   }
 
-  async uploadProductImage(productId: number, sellerId: string, fileName: string, payload: Buffer, mimeType: string) {
+  async uploadProductImage(productId: number, adminId: string, fileName: string, payload: Buffer, mimeType: string) {
     const upload = await this.blobService.uploadImage(`products/${productId}/${fileName}`, payload, mimeType);
 
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
     if (!product) throw new NotFoundException('Product not found.');
-    if (product.sellerId !== sellerId) throw new ForbiddenException('This product does not belong to the requesting seller.');
+    if (product.adminId !== adminId) throw new ForbiddenException('This product does not belong to the requesting admin.');
 
     // Append to media array
     return this.prisma.product.update({
@@ -89,9 +97,9 @@ export class SellerService {
     });
   }
 
-  async getSellerReport(sellerId: string) {
+  async getadminReport(adminId: string) {
     const products = await this.prisma.product.findMany({
-      where: { sellerId },
+      where: { adminId },
       include: { orders: true },
     });
 
@@ -123,3 +131,6 @@ export class SellerService {
     };
   }
 }
+
+
+

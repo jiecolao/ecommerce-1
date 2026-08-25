@@ -27,13 +27,13 @@ async function main() {
   await localPrisma.product.deleteMany();
   await localPrisma.store.deleteMany();
   await localPrisma.type.deleteMany();
-  await localPrisma.seller.deleteMany();
+  await localPrisma.admin.deleteMany();
   await localPrisma.buyer.deleteMany();
 
   console.log('Fetching remote data (limit: 10 per entity for testing)...');
   
   // 1. Fetch Sellers and Buyers
-  const sellers = await remotePrisma.seller.findMany({ take: 10 });
+  const admins = await remotePrisma.admin.findMany({ take: 10 });
   const buyers = await remotePrisma.buyer.findMany({ take: 10 });
   
   // 2. Fetch Lookup tables
@@ -49,8 +49,8 @@ async function main() {
   console.log('Writing data to local database...');
 
   // Insert Sellers
-  if (sellers.length > 0) {
-    await localPrisma.seller.createMany({ data: sellers, skipDuplicates: true });
+  if (admins.length > 0) {
+    await localPrisma.admin.createMany({ data: admins, skipDuplicates: true });
   }
 
   // Insert Buyers

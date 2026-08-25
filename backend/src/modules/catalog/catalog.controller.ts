@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, BadRequestException } from '@nestjs/common';
 import { CatalogService } from './catalog.service';
 import { ListCatalogQueryDto } from './dto/list-catalog-query.dto';
 
@@ -13,6 +13,10 @@ export class CatalogController {
 
   @Get('products/:id')
   getProduct(@Param('id') id: string) {
-    return this.catalogService.getProductById(parseInt(id, 10));
+    const idNum = parseInt(id, 10);
+    if (isNaN(idNum)) {
+      throw new BadRequestException('Invalid product ID');
+    }
+    return this.catalogService.getProductById(idNum);
   }
 }

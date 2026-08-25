@@ -6,8 +6,8 @@ import { Button } from '../../components/ui/button';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 import { API_URL } from '../../lib/api';
 
-const fetchSellerProducts = async () => {
-  const { data } = await axios.get<Product[]>(`${API_URL}/seller/products`, {
+const fetchadminProducts = async () => {
+  const { data } = await axios.get<Product[]>(`${API_URL}/admin/products`, {
     headers: { 'x-actor-id': '22222222-2222-2222-2222-222222222222' }
   });
   return data;
@@ -16,18 +16,18 @@ const fetchSellerProducts = async () => {
 export default function ProductsPage() {
   const queryClient = useQueryClient();
   const { data: products, isLoading } = useQuery({
-    queryKey: ['seller-products'],
-    queryFn: fetchSellerProducts,
+    queryKey: ['admin-products'],
+    queryFn: fetchadminProducts,
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await axios.delete(`${API_URL}/seller/products/${id}`, {
+      await axios.delete(`${API_URL}/admin/products/${id}`, {
         headers: { 'x-actor-id': '22222222-2222-2222-2222-222222222222' }
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seller-products'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
     }
   });
 
@@ -40,7 +40,7 @@ export default function ProductsPage() {
           <h1 className="text-4xl font-bold tracking-tight text-slate-900">Manage Products</h1>
           <p className="mt-2 text-lg text-slate-600">Add, edit, or remove your products.</p>
         </div>
-        <Link to="/seller/products/new">
+        <Link to="/admin/products/new">
           <Button className="flex items-center space-x-2">
             <Plus className="w-4 h-4" />
             <span>Add Product</span>
@@ -96,3 +96,5 @@ export default function ProductsPage() {
     </div>
   );
 }
+
+

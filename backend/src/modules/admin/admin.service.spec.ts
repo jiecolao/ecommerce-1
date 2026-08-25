@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SellerService } from './seller.service';
+import { AdminService } from './admin.service';
 import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { BlobService } from '../../integrations/blob/blob.service';
 
-describe('SellerService', () => {
-  let service: SellerService;
+describe('AdminService', () => {
+  let service: AdminService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        SellerService,
+        AdminService,
         {
           provide: PrismaService,
           useValue: {}
@@ -21,10 +21,13 @@ describe('SellerService', () => {
       ],
     }).compile();
 
-    service = module.get<SellerService>(SellerService);
+    service = module.get<AdminService>(AdminService);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 });
+
+
+

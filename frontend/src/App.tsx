@@ -4,9 +4,10 @@ import CatalogPage from './pages/buyer/CatalogPage';
 import ProductDetailsPage from './pages/buyer/ProductDetailsPage';
 import CheckoutPage from './pages/buyer/CheckoutPage';
 import OrdersPage from './pages/buyer/OrdersPage';
-import DashboardPage from './pages/seller/DashboardPage';
-import ProductsPage from './pages/seller/ProductsPage';
-import CreateProductPage from './pages/seller/CreateProductPage';
+import DashboardPage from './pages/admin/DashboardPage';
+import ProductsPage from './pages/admin/ProductsPage';
+import CreateProductPage from './pages/admin/CreateProductPage';
+import { Auth } from './pages/Auth/Auth';
 import { Toaster } from './components/ui/toaster';
 
 function App() {
@@ -16,16 +17,19 @@ function App() {
         <Navbar />
         <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full">
           <Routes>
+            {/* Public Routes */}
+            <Route path="/auth" element={<Auth />} />
+            
             {/* Buyer Routes */}
             <Route path="/" element={<CatalogPage />} />
             <Route path="/product/:id" element={<ProductDetailsPage />} />
             <Route path="/checkout/:id" element={<CheckoutPage />} />
             <Route path="/buyer/orders" element={<OrdersPage />} />
             
-            {/* Seller Routes */}
-            <Route path="/seller/dashboard" element={<DashboardPage />} />
-            <Route path="/seller/products" element={<ProductsPage />} />
-            <Route path="/seller/products/new" element={<CreateProductPage />} />
+            {/* admin Routes */}
+            <Route path="/admin/dashboard" element={<DashboardPage />} />
+            <Route path="/admin/products" element={<ProductsPage />} />
+            <Route path="/admin/products/new" element={<CreateProductPage />} />
           </Routes>
         </main>
       </div>
@@ -35,3 +39,4 @@ function App() {
 }
 
 export default App;
+

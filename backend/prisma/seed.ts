@@ -11,17 +11,15 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('Seeding database...');
 
-  // Upsert Seller
-  const sellerId = '22222222-2222-2222-2222-222222222222';
-  await prisma.seller.upsert({
-    where: { id: sellerId },
+  // Upsert Admin
+  const adminId = '22222222-2222-2222-2222-222222222222';
+  await prisma.admin.upsert({
+    where: { id: adminId },
     update: {},
     create: {
-      id: sellerId,
-      email: 'demo-seller@example.com',
-      businessName: 'Demo Games Studio',
-      phone: '1234567890',
-      rating: 5,
+      id: adminId,
+      email: 'demo-admin@example.com',
+      name: 'Demo Admin',
     },
   });
 
@@ -41,33 +39,34 @@ async function main() {
   });
 
   // Seed Stores
-  const store1 = await prisma.store.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { id: 1, name: 'Steam' },
-  });
-  const store2 = await prisma.store.upsert({
-    where: { id: 2 },
-    update: {},
-    create: { id: 2, name: 'Epic Games' },
-  });
+  const stores = ['Steam', 'GOG', 'Epic Games', 'Microsoft Store'];
+  for (let i = 0; i < stores.length; i++) {
+    await prisma.store.upsert({
+      where: { id: i + 1 },
+      update: { name: stores[i] },
+      create: { id: i + 1, name: stores[i] },
+    });
+  }
+
+  // Seed Regions
+  const regions = ['EU', 'US', 'Asia', 'Global'];
+  for (let i = 0; i < regions.length; i++) {
+    await prisma.region.upsert({
+      where: { id: i + 1 },
+      update: { name: regions[i] },
+      create: { id: i + 1, name: regions[i] },
+    });
+  }
 
   // Seed Types
-  const type1 = await prisma.type.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { id: 1, name: 'Key' },
-  });
-  const type2 = await prisma.type.upsert({
-    where: { id: 2 },
-    update: {},
-    create: { id: 2, name: 'Account' },
-  });
-  const type3 = await prisma.type.upsert({
-    where: { id: 3 },
-    update: {},
-    create: { id: 3, name: 'Gift' },
-  });
+  const types = ['Game', 'DLC', 'Currency', 'Subscription'];
+  for (let i = 0; i < types.length; i++) {
+    await prisma.type.upsert({
+      where: { id: i + 1 },
+      update: { name: types[i] },
+      create: { id: i + 1, name: types[i] },
+    });
+  }
 
   console.log('Database seeded successfully.');
 }

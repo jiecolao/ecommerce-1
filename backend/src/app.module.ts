@@ -6,8 +6,9 @@ import { SupabaseModule } from './integrations/supabase/supabase.module';
 import { BlobModule } from './integrations/blob/blob.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { BuyerModule } from './modules/buyer/buyer.module';
-import { SellerModule } from './modules/seller/seller.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -20,8 +21,9 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     BlobModule,
     CatalogModule,
     BuyerModule,
-    SellerModule,
+    AdminModule,
     AnalyticsModule,
+    AuthModule,
   ],
 })
 export class AppModule { }

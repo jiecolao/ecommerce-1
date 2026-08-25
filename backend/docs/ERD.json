@@ -1,5 +1,5 @@
 {
-  "version": "31.3.1",
+  "version": "31.3.2",
   "pages": [
     {
       "id": "k4vZEWUCvI8hoS_lffrF",
@@ -13,7 +13,7 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-206",
           "type": "node",
           "parent": "1",
-          "label": "Seller"
+          "label": "Admin"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-207",
@@ -98,7 +98,7 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-218",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-216",
-          "label": "business_name"
+          "label": "name"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-222",
@@ -106,51 +106,6 @@
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-216",
           "label": "VARCHAR(255)",
           "html": "<span style=\"\">VARCHAR(255)</span>"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-243",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-206"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-244",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-243"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-245",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-243",
-          "label": "phone"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-246",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-243",
-          "label": "VARCHAR(16)",
-          "html": "<span style=\"\">VARCHAR(16)</span>"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-239",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-206"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-240",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-239"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-241",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-239",
-          "label": "rating"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-242",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-239",
-          "label": "INTEGER"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-231",
@@ -450,7 +405,7 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-299",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-297",
-          "label": "seller_id"
+          "label": "admin_id"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-300",
@@ -939,6 +894,29 @@
           "label": "INTEGER"
         },
         {
+          "id": "ilAGfXOLO0LGCuHBBWmB-19",
+          "type": "node",
+          "parent": "L2mE2fW-k_Jq8dcg_3Jt-424"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-20",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-19",
+          "label": "FK"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-21",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-19",
+          "label": "region"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-22",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-19",
+          "label": "INTEGER"
+        },
+        {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-572",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-424"
@@ -959,28 +937,6 @@
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-572",
           "label": "VARCHAR(255)"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-433",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-424"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-434",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-433"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-435",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-433",
-          "label": "region"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-436",
-          "type": "node",
-          "parent": "L2mE2fW-k_Jq8dcg_3Jt-433",
-          "label": "INTEGER"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-542",
@@ -1425,8 +1381,110 @@
           "id": "a6tu12li3iriKLEBhwRI-26",
           "type": "edge",
           "parent": "1",
-          "source": "a6tu12li3iriKLEBhwRI-22",
+          "source": "a6tu12li3iriKLEBhwRI-2",
           "target": "5ThVSRgdGXeH_72jmp8c-1"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-1",
+          "type": "node",
+          "parent": "1",
+          "label": "Region"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-2",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-1"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-3",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-2",
+          "label": "PK"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-4",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-2",
+          "label": "id"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-5",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-2",
+          "label": "INTEGER"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-6",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-1"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-7",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-6"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-8",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-6",
+          "label": "name"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-9",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-6",
+          "label": "VARCHAR(255)"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-10",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-1"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-11",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-10"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-12",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-10",
+          "label": "created_at"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-13",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-10",
+          "label": "TIMESTAMPTZ"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-14",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-1"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-15",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-14"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-16",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-14",
+          "label": "updated_at"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-17",
+          "type": "node",
+          "parent": "ilAGfXOLO0LGCuHBBWmB-14",
+          "label": "TIMESTAMPTZ"
+        },
+        {
+          "id": "ilAGfXOLO0LGCuHBBWmB-23",
+          "type": "edge",
+          "parent": "1",
+          "source": "ilAGfXOLO0LGCuHBBWmB-19",
+          "target": "ilAGfXOLO0LGCuHBBWmB-2"
         }
       ]
     }

@@ -7,7 +7,7 @@ export interface ApiResponse<T> {
 // Product & Catalog Types
 export interface Product {
   id: number;
-  sellerId: string;
+  adminId: string;
   title: string;
   media: string[];
   description: string;
@@ -78,8 +78,8 @@ export interface Order {
   product?: Product; // Populated by relations
 }
 
-// Seller Dashboard Types
-export interface SellerReport {
+// admin Dashboard Types
+export interface adminReport {
   totalRevenueCents: number;
   totalOrders: number;
   topSellingProducts: {
@@ -89,3 +89,4 @@ export interface SellerReport {
     revenueCents: number;
   }[];
 }
+

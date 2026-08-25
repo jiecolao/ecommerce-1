@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import type { SellerReport } from 'shared';
+import type { AdminReport } from 'shared';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { DollarSign, ShoppingBag, Package } from 'lucide-react';
 import { API_URL } from '../../lib/api';
 
 const fetchReport = async () => {
-  const { data } = await axios.get<SellerReport>(`${API_URL}/seller/reports`, {
+  const { data } = await axios.get<AdminReport>(`${API_URL}/admin/reports`, {
     headers: { 'x-actor-id': '22222222-2222-2222-2222-222222222222' }
   });
   return data;
@@ -14,7 +14,7 @@ const fetchReport = async () => {
 
 export default function DashboardPage() {
   const { data: report, isLoading } = useQuery({
-    queryKey: ['seller-report'],
+    queryKey: ['admin-report'],
     queryFn: fetchReport,
   });
 
@@ -24,7 +24,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Seller Dashboard</h1>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Admin Dashboard</h1>
         <p className="mt-2 text-lg text-slate-600">Overview of your store performance.</p>
       </div>
 
@@ -76,3 +76,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+

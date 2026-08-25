@@ -89,7 +89,7 @@ export default function CreateProductPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: CreateProductDto) => {
-      const res = await axios.post(`${API_URL}/seller/products`, dto, {
+      const res = await axios.post(`${API_URL}/admin/products`, dto, {
         headers: { 'x-actor-id': '22222222-2222-2222-2222-222222222222' }
       });
       
@@ -99,7 +99,7 @@ export default function CreateProductPage() {
         // Append as a File object with original name, but compressed payload
         formData.append('file', compressedBlob, imageFile.name);
         
-        await axios.post(`${API_URL}/seller/products/${res.data.id}/image`, formData, {
+        await axios.post(`${API_URL}/admin/products/${res.data.id}/image`, formData, {
           headers: { 
             'x-actor-id': '22222222-2222-2222-2222-222222222222'
           }
@@ -107,8 +107,8 @@ export default function CreateProductPage() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seller-products'] });
-      navigate('/seller/products');
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      navigate('/admin/products');
     }
   });
 
@@ -232,7 +232,7 @@ export default function CreateProductPage() {
             </div>
 
             <CardFooter className="px-0 pt-6 flex justify-end space-x-4">
-              <Button variant="outline" type="button" onClick={() => navigate('/seller/products')}>Cancel</Button>
+              <Button variant="outline" type="button" onClick={() => navigate('/admin/products')}>Cancel</Button>
               <Button type="submit" disabled={createMutation.isPending}>
                 {createMutation.isPending ? 'Publishing...' : 'Publish Product'}
               </Button>
@@ -243,3 +243,5 @@ export default function CreateProductPage() {
     </div>
   );
 }
+
+
