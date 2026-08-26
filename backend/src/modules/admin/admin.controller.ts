@@ -8,6 +8,11 @@ import { UpdateAdminProductDto } from './dto/update-admin-product.dto';
 export class AdminController {
   constructor(private readonly AdminService: AdminService) {}
 
+  @Get('metadata')
+  getMetadata() {
+    return this.AdminService.getMetadata();
+  }
+
   @Get('products')
   getProducts(@Req() req: any) {
     const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
@@ -15,9 +20,34 @@ export class AdminController {
   }
 
   @Post('products')
-  createProduct(@Body() dto: CreateAdminProductDto, @Req() req: any) {
+  @UseInterceptors(FileInterceptor('file'))
+  async createProduct(
+    @Body('data') dataString: string,
+    @UploadedFile() file: any,
+    @Req() req: any
+  ) {
+    if (!file) throw new BadRequestException('Product must have at least one image.');
+    if (!dataString) throw new BadRequestException('Product data is missing.');
+    
+    // Import manually to avoid messing up top level imports for a quick fix
+    const { plainToInstance } = require('class-transformer');
+    const { validate } = require('class-validator');
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(dataString);
+    } catch {
+      throw new BadRequestException('Invalid JSON format for data field.');
+    }
+
+    const dto = plainToInstance(CreateAdminProductDto, parsed);
+    const errors = await validate(dto);
+    if (errors.length > 0) {
+      throw new BadRequestException(errors.map((e: any) => Object.values(e.constraints)).flat());
+    }
+
     const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
-    return this.AdminService.createProduct(adminId, dto);
+    return this.AdminService.createProduct(adminId, dto, file);
   }
 
   @Patch('products/:id')

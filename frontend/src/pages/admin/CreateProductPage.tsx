@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import type { CreateProductDto } from 'shared';
@@ -61,6 +61,14 @@ const compressImage = (file: File): Promise<Blob> => {
 export default function CreateProductPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const { data: metadata } = useQuery({
+    queryKey: ['admin-metadata'],
+    queryFn: async () => {
+      const res = await axios.get(`${API_URL}/admin/metadata`);
+      return res.data;
+    }
+  });
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [developer, setDeveloper] = useState('');
@@ -70,9 +78,9 @@ export default function CreateProductPage() {
   // Variant fields
   const [variantName, setVariantName] = useState('Standard Edition');
   const [price, setPrice] = useState('59.99');
-  const [storeId, setStoreId] = useState('1'); // Steam
-  const [typeId, setTypeId] = useState('1'); // Key
-  const [region, setRegion] = useState('1'); // Global
+  const [storeId, setStoreId] = useState('');
+  const [typeId, setTypeId] = useState('');
+  const [region, setRegion] = useState('');
   const [stagedKeys, setStagedKeys] = useState<string[]>([]);
   const [currentKey, setCurrentKey] = useState('');
 
@@ -89,22 +97,21 @@ export default function CreateProductPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: CreateProductDto) => {
-      const res = await axios.post(`${API_URL}/admin/products`, dto, {
-        headers: { 'x-actor-id': '22222222-2222-2222-2222-222222222222' }
-      });
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(dto));
       
-      if (imageFile && res.data.id) {
+      if (imageFile) {
         const compressedBlob = await compressImage(imageFile);
-        const formData = new FormData();
-        // Append as a File object with original name, but compressed payload
         formData.append('file', compressedBlob, imageFile.name);
-        
-        await axios.post(`${API_URL}/admin/products/${res.data.id}/image`, formData, {
-          headers: { 
-            'x-actor-id': '22222222-2222-2222-2222-222222222222'
-          }
-        });
+      } else {
+        throw new Error('Please select a product image.');
       }
+      
+      await axios.post(`${API_URL}/admin/products`, formData, {
+        headers: { 
+          'x-actor-id': '22222222-2222-2222-2222-222222222222'
+        }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
@@ -122,9 +129,9 @@ export default function CreateProductPage() {
       variants: [{
         name: variantName,
         price: Math.round(parseFloat(price) * 100), // convert to cents
-        storeId: parseInt(storeId, 10),
-        typeId: parseInt(typeId, 10),
-        region: parseInt(region, 10),
+        storeId: storeId ? parseInt(storeId, 10) : metadata?.stores?.[0]?.id,
+        typeId: typeId ? parseInt(typeId, 10) : metadata?.types?.[0]?.id,
+        region: region ? parseInt(region, 10) : metadata?.regions?.[0]?.id,
         languageSupport: ['English'],
         keys: stagedKeys
       }]
@@ -180,24 +187,25 @@ export default function CreateProductPage() {
                 <div className="space-y-2">
                   <Label htmlFor="storeId">Platform</Label>
                   <select id="storeId" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm" value={storeId} onChange={e => setStoreId(e.target.value)} required>
-                    <option value="1">Steam</option>
-                    <option value="2">Epic Games</option>
+                    {metadata?.stores?.map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="typeId">Product Type</Label>
                   <select id="typeId" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm" value={typeId} onChange={e => setTypeId(e.target.value)} required>
-                    <option value="1">Key</option>
-                    <option value="2">Account</option>
-                    <option value="3">Gift</option>
+                    {metadata?.types?.map((t: any) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="region">Region</Label>
                   <select id="region" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm" value={region} onChange={e => setRegion(e.target.value)} required>
-                    <option value="1">Global</option>
-                    <option value="2">North America</option>
-                    <option value="3">Europe</option>
+                    {metadata?.regions?.map((r: any) => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>

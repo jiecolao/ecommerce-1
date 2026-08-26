@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../lib/api';
@@ -8,54 +7,42 @@ export function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState<'buyer' | 'admin'>('buyer');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const navigate = useNavigate();
 
-  const handleAuth = async (e: React.FormEvent, type: 'login' | 'signup') => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      if (type === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
+      if (!isLogin) {
+        await axios.post(`${API_URL}/auth/signup`, {
           email,
           password,
-          options: {
-            data: {
-              role,
-              first_name: firstName,
-              last_name: lastName,
-            }
-          }
+          role,
+          firstName,
+          lastName
         });
-        
-        if (error) throw error;
-        
-        // Custom backend API call to map user to our Admin/Buyer tables
-        if (data.user) {
-           await axios.post(`${API_URL}/auth/sync`, {
-             role,
-             firstName,
-             lastName
-           }, {
-             headers: {
-               'Authorization': `Bearer ${data.session?.access_token}`
-             }
-           });
-        }
-        alert('Check your email for the login link!');
+        alert('Check your email for the login link! Or if auto-confirm is enabled, please login.');
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const res = await axios.post(`${API_URL}/auth/login`, {
           email,
           password,
         });
-        if (error) throw error;
+        
+        // If login returns token, we can store it or use it as needed
+        const token = res.data?.session?.access_token || res.data?.token;
+        if (token) {
+          localStorage.setItem('auth_token', token);
+        }
+        
         navigate('/');
       }
     } catch (error: any) {
-      alert(error.error_description || error.message);
+      alert(error.response?.data?.message || error.message || 'An error occurred during authentication.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +53,44 @@ export function Auth() {
       <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-xl shadow-2xl">
         <h2 className="text-3xl font-bold text-center text-blue-400">Welcome to GameKeys</h2>
         
-        <form className="space-y-4" onSubmit={(e) => handleAuth(e, 'login')}>
+        <form className="space-y-4" onSubmit={handleAuth}>
+          {!isLogin && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400">First Name</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 mt-1 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400">Last Name</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 mt-1 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400">Account Type</label>
+                <select
+                  className="w-full px-4 py-2 mt-1 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as 'buyer' | 'admin')}
+                >
+                  <option value="buyer">Buyer</option>
+                  <option value="admin">Admin / Seller</option>
+                </select>
+              </div>
+            </>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-400">Email</label>
             <input
@@ -94,15 +118,14 @@ export function Auth() {
               disabled={loading}
               className="w-full px-4 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Loading...' : 'Sign In'}
+              {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Sign Up'}
             </button>
             <button
               type="button"
-              onClick={(e) => handleAuth(e, 'signup')}
-              disabled={loading}
-              className="w-full px-4 py-2 font-semibold text-white transition bg-gray-600 rounded-lg hover:bg-gray-700 disabled:opacity-50"
+              onClick={() => setIsLogin(!isLogin)}
+              className="w-full px-4 py-2 font-semibold text-white transition bg-gray-600 rounded-lg hover:bg-gray-700"
             >
-              Sign Up
+              {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
             </button>
           </div>
         </form>

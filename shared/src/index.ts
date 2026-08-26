@@ -79,7 +79,7 @@ export interface Order {
 }
 
 // admin Dashboard Types
-export interface adminReport {
+export interface AdminReport {
   totalRevenueCents: number;
   totalOrders: number;
   topSellingProducts: {

@@ -56,10 +56,10 @@ export class CreateAdminProductDto {
   @IsString()
   tags?: string;
 
+  @IsOptional()
   @IsArray()
-  @ArrayMinSize(1, { message: 'Product must have at least one image.' })
   @IsString({ each: true })
-  media!: string[];
+  media?: string[];
 
   @IsOptional()
   @IsArray()

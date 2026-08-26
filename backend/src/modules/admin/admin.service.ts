@@ -11,6 +11,15 @@ export class AdminService {
     private readonly blobService: BlobService,
   ) {}
 
+  async getMetadata() {
+    const [stores, types, regions] = await Promise.all([
+      this.prisma.store.findMany(),
+      this.prisma.type.findMany(),
+      this.prisma.region.findMany(),
+    ]);
+    return { stores, types, regions };
+  }
+
   async getProducts(adminId: string) {
     return this.prisma.product.findMany({
       where: { adminId },
@@ -19,35 +28,47 @@ export class AdminService {
     });
   }
 
-  async createProduct(adminId: string, dto: CreateAdminProductDto) {
-    return this.prisma.product.create({
-      data: {
-        adminId,
-        title: dto.title,
-        description: dto.description,
-        developer: dto.developer,
-        publisher: dto.publisher,
-        systemRequirements: dto.systemRequirements,
-        tags: dto.tags,
-        media: dto.media ?? [],
-        productVariants: dto.variants ? {
-          create: dto.variants.map(v => ({
-            storeId: v.storeId,
-            typeId: v.typeId,
-            name: v.name,
-            regionId: v.region,
-            languageSupport: v.languageSupport,
-            storePage: v.storePage,
-            price: v.price,
-            ...(v.keys && v.keys.length > 0 ? {
-              keys: {
-                create: v.keys.map(code => ({ code }))
-              }
-            } : {})
-          }))
-        } : undefined
-      },
-    });
+  async createProduct(adminId: string, dto: CreateAdminProductDto, file: any) {
+    // 1. Create product first to get the ID, but within a transaction?
+    // Vercel Blob API doesn't support database transactions. 
+    // We will upload the file first to a temporary path, then create the product.
+    const tempId = Date.now().toString();
+    const upload = await this.blobService.uploadImage(`products/tmp_${tempId}/${file.originalname}`, file.buffer, file.mimetype);
+
+    try {
+      const product = await this.prisma.product.create({
+        data: {
+          adminId,
+          title: dto.title,
+          description: dto.description,
+          developer: dto.developer,
+          publisher: dto.publisher,
+          systemRequirements: dto.systemRequirements,
+          tags: dto.tags,
+          media: [upload.url],
+          productVariants: dto.variants ? {
+            create: dto.variants.map(v => ({
+              storeId: v.storeId,
+              typeId: v.typeId,
+              name: v.name,
+              regionId: v.region,
+              languageSupport: v.languageSupport,
+              storePage: v.storePage,
+              price: v.price,
+              ...(v.keys && v.keys.length > 0 ? {
+                keys: {
+                  create: v.keys.map(code => ({ code }))
+                }
+              } : {})
+            }))
+          } : undefined
+        },
+      });
+      return product;
+    } catch (e) {
+      // If db fails, optionally delete the orphaned blob here
+      throw e;
+    }
   }
 
   async updateProduct(id: number, adminId: string, dto: UpdateAdminProductDto) {
