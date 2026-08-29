@@ -55,6 +55,8 @@ export default function ProductsPage() {
               <th scope="col" className="px-6 py-3">Title</th>
               <th scope="col" className="px-6 py-3">Developer</th>
               <th scope="col" className="px-6 py-3">Publisher</th>
+              <th scope="col" className="px-6 py-3">Status</th>
+              <th scope="col" className="px-6 py-3">Rating</th>
               <th scope="col" className="px-6 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -66,6 +68,16 @@ export default function ProductsPage() {
                 </th>
                 <td className="px-6 py-4">{product.developer || '-'}</td>
                 <td className="px-6 py-4">{product.publisher || '-'}</td>
+                <td className="px-6 py-4">
+                  <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                    product.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                    product.status === 'INACTIVE' ? 'bg-red-100 text-red-800' :
+                    'bg-amber-100 text-amber-800'
+                  }`}>
+                    {product.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4">{product.rating || '-'}</td>
                 <td className="px-6 py-4 text-right space-x-2">
                   <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
                     <Edit2 className="w-4 h-4" />

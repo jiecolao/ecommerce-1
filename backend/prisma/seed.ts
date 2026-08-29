@@ -9,30 +9,42 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('Seeding database...');
+  console.log('Wiping database before seeding...');
 
-  // Upsert Admin
+  // Delete in dependency order
+  await prisma.logs.deleteMany();
+  await prisma.wishlist.deleteMany();
+  await prisma.key.deleteMany();
+  await prisma.productVariant.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.paymentMethod.deleteMany();
+  await prisma.store.deleteMany();
+  await prisma.type.deleteMany();
+  await prisma.region.deleteMany();
+  await prisma.customer.deleteMany();
+  await prisma.admin.deleteMany();
+
+  console.log('Seeding database lookup tables...');
+
+  // Seed Admin
   const adminId = '22222222-2222-2222-2222-222222222222';
-  await prisma.admin.upsert({
-    where: { id: adminId },
-    update: {},
-    create: {
+  await prisma.admin.create({
+    data: {
       id: adminId,
       email: 'demo-admin@example.com',
       name: 'Demo Admin',
     },
   });
 
-  // Upsert Buyer
-  const buyerId = '11111111-1111-1111-1111-111111111111';
-  await prisma.buyer.upsert({
-    where: { id: buyerId },
-    update: {},
-    create: {
-      id: buyerId,
-      email: 'demo-buyer@example.com',
+  // Seed Customer
+  const customerId = '11111111-1111-1111-1111-111111111111';
+  await prisma.customer.create({
+    data: {
+      id: customerId,
+      email: 'demo-customer@example.com',
       firstName: 'Demo',
-      lastName: 'Buyer',
+      lastName: 'Customer',
       phone: '0987654321',
       address: '123 Demo St',
     },
@@ -41,30 +53,32 @@ async function main() {
   // Seed Stores
   const stores = ['Steam', 'GOG', 'Epic Games', 'Microsoft Store'];
   for (let i = 0; i < stores.length; i++) {
-    await prisma.store.upsert({
-      where: { id: i + 1 },
-      update: { name: stores[i] },
-      create: { id: i + 1, name: stores[i] },
+    await prisma.store.create({
+      data: { id: i + 1, name: stores[i] },
     });
   }
 
   // Seed Regions
   const regions = ['EU', 'US', 'Asia', 'Global'];
   for (let i = 0; i < regions.length; i++) {
-    await prisma.region.upsert({
-      where: { id: i + 1 },
-      update: { name: regions[i] },
-      create: { id: i + 1, name: regions[i] },
+    await prisma.region.create({
+      data: { id: i + 1, name: regions[i] },
     });
   }
 
   // Seed Types
   const types = ['Game', 'DLC', 'Currency', 'Subscription'];
   for (let i = 0; i < types.length; i++) {
-    await prisma.type.upsert({
-      where: { id: i + 1 },
-      update: { name: types[i] },
-      create: { id: i + 1, name: types[i] },
+    await prisma.type.create({
+      data: { id: i + 1, name: types[i] },
+    });
+  }
+
+  // Seed Payment Methods
+  const paymentMethods = ['QR Ph', 'PayPal', 'Card', 'Google Pay', 'Apple Pay'];
+  for (let i = 0; i < paymentMethods.length; i++) {
+    await prisma.paymentMethod.create({
+      data: { id: i + 1, name: paymentMethods[i] },
     });
   }
 

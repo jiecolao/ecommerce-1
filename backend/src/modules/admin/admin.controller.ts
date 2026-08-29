@@ -80,6 +80,11 @@ export class AdminController {
     const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
     return this.AdminService.getadminReport(adminId);
   }
+
+  @Get('logs')
+  getLogs() {
+    return this.AdminService.getLogs();
+  }
 }
 
 

@@ -44,8 +44,10 @@ export class AdminService {
           developer: dto.developer,
           publisher: dto.publisher,
           systemRequirements: dto.systemRequirements,
-          tags: dto.tags,
+          tags: dto.tags ? dto.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
           media: [upload.url],
+          status: dto.status === 'ACTIVE' ? 'ACTIVE' : dto.status === 'INACTIVE' ? 'INACTIVE' : 'DRAFT',
+          rating: dto.rating || null,
           productVariants: dto.variants ? {
             create: dto.variants.map(v => ({
               storeId: v.storeId,
@@ -53,6 +55,7 @@ export class AdminService {
               name: v.name,
               regionId: v.region,
               languageSupport: v.languageSupport,
+              activationGuide: v.activationGuide || null,
               storePage: v.storePage,
               price: v.price,
               ...(v.keys && v.keys.length > 0 ? {
@@ -64,6 +67,18 @@ export class AdminService {
           } : undefined
         },
       });
+
+      // Audit Log
+      await this.prisma.logs.create({
+        data: {
+          updatedBy: adminId,
+          tableName: 'PRODUCT',
+          recordId: product.id,
+          updateAction: 'CREATE',
+          updateDiff: { old: null, new: product }
+        }
+      });
+
       return product;
     } catch (e) {
       // If db fails, optionally delete the orphaned blob here
@@ -76,12 +91,29 @@ export class AdminService {
     if (!product) throw new NotFoundException('Product not found.');
     if (product.adminId !== adminId) throw new ForbiddenException('This product does not belong to the requesting admin.');
 
-    return this.prisma.product.update({
+    const { tags, status, rating, ...rest } = dto;
+    const updatedProduct = await this.prisma.product.update({
       where: { id },
       data: {
-        ...dto,
+        ...rest,
+        status: status ? (status === 'ACTIVE' ? 'ACTIVE' : status === 'INACTIVE' ? 'INACTIVE' : 'DRAFT') : undefined,
+        rating: rating !== undefined ? rating : undefined,
+        tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : undefined,
       },
     });
+
+    // Audit Log
+    await this.prisma.logs.create({
+      data: {
+        updatedBy: adminId,
+        tableName: 'PRODUCT',
+        recordId: product.id,
+        updateAction: 'UPDATE',
+        updateDiff: { old: product, new: updatedProduct }
+      }
+    });
+
+    return updatedProduct;
   }
 
   async deleteProduct(id: number, adminId: string) {
@@ -91,6 +123,17 @@ export class AdminService {
 
     await this.prisma.$transaction(async (prisma) => {
       await prisma.product.delete({ where: { id } });
+    });
+
+    // Audit Log
+    await this.prisma.logs.create({
+      data: {
+        updatedBy: adminId,
+        tableName: 'PRODUCT',
+        recordId: product.id,
+        updateAction: 'DELETE',
+        updateDiff: { old: product, new: null }
+      }
     });
     
     if (product.media && product.media.length > 0) {
@@ -130,7 +173,7 @@ export class AdminService {
     const topSellingProducts = products
       .map((product) => {
         let quantitySold = product.orders.length; // 1 order = 1 product in this schema
-        let revenueCents = product.orders.reduce((sum, order) => sum + order.totalAmount, 0);
+        let revenueCents = product.orders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
         
         totalOrders += quantitySold;
         totalRevenueCents += revenueCents;
@@ -143,7 +186,7 @@ export class AdminService {
         };
       })
       .sort((a, b) => b.revenueCents - a.revenueCents)
-      .slice(0, 10);
+      .slice(0, 5);
 
     return {
       totalRevenueCents,
@@ -151,7 +194,51 @@ export class AdminService {
       topSellingProducts,
     };
   }
+
+  async getLogs() {
+    const logs = await this.prisma.logs.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        admin: {
+          select: { name: true, email: true }
+        }
+      }
+    });
+
+    return logs.map(log => {
+      let description = '';
+      const diff = log.updateDiff as any;
+      const action = log.updateAction;
+      const tableName = log.tableName;
+
+      if (action === 'CREATE') {
+        const title = diff?.new?.title || 'Unknown Record';
+        description = `Created ${tableName.toLowerCase()} "${title}" (ID: ${log.recordId})`;
+      } else if (action === 'UPDATE') {
+        const oldTitle = diff?.old?.title || 'Unknown Record';
+        const newTitle = diff?.new?.title || oldTitle;
+        const changes: string[] = [];
+        
+        if (diff?.old && diff?.new) {
+          for (const key of Object.keys(diff.new)) {
+            const oldValue = diff.old[key];
+            const newValue = diff.new[key];
+            if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+              changes.push(`changed ${key} from "${oldValue}" to "${newValue}"`);
+            }
+          }
+        }
+        
+        description = `Updated ${tableName.toLowerCase()} "${newTitle}" (ID: ${log.recordId}): ${changes.join(', ') || 'no values changed'}`;
+      } else if (action === 'DELETE') {
+        const title = diff?.old?.title || 'Unknown Record';
+        description = `Deleted ${tableName.toLowerCase()} "${title}" (ID: ${log.recordId})`;
+      }
+
+      return {
+        ...log,
+        description,
+      };
+    });
+  }
 }
-
-
-

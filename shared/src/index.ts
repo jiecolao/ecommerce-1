@@ -14,7 +14,9 @@ export interface Product {
   developer?: string;
   publisher?: string;
   systemRequirements?: string;
-  tags?: string;
+  tags?: string[];
+  status: string;
+  rating?: string;
   createdAt: string;
   updatedAt: string;
   productVariants?: ProductVariant[];
@@ -28,6 +30,7 @@ export interface ProductVariant {
   name: string;
   region: number;
   languageSupport: string[];
+  activationGuide?: string;
   storePage?: string;
   price: number;
   createdAt: string;
@@ -41,6 +44,8 @@ export interface CreateProductDto {
   publisher?: string;
   systemRequirements?: string;
   tags?: string;
+  status?: string;
+  rating?: string;
   media?: string[];
   variants?: {
     storeId: number;
@@ -48,6 +53,7 @@ export interface CreateProductDto {
     name: string;
     region: number;
     languageSupport: string[];
+    activationGuide?: string;
     storePage?: string;
     price: number;
     keys?: string[];
@@ -65,14 +71,19 @@ export interface ListCatalogQueryDto {
 export interface CheckoutDto {
   productId: number;
   totalAmount: number;
+  discountCode?: string;
 }
 
 export interface Order {
   id: number;
-  buyerId: string;
+  customerId: string;
   productId: number;
   orderDate: string;
   totalAmount: number;
+  discountCode?: string | null;
+  discountAmount?: number;
+  paymentMethodId?: number | null;
+  amountPaid?: number;
   status: string;
   createdAt: string;
   product?: Product; // Populated by relations

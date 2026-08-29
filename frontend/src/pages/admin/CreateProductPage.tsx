@@ -69,10 +69,15 @@ export default function CreateProductPage() {
       return res.data;
     }
   });
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [developer, setDeveloper] = useState('');
   const [publisher, setPublisher] = useState('');
+  const [systemRequirements, setSystemRequirements] = useState('');
+  const [tags, setTags] = useState('');
+  const [status, setStatus] = useState('ACTIVE');
+  const [rating, setRating] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   
   // Variant fields
@@ -81,6 +86,7 @@ export default function CreateProductPage() {
   const [storeId, setStoreId] = useState('');
   const [typeId, setTypeId] = useState('');
   const [region, setRegion] = useState('');
+  const [activationGuide, setActivationGuide] = useState('');
   const [stagedKeys, setStagedKeys] = useState<string[]>([]);
   const [currentKey, setCurrentKey] = useState('');
 
@@ -126,6 +132,10 @@ export default function CreateProductPage() {
       description,
       developer,
       publisher,
+      systemRequirements,
+      tags,
+      status,
+      rating,
       variants: [{
         name: variantName,
         price: Math.round(parseFloat(price) * 100), // convert to cents
@@ -133,6 +143,7 @@ export default function CreateProductPage() {
         typeId: typeId ? parseInt(typeId, 10) : metadata?.types?.[0]?.id,
         region: region ? parseInt(region, 10) : metadata?.regions?.[0]?.id,
         languageSupport: ['English'],
+        activationGuide,
         keys: stagedKeys
       }]
     });
@@ -173,6 +184,31 @@ export default function CreateProductPage() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="status">Publish Status</Label>
+                <select id="status" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm" value={status} onChange={e => setStatus(e.target.value)} required>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                  <option value="DRAFT">DRAFT</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rating">Rating (e.g. 9/10)</Label>
+                <Input id="rating" value={rating} onChange={e => setRating(e.target.value)} placeholder="e.g. 9/10, 85%" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Input id="tags" value={tags} onChange={e => setTags(e.target.value)} placeholder="e.g. RPG, Action, Indie" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="systemRequirements">System Requirements</Label>
+              <Input id="systemRequirements" value={systemRequirements} onChange={e => setSystemRequirements(e.target.value)} placeholder="Minimum & Recommended hardware specs" />
+            </div>
+
             <div className="pt-4 border-t border-slate-200">
               <h3 className="text-lg font-medium text-slate-900 mb-4">Initial Variant</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -207,6 +243,10 @@ export default function CreateProductPage() {
                       <option key={r.id} value={r.id}>{r.name}</option>
                     ))}
                   </select>
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="activationGuide">Activation Guide</Label>
+                  <Input id="activationGuide" value={activationGuide} onChange={e => setActivationGuide(e.target.value)} placeholder="Instructions on how to activate key" />
                 </div>
               </div>
               
@@ -251,5 +291,3 @@ export default function CreateProductPage() {
     </div>
   );
 }
-
-

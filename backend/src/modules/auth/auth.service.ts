@@ -54,7 +54,7 @@ export class AuthService {
           }
         });
       } else {
-        await this.prisma.buyer.create({
+        await this.prisma.customer.create({
           data: {
             id: userId,
             email: email,

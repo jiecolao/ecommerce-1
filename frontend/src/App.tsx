@@ -4,6 +4,7 @@ import CatalogPage from './pages/buyer/CatalogPage';
 import ProductDetailsPage from './pages/buyer/ProductDetailsPage';
 import CheckoutPage from './pages/buyer/CheckoutPage';
 import OrdersPage from './pages/buyer/OrdersPage';
+import WishlistPage from './pages/buyer/WishlistPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import ProductsPage from './pages/admin/ProductsPage';
 import CreateProductPage from './pages/admin/CreateProductPage';
@@ -25,6 +26,7 @@ function App() {
             <Route path="/product/:id" element={<ProductDetailsPage />} />
             <Route path="/checkout/:id" element={<CheckoutPage />} />
             <Route path="/buyer/orders" element={<OrdersPage />} />
+            <Route path="/buyer/wishlist" element={<WishlistPage />} />
             
             {/* admin Routes */}
             <Route path="/admin/dashboard" element={<DashboardPage />} />

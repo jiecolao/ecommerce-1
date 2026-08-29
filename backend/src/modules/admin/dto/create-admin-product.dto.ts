@@ -21,6 +21,10 @@ export class CreateProductVariantDto {
 
   @IsOptional()
   @IsString()
+  activationGuide?: string;
+
+  @IsOptional()
+  @IsString()
   storePage?: string;
 
   @IsInt()
@@ -55,6 +59,14 @@ export class CreateAdminProductDto {
   @IsOptional()
   @IsString()
   tags?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  rating?: string;
 
   @IsOptional()
   @IsArray()

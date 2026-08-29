@@ -10,11 +10,14 @@ export class CatalogService {
     const limit = query.limit ?? 20;
 
     return this.prisma.product.findMany({
-      where: query.search
-        ? {
-          title: { contains: query.search, mode: 'insensitive' },
-        }
-        : undefined,
+      where: {
+        status: 'ACTIVE',
+        ...(query.search
+          ? {
+              title: { contains: query.search, mode: 'insensitive' },
+            }
+          : {}),
+      },
       take: limit,
       select: { id: true, title: true, media: true, productVariants: { select: { price: true } } },
       orderBy: { title: 'desc' },
@@ -23,7 +26,7 @@ export class CatalogService {
 
   async getProductById(id: number) {
     return this.prisma.product.findUnique({
-      where: { id },
+      where: { id, status: 'ACTIVE' },
       include: { admin: true, productVariants: true },
     });
   }

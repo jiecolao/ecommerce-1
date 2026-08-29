@@ -27,6 +27,14 @@ export class UpdateAdminProductDto {
   tags?: string;
 
   @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  rating?: string;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   media?: string[];

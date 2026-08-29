@@ -36,6 +36,9 @@ export default function Navbar() {
           <nav className="flex items-center">
             {!isAdmin ? (
               <>
+                <Link to="/buyer/wishlist" className="text-sm font-medium text-slate-600 hover:text-slate-900 mr-4">
+                  Wishlist
+                </Link>
                 <Link to="/buyer/orders" className="text-sm font-medium text-slate-600 hover:text-slate-900 mr-4">
                   My Games
                 </Link>
