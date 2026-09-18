@@ -9,6 +9,7 @@ import { BuyerModule } from './modules/buyer/buyer.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { SteamModule } from './integrations/steam/steam.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthModule } from './modules/auth/auth.module';
     AdminModule,
     AnalyticsModule,
     AuthModule,
+    SteamModule
   ],
 })
 export class AppModule { }
