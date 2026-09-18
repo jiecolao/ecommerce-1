@@ -18,54 +18,55 @@ export default function DashboardPage() {
     queryFn: fetchReport,
   });
 
-  if (isLoading) return <div className="text-center py-10">Loading dashboard...</div>;
-  if (!report) return <div className="text-center py-10 text-red-500">Failed to load reports.</div>;
+  if (isLoading) return <div className="font-display py-16 text-center text-[#f4b72b]">Loading dashboard...</div>;
+  if (!report) return <div className="font-display py-16 text-center text-[#ff5c80]">Failed to load reports.</div>;
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Seller Dashboard</h1>
-        <p className="mt-2 text-lg text-slate-600">Overview of your store performance.</p>
+        <span className="comic-kicker mb-5">Seller command</span>
+        <h1 className="comic-title text-4xl font-black">Seller Dashboard</h1>
+        <p className="mt-3 text-lg text-[#a99bb5]">Overview of your store performance.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="w-4 h-4 text-slate-500" />
+            <CardTitle className="text-sm font-medium text-[#67e8f9]">Total Revenue</CardTitle>
+            <DollarSign className="h-5 w-5 text-[#f4b72b]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(report.totalRevenueCents / 100).toFixed(2)}</div>
+            <div className="font-display text-2xl font-bold text-white">${(report.totalRevenueCents / 100).toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <ShoppingBag className="w-4 h-4 text-slate-500" />
+            <CardTitle className="text-sm font-medium text-[#67e8f9]">Total Orders</CardTitle>
+            <ShoppingBag className="h-5 w-5 text-[#f4b72b]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{report.totalOrders}</div>
+            <div className="font-display text-2xl font-bold text-white">+{report.totalOrders}</div>
           </CardContent>
         </Card>
       </div>
 
       <div>
-        <h3 className="text-xl font-bold mb-4">Top Selling Games</h3>
+        <h3 className="comic-title mb-5 text-xl font-bold">Top Selling Games</h3>
         <Card>
           <CardContent className="p-0">
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-[#382548]">
               {report.topSellingProducts.length === 0 ? (
-                <div className="p-6 text-center text-slate-500">No sales yet.</div>
+                <div className="p-6 text-center text-[#8f819b]">No sales yet.</div>
               ) : (
                 report.topSellingProducts.map(p => (
                   <div key={p.productId} className="flex items-center justify-between p-6">
                     <div className="flex items-center space-x-4">
-                      <div className="bg-slate-100 p-2 rounded-md">
-                        <Package className="w-5 h-5 text-slate-600" />
+                      <div className="bg-[#7115c4] p-2">
+                        <Package className="h-5 w-5 text-white" />
                       </div>
-                      <div className="font-medium text-slate-900">{p.title}</div>
+                      <div className="font-medium text-white">{p.title}</div>
                     </div>
-                    <div className="font-semibold">{p.quantitySold} sold</div>
+                    <div className="font-display text-xs font-semibold uppercase text-[#f4b72b]">{p.quantitySold} sold</div>
                   </div>
                 ))
               )}

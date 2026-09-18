@@ -59,20 +59,21 @@ export default function CheckoutPage() {
     });
   };
 
-  if (isLoading) return <div className="text-center py-10">Preparing checkout...</div>;
-  if (!product) return <div className="text-center py-10">Product not found.</div>;
+  if (isLoading) return <div className="font-display py-16 text-center text-[#f4b72b]">Preparing checkout...</div>;
+  if (!product) return <div className="font-display py-16 text-center text-[#ff5c80]">Product not found.</div>;
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
+    <div className="mx-auto max-w-2xl py-8">
+      <span className="comic-kicker mb-7">Secure checkout</span>
       <Card>
         <CardHeader>
           <CardTitle>Checkout</CardTitle>
           <CardDescription>Review your order and enter billing details.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between items-center py-4 border-b border-slate-200 mb-6">
-            <div className="font-semibold text-slate-900">{product.title}</div>
-            <div className="font-bold">${(product.priceCents / 100).toFixed(2)}</div>
+          <div className="mb-6 flex items-center justify-between border-y border-[#49345d] bg-[#0d0912] px-4 py-5">
+            <div className="font-semibold text-white">{product.title}</div>
+            <div className="font-display font-bold text-[#f4b72b]">${(product.priceCents / 100).toFixed(2)}</div>
           </div>
           
           <form onSubmit={handleCheckout} className="space-y-4">

@@ -41,7 +41,8 @@ export default function CreateProductPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
+    <div className="mx-auto max-w-2xl py-8">
+      <span className="comic-kicker mb-7">New listing</span>
       <Card>
         <CardHeader>
           <CardTitle>Add New Game Key</CardTitle>

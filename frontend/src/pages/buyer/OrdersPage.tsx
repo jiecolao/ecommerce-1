@@ -19,19 +19,20 @@ export default function OrdersPage() {
     queryFn: fetchOrders,
   });
 
-  if (isLoading) return <div className="text-center py-10">Loading your games...</div>;
-  if (error) return <div className="text-center py-10 text-red-500">Failed to load orders.</div>;
+  if (isLoading) return <div className="font-display py-16 text-center text-[#f4b72b]">Loading your games...</div>;
+  if (error) return <div className="font-display py-16 text-center text-[#ff5c80]">Failed to load orders.</div>;
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">My Games Library</h1>
-        <p className="mt-2 text-lg text-slate-600">Access your purchased game keys here.</p>
+        <span className="comic-kicker mb-5">Player vault</span>
+        <h1 className="comic-title text-4xl font-black">My Games Library</h1>
+        <p className="mt-3 text-lg text-[#a99bb5]">Access your purchased game keys here.</p>
       </div>
 
       <div className="space-y-6">
         {orders?.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 bg-white rounded-lg border border-slate-200">
+          <div className="comic-panel py-12 text-center text-[#a99bb5]">
             You haven't bought any games yet.
           </div>
         ) : (
@@ -40,20 +41,20 @@ export default function OrdersPage() {
               <CardHeader>
                 <CardTitle>Order #{order.id.slice(0, 8)}</CardTitle>
                 <CardDescription>
-                  Placed on {new Date(order.createdAt).toLocaleDateString()} • Total: ${(order.totalCents / 100).toFixed(2)}
+                  Placed on {new Date(order.createdAt).toLocaleDateString()} | Total: ${(order.totalCents / 100).toFixed(2)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {order.items.map(item => (
-                    <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
+                    <div key={item.id} className="flex items-center justify-between border border-[#382548] bg-[#0d0912] p-4">
                       <div className="flex items-center space-x-4">
-                        <div className="bg-slate-200 p-3 rounded-md">
-                          <KeyRound className="w-6 h-6 text-slate-500" />
+                        <div className="bg-[#7115c4] p-3">
+                          <KeyRound className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-900">{item.product?.title || 'Unknown Game'}</div>
-                          <div className="text-sm text-slate-500">Qty: {item.quantity}</div>
+                          <div className="font-semibold text-white">{item.product?.title || 'Unknown Game'}</div>
+                          <div className="text-sm text-[#8f819b]">Qty: {item.quantity}</div>
                         </div>
                       </div>
                       <Button variant="outline" onClick={() => alert(`Your Game Key for ${item.product?.title}:\nXXXX-XXXX-XXXX-XXXX`)}>

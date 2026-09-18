@@ -31,14 +31,15 @@ export default function ProductsPage() {
     }
   });
 
-  if (isLoading) return <div className="text-center py-10">Loading products...</div>;
+  if (isLoading) return <div className="font-display py-16 text-center text-[#f4b72b]">Loading products...</div>;
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">Manage Keys</h1>
-          <p className="mt-2 text-lg text-slate-600">Add, edit, or remove game keys.</p>
+          <span className="comic-kicker mb-5">Inventory</span>
+          <h1 className="comic-title text-4xl font-black">Manage Keys</h1>
+          <p className="mt-3 text-lg text-[#a99bb5]">Add, edit, or remove game keys.</p>
         </div>
         <Link to="/seller/products/new">
           <Button className="flex items-center space-x-2">
@@ -48,9 +49,9 @@ export default function ProductsPage() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm text-left text-slate-500">
-          <thead className="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+      <div className="comic-panel overflow-x-auto">
+        <table className="w-full min-w-[720px] text-left text-sm text-[#b9adc4]">
+          <thead className="font-display border-b border-[#49345d] bg-[#22112f] text-[10px] uppercase text-[#67e8f9]">
             <tr>
               <th scope="col" className="px-6 py-3">Title</th>
               <th scope="col" className="px-6 py-3">Price</th>
@@ -61,27 +62,27 @@ export default function ProductsPage() {
           </thead>
           <tbody>
             {products?.map(product => (
-              <tr key={product.id} className="bg-white border-b hover:bg-slate-50">
-                <th scope="row" className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
+              <tr key={product.id} className="border-b border-[#382548] bg-[#130d1b] hover:bg-[#1c1226]">
+                <th scope="row" className="whitespace-nowrap px-6 py-4 font-medium text-white">
                   {product.title}
                 </th>
                 <td className="px-6 py-4">${(product.priceCents / 100).toFixed(2)}</td>
                 <td className="px-6 py-4">{product.inventoryCount}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    product.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
+                  <span className={`font-display border px-2 py-1 text-[9px] font-semibold ${
+                    product.status === 'PUBLISHED' ? 'border-[#22d3ee] bg-[#10252a] text-[#67e8f9]' : 'border-[#72558a] bg-[#1c1226] text-[#b9adc4]'
                   }`}>
                     {product.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right space-x-2">
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                  <Button variant="ghost" size="sm" className="text-[#67e8f9]">
                     <Edit2 className="w-4 h-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-[#ff5c80] hover:bg-[#2c0d18]"
                     onClick={() => {
                       if (window.confirm('Are you sure?')) {
                         deleteMutation.mutate(product.id);
