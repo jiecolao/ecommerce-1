@@ -10,6 +10,10 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { SteamModule } from './integrations/steam/steam.module';
+import { RawgModule } from './integrations/rawg/rawg.module';
+import { OpencriticModule } from './integrations/opencritic/opencritic.module';
+import { IgdbModule } from './integrations/igdb/igdb.module';
+import { CheapsharkModule } from './integrations/cheapshark/cheapshark.module';
 
 @Module({
   imports: [
@@ -25,7 +29,11 @@ import { SteamModule } from './integrations/steam/steam.module';
     AdminModule,
     AnalyticsModule,
     AuthModule,
-    SteamModule
+    SteamModule,
+    RawgModule,
+    OpencriticModule,
+    IgdbModule,
+    CheapsharkModule
   ],
 })
 export class AppModule { }
