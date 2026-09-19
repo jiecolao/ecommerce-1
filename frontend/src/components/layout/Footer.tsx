@@ -1,15 +1,15 @@
-import { KeyRound, Mail } from 'lucide-react';
+import { Gamepad2, KeyRound, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const socialIcons = [
   { id: 'x-icon', label: 'X' },
-  { id: 'discord-icon', label: 'Discord' },
+  { id: null, label: 'Steam' },
   { id: 'github-icon', label: 'GitHub' },
 ];
 
 export default function Footer() {
   return (
-    <footer className="mt-20 border-t border-[#49345d] bg-[#171419]">
+    <footer className="mt-20 border-t border-[#49345d] bg-[#171419] print:hidden">
       <div className="mx-auto grid max-w-[1440px] gap-10 px-5 py-12 sm:px-8 md:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_0.8fr_1.4fr]">
         <div>
           <Link to="/catalog" className="flex items-center gap-3 text-white">
@@ -22,9 +22,7 @@ export default function Footer() {
           <div className="mt-6 flex gap-3">
             {socialIcons.map((social) => (
               <a key={social.id} href="#" aria-label={social.label} className="grid h-9 w-9 place-items-center bg-[#f4b72b] transition-transform hover:-translate-y-1">
-                <svg className="h-4 w-4" aria-hidden="true">
-                  <use href={`/icons.svg#${social.id}`} />
-                </svg>
+                {social.id ? <svg className="h-4 w-4" aria-hidden="true"><use href={`/icons.svg#${social.id}`} /></svg> : <Gamepad2 className="h-4 w-4 text-[#171419]" />}
               </a>
             ))}
           </div>
@@ -43,8 +41,9 @@ export default function Footer() {
         <div>
           <h2 className="font-display text-xs font-bold uppercase text-white">Support</h2>
           <nav className="mt-5 flex flex-col gap-3 text-sm text-[#a99bb5]">
-            <a href="#" className="hover:text-[#f4b72b]">FAQ</a>
-            <a href="#" className="hover:text-[#f4b72b]">Contact Us</a>
+            <Link to="/about" className="hover:text-[#f4b72b]">About MystiKeys</Link>
+            <Link to="/faq" className="hover:text-[#f4b72b]">FAQ</Link>
+            <Link to="/contact" className="hover:text-[#f4b72b]">Contact Us</Link>
             <a href="#" className="hover:text-[#f4b72b]">Refund Policy</a>
             <a href="#" className="hover:text-[#f4b72b]">How to Activate</a>
           </nav>
