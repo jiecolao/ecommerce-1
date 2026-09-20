@@ -2,13 +2,12 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { SteamService } from './steam.service';
 
-@Controller('steam') // This sets the base route to /steam
+@Controller('steam')
 export class SteamController {
   constructor(private readonly steamService: SteamService) {}
 
-  @Get(':id') // This catches requests like /steam/570
+  @Get(':id/info')
   async getGameInfo(@Param('id') id: string) {
-    // Passes the ID (e.g., '570') to your service and returns the data
     return this.steamService.getGameDetails(id);
   }
 

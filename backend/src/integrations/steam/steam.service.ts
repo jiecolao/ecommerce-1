@@ -13,7 +13,6 @@ export class SteamService {
     const url = `https://store.steampowered.com/api/appdetails?appids=${steamAppId}`;
 
     try {
-      // firstValueFrom converts the RxJS Observable from HttpModule into a standard Promise
       const response = await firstValueFrom(this.httpService.get(url));
       const data = response.data;
 
