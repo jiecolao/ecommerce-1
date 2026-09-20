@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { join } from 'path';
 
 import { PrismaModule } from './integrations/prisma/prisma.module';
 import { SupabaseModule } from './integrations/supabase/supabase.module';
@@ -19,7 +20,6 @@ import { CheapsharkModule } from './integrations/cheapshark/cheapshark.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
     }),
     PrismaModule,
     SupabaseModule,
