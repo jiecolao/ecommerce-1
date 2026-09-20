@@ -1,20 +1,17 @@
-import { Controller, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
-import { OpenCriticService } from './opencritic.service.spec';
+import { Controller, Get, Param } from "@nestjs/common";
+import { OpencriticService } from "./opencritic.service";
 
-@Controller('games')
-export class OpenCriticController {
-  constructor(private readonly openCriticService: OpenCriticService) {}
-
-  @Get('search')
-  async search(@Query('q') query: string) {
-    if (!query) {
-      return { message: 'Please provide a search query using the ?q= parameter' };
-    }
-    return this.openCriticService.searchGames(query);
+@Controller('opencritic')
+export class OpencriticController {
+  constructor(private readonly opencriticService: OpencriticService) {}
+  
+  @Get(':id/info')
+  async getGameInfo(@Param('id') id: string){
+    return this.opencriticService.getGameInfo(id);
   }
 
-  @Get(':id')
-  async getGame(@Param('id', ParseIntPipe) id: number) {
-    return this.openCriticService.getGameDetails(id);
+  @Get(':id/reviews')
+  async getGameReviews(@Param('id') id: string){
+    return this.opencriticService.getGameReviews(id);
   }
 }
