@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../lib/api';
 
@@ -11,7 +11,36 @@ export function Auth() {
   const [role, setRole] = useState<'buyer' | 'admin'>('buyer');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [authStatus, setAuthStatus] = useState<string>('Checking status...');
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check for email verification callback (hash fragments)
+    const hashParams = new URLSearchParams(location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+    
+    if (accessToken && type === 'signup') {
+      localStorage.setItem('auth_token', accessToken);
+      setAuthStatus('Auth Verified! Email confirmed successfully.');
+      setVerifiedEmail('Verified User');
+      
+      // Clear hash to prevent accidental re-use
+      window.history.replaceState(null, '', location.pathname);
+      return;
+    }
+
+    // Check general auth status from localStorage for simulation
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      setAuthStatus('Logged in (Simulated Status)');
+    } else {
+      setAuthStatus('Not logged in');
+    }
+  }, [location]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,17 +55,18 @@ export function Auth() {
           firstName,
           lastName
         });
-        alert('Check your email for the login link! Or if auto-confirm is enabled, please login.');
+        alert('Signup initiated. Please check your email for the verification link if SMTP is configured, otherwise you might need to auto-confirm.');
+        setAuthStatus('Signup complete. Waiting for verification.');
       } else {
         const res = await axios.post(`${API_URL}/auth/login`, {
           email,
           password,
         });
         
-        // If login returns token, we can store it or use it as needed
         const token = res.data?.session?.access_token || res.data?.token;
         if (token) {
           localStorage.setItem('auth_token', token);
+          setAuthStatus(`Logged in successfully as ${role}`);
         }
         
         navigate('/');
@@ -48,11 +78,35 @@ export function Auth() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    setAuthStatus('Logged out');
+    setVerifiedEmail(null);
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-xl shadow-2xl">
-        <h2 className="text-3xl font-bold text-center text-blue-400">Welcome to GameKeys</h2>
+    <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white p-4">
+      <div className="w-full max-w-xl p-8 space-y-6 bg-gray-800 rounded-xl shadow-2xl">
+        <h2 className="text-3xl font-bold text-center text-blue-400">Auth Hub & Role Simulation</h2>
         
+        {/* Status Section */}
+        <div className="p-4 bg-gray-700 rounded-lg border border-gray-600">
+          <h3 className="text-lg font-semibold text-gray-200 mb-2">Current Status</h3>
+          <p className="text-sm text-gray-300">Status: <span className="font-bold text-blue-400">{authStatus}</span></p>
+          {verifiedEmail && (
+            <p className="text-sm text-green-400 mt-1">✓ {verifiedEmail}</p>
+          )}
+          
+          <div className="mt-4 flex gap-2">
+            <button 
+              onClick={handleLogout}
+              className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded transition"
+            >
+              Simulate Logout
+            </button>
+          </div>
+        </div>
+
         <form className="space-y-4" onSubmit={handleAuth}>
           {!isLogin && (
             <>
@@ -78,19 +132,24 @@ export function Auth() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400">Account Type</label>
-                <select
-                  className="w-full px-4 py-2 mt-1 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as 'buyer' | 'admin')}
-                >
-                  <option value="buyer">Buyer</option>
-                  <option value="admin">Admin / Seller</option>
-                </select>
-              </div>
             </>
           )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Simulate Role (Admin / Customer)</label>
+            <select
+              className="w-full px-4 py-2 mt-1 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={role}
+              onChange={(e) => setRole(e.target.value as 'buyer' | 'admin')}
+            >
+              <option value="buyer">Customer (Buyer)</option>
+              <option value="admin">Admin (Seller)</option>
+            </select>
+            <p className="text-xs text-gray-400 mt-1">
+              Select which role you want to authenticate as for this simulation.
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-400">Email</label>
             <input
@@ -118,7 +177,7 @@ export function Auth() {
               disabled={loading}
               className="w-full px-4 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Sign Up'}
+              {loading ? 'Loading...' : isLogin ? 'Sign In as Selected Role' : 'Sign Up as Selected Role'}
             </button>
             <button
               type="button"

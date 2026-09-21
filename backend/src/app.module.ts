@@ -14,7 +14,7 @@ import { SteamModule } from './integrations/steam/steam.module';
 import { RawgModule } from './integrations/rawg/rawg.module';
 import { OpencriticModule } from './integrations/opencritic/opencritic.module';
 import { IgdbModule } from './integrations/igdb/igdb.module';
-import { CheapsharkModule } from './integrations/cheapshark/cheapshark.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -33,7 +33,7 @@ import { CheapsharkModule } from './integrations/cheapshark/cheapshark.module';
     RawgModule,
     OpencriticModule,
     IgdbModule,
-    CheapsharkModule
+    MailModule
   ],
 })
 export class AppModule { }

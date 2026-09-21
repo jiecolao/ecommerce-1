@@ -41,33 +41,8 @@ export class AuthService {
       throw new InternalServerErrorException('User creation failed in Supabase');
     }
 
-    const userId = data.user.id;
-
-    // 2. Sync to Prisma Database
-    try {
-      if (role === 'admin') {
-        await this.prisma.admin.create({
-          data: {
-            id: userId,
-            email: email,
-            name: `${firstName} ${lastName}`.trim(),
-          }
-        });
-      } else {
-        await this.prisma.customer.create({
-          data: {
-            id: userId,
-            email: email,
-            firstName,
-            lastName,
-          }
-        });
-      }
-    } catch (e: any) {
-      // Note: Ideally, if this fails, we would roll back the Supabase user creation via admin API.
-      console.error('Failed to sync user to Prisma:', e.message);
-    }
-
+    // 2. Sync to Prisma Database is now handled by a PostgreSQL Trigger on auth.users
+    
     return { message: 'User created successfully', user: data.user, session: data.session };
   }
 
