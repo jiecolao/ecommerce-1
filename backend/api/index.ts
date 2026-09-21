@@ -1,20 +1,12 @@
 import 'reflect-metadata';
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-
-// Dummy requires to ensure Vercel's Node File Trace (NFT) includes these dependencies
-if (process.env.NODE_ENV === 'never') {
-  require('@nestjs/core');
-  require('@nestjs/common');
-}
 
 let cachedServer: any;
 
 async function bootstrap() {
   if (!cachedServer) {
-    // Use dynamic import to prevent CommonJS transpilation from using require() on ESM modules
-    const { NestFactory } = await eval(`import('@nestjs/core')`);
-    const { ValidationPipe } = await eval(`import('@nestjs/common')`);
-    
     const app = await NestFactory.create(AppModule);
     
     app.enableCors({
