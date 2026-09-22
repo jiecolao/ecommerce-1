@@ -1,13 +1,15 @@
 ---
 name: mystikeys-ui
-description: Build or refine MystiKeys React frontend pages and components using the project's established comic storefront theme, layout conventions, assets, and interaction patterns. Use for MystiKeys UI work; do not apply this brand system to unrelated projects.
+description: Build or refine MystiKeys React frontend pages and components using the project's established comic storefront theme, layout conventions, assets, and interaction patterns. Use only for frontend UI work; do not apply this brand system to backend, shared, deployment, or unrelated project work.
 ---
 
 # MystiKeys UI
 
+These instructions are agent-agnostic. If an AI coding agent does not support Codex skills directly, treat this file and its references as plain frontend project guidance.
+
 Maintain a cohesive, colorful comic-game storefront without drifting into neon, cyberpunk, generic SaaS, or marketing-page styling.
 
-Before editing, inspect the relevant route, shared components, and existing assets. Reuse the app's React, Tailwind, React Router, Lucide, and shared component patterns. Preserve working data and backend boundaries unless the request explicitly changes them.
+Use this skill only for MystiKeys frontend work. Before editing, inspect the relevant route, shared components, and existing assets. Reuse the app's React, Tailwind, React Router, Lucide, and shared component patterns. Preserve working data and backend boundaries unless the request explicitly changes them.
 
 Read [references/design-system.md](references/design-system.md) before making visual or interaction decisions.
 
