@@ -26,6 +26,13 @@ import CustomersPage from './pages/seller/CustomersPage';
 import ActivityLogsPage from './pages/seller/ActivityLogsPage';
 import PromoTestPage from './pages/PromoTestPage';
 import { Toaster } from './components/ui/toaster';
+import CatalogPageOriginal from './pages/test/CatalogPageOriginal';
+import ProductDetailsPageOriginal from './pages/test/ProductDetailsPageOriginal';
+import CheckoutPageOriginal from './pages/test/CheckoutPageOriginal';
+import OrdersPageOriginal from './pages/test/OrdersPageOriginal';
+import DashboardPageOriginal from './pages/test/DashboardPageOriginal';
+import ProductsPageOriginal from './pages/test/ProductsPageOriginal';
+import CreateProductPageOriginal from './pages/test/CreateProductPageOriginal';
 
 const DashboardPage = lazy(() => import('./pages/seller/DashboardPage'));
 
@@ -33,7 +40,7 @@ function AppShell() {
   const location = useLocation();
   const isCatalog = location.pathname === '/catalog' || location.pathname === '/';
   const isAuth = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].includes(location.pathname);
-  const isSeller = location.pathname.startsWith('/seller');
+  const isSeller = location.pathname.startsWith('/seller') || location.pathname.startsWith('/test/seller');
 
   return (
     <>
@@ -71,6 +78,15 @@ function AppShell() {
             <Route path="/seller/orders" element={<SellerOrdersPage />} />
             <Route path="/seller/customers" element={<CustomersPage />} />
             <Route path="/seller/activity-logs" element={<ActivityLogsPage />} />
+
+            {/* Test Routes — original team's pages preserved for reference */}
+            <Route path="/test/catalog" element={<CatalogPageOriginal />} />
+            <Route path="/test/product/:id" element={<ProductDetailsPageOriginal />} />
+            <Route path="/test/checkout/:id" element={<CheckoutPageOriginal />} />
+            <Route path="/test/orders" element={<OrdersPageOriginal />} />
+            <Route path="/test/seller/dashboard" element={<DashboardPageOriginal />} />
+            <Route path="/test/seller/products" element={<ProductsPageOriginal />} />
+            <Route path="/test/seller/products/new" element={<CreateProductPageOriginal />} />
           </Routes>
         </main>
         {!isAuth && !isSeller && <Footer />}
