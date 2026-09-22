@@ -1,12 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #3b82f6;
-  --color-secondary: #8b5cf6;
+  --color-primary: #f4b72b;
+  --color-secondary: #7115c4;
+  --font-display: "Orbitron", sans-serif;
+  --font-sans: "Space Grotesk", sans-serif;
 }
 
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background: #1c191f;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply m-0 bg-[#1c191f] font-sans text-[#f4eef9];
+    background-image: radial-gradient(rgba(244, 183, 43, 0.06) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  ::selection {
+    background: #f4b72b;
+    color: #09060d;
+  }
+}
+
+@layer components {
+  .app-page {
+    @apply mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10;
+  }
+
+  .comic-title {
+    @apply font-display uppercase text-white;
+    text-shadow: 3px 3px 0 #7115c4;
+  }
+
+  .comic-panel {
+    border: 1px solid #49345d;
+    background: #252028;
+    box-shadow: 7px 7px 0 #2c0c46;
+  }
+
+  .comic-kicker {
+    @apply font-display inline-flex bg-[#f4b72b] px-4 py-2 text-[10px] font-black uppercase text-[#09060d];
+    clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%, 7% 50%);
+  }
+
+  .catalog-tab {
+    @apply font-display h-12 min-w-32 border border-[#49345d] bg-[#1e1627] px-6 text-[11px] font-bold uppercase text-[#d8d0df] transition-all;
+    clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  }
+
+  .catalog-tab:hover {
+    border-color: #f4b72b;
+    color: #ffe29a;
+    box-shadow: inset 0 -3px 0 #f4b72b;
+  }
+
+  .catalog-tab-active {
+    border-color: #f4b72b;
+    background: #f4b72b;
+    color: #09060d;
+    box-shadow: 4px 4px 0 #7115c4;
+  }
+
+  .catalog-tab-active:hover {
+    border-color: #ffd45e;
+    background: #ffd45e;
+    color: #09060d;
+    box-shadow: 4px 4px 0 #7115c4;
+  }
+
+  .product-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    clip-path: polygon(0 20px, 100% 0, 100% 100%, 0 100%);
+    filter: drop-shadow(6px 7px 0 #2c0c46);
+    transition: transform 180ms ease, filter 180ms ease;
+  }
+
+  .product-card:hover {
+    z-index: 2;
+    transform: translate(-2px, -7px) rotate(-0.25deg);
+    filter: drop-shadow(9px 11px 0 #2c0c46);
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .product-card::after,
+  .product-card img {
+    animation: none !important;
+    transition: none !important;
   }
 }
