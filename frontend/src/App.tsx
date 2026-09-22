@@ -26,6 +26,7 @@ import CustomersPage from './pages/seller/CustomersPage';
 import ActivityLogsPage from './pages/seller/ActivityLogsPage';
 import PromoTestPage from './pages/PromoTestPage';
 import { Toaster } from './components/ui/toaster';
+import { Auth } from './pages/auth/Auth';
 import CatalogPageOriginal from './pages/test/CatalogPageOriginal';
 import ProductDetailsPageOriginal from './pages/test/ProductDetailsPageOriginal';
 import CheckoutPageOriginal from './pages/test/CheckoutPageOriginal';
@@ -33,6 +34,9 @@ import OrdersPageOriginal from './pages/test/OrdersPageOriginal';
 import DashboardPageOriginal from './pages/test/DashboardPageOriginal';
 import ProductsPageOriginal from './pages/test/ProductsPageOriginal';
 import CreateProductPageOriginal from './pages/test/CreateProductPageOriginal';
+import AdminDashboardPage from './pages/admin/DashboardPage';
+import AdminProductsPage from './pages/admin/ProductsPage';
+import AdminCreateProductPage from './pages/admin/CreateProductPage';
 
 const DashboardPage = lazy(() => import('./pages/seller/DashboardPage'));
 
@@ -69,6 +73,9 @@ function AppShell() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
 
+            {/* Auth (upstream) */}
+            <Route path="/auth" element={<Auth />} />
+
             {/* Seller Routes */}
             <Route path="/seller" element={<Navigate to="/seller/products" replace />} />
             <Route path="/seller/dashboard" element={<Suspense fallback={<div className="font-display p-10 text-center text-[#f4b72b]">Loading analytics...</div>}><DashboardPage /></Suspense>} />
@@ -78,6 +85,11 @@ function AppShell() {
             <Route path="/seller/orders" element={<SellerOrdersPage />} />
             <Route path="/seller/customers" element={<CustomersPage />} />
             <Route path="/seller/activity-logs" element={<ActivityLogsPage />} />
+
+            {/* Admin Routes (upstream's pages, accessible for reference) */}
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/products" element={<AdminProductsPage />} />
+            <Route path="/admin/products/new" element={<AdminCreateProductPage />} />
 
             {/* Test Routes — original team's pages preserved for reference */}
             <Route path="/test/catalog" element={<CatalogPageOriginal />} />

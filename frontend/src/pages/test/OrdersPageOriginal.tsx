@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import type { Order } from 'shared';
@@ -77,3 +78,4 @@ export default function OrdersPageOriginal() {
     </div>
   );
 }
+

@@ -1,112 +1,194 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DIRECT_URL")
 }
 
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  displayName  String
-  role         UserRole
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  products     Product[]
-  orders       Order[]
+model Admin {
+  id        String    @id @default(uuid()) @db.Uuid
+  email     String    @unique @db.VarChar(255)
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  logs      Logs[]
+  products  Product[]
+}
+
+model Customer {
+  id        String     @id @default(uuid()) @db.Uuid
+  email     String     @unique @db.VarChar(255)
+  firstName String     @map("first_name") @db.VarChar(255)
+  lastName  String     @map("last_name") @db.VarChar(255)
+  phone     String?    @db.VarChar(16)
+  address   String?    @db.VarChar(255)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  orders    Order[]
+  wishlists Wishlist[]
+}
+
+model Wishlist {
+  id         Int      @id @default(autoincrement())
+  customerId String   @map("customer_id") @db.Uuid
+  productId  Int      @map("product_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Product {
-  id             String        @id @default(cuid())
-  sellerId       String
-  title          String
-  description    String
-  priceCents     Int
-  inventoryCount Int
-  isFeatured     Boolean       @default(false)
-  status         ProductStatus @default(DRAFT)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  seller         User          @relation(fields: [sellerId], references: [id])
-  images         ProductImage[]
-  orderItems     OrderItem[]
-
-  @@index([sellerId])
-  @@index([isFeatured])
-}
-
-model ProductImage {
-  id        String   @id @default(cuid())
-  productId String
-  blobUrl   String
-  altText   String
-  createdAt DateTime @default(now())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([productId])
+  id                 Int              @id @default(autoincrement())
+  adminId            String           @map("admin_id") @db.Uuid
+  title              String           @db.VarChar(255)
+  media              String[]
+  description        String
+  developer          String?          @db.VarChar(255)
+  publisher          String?          @db.VarChar(255)
+  systemRequirements String?          @map("system_requirements")
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  rating             String?
+  status             Product_Status   @default(DRAFT)
+  tags               String[]         @db.VarChar(255)
+  orders             Order[]
+  admin              Admin            @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  productVariants    ProductVariant[]
+  wishlists          Wishlist[]
 }
 
 model Order {
-  id               String        @id @default(cuid())
-  buyerId          String
-  status           OrderStatus   @default(PENDING_PAYMENT)
-  subtotalCents    Int
-  shippingCents    Int
-  totalCents       Int
-  paymentReference String
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  buyer            User          @relation(fields: [buyerId], references: [id])
-  items            OrderItem[]
-  invoice          Invoice?
-
-  @@index([buyerId])
-  @@index([createdAt])
+  id              Int            @id @default(autoincrement())
+  customerId      String         @map("customer_id") @db.Uuid
+  productId       Int            @map("product_id")
+  orderDate       DateTime       @default(now()) @map("order_date") @db.Timestamptz(6)
+  totalAmount     Decimal        @map("total_amount") @db.Decimal(10, 2)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  amountPaid      Decimal        @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
+  discountAmount  Decimal        @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  discountCode    String?        @map("discount_code") @db.VarChar(255)
+  paymentMethodId Int?           @map("payment_method_id")
+  status          Order_Status
+  customer        Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  product         Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
-model OrderItem {
-  id             String   @id @default(cuid())
-  orderId        String
-  productId      String
-  quantity       Int
-  unitPriceCents Int
-  lineTotalCents Int
-  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product        Product  @relation(fields: [productId], references: [id])
+model PaymentMethod {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  orders    Order[]
 
-  @@index([orderId])
-  @@index([productId])
+  @@map("Payment_Method")
 }
 
-model Invoice {
-  id           String   @id @default(cuid())
-  orderId      String   @unique
-  invoiceNo    String   @unique
-  issuedAt     DateTime @default(now())
-  billingName  String
-  billingEmail String
-  notes        String
-  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+model Store {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  productVariants ProductVariant[]
 }
 
-enum UserRole {
-  BUYER
-  SELLER
-  ADMIN
+model Type {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  productVariants ProductVariant[]
 }
 
-enum ProductStatus {
+model Region {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  productVariants ProductVariant[]
+}
+
+model ProductVariant {
+  id              Int      @id @default(autoincrement())
+  productId       Int      @map("product_id")
+  storeId         Int      @map("store_id")
+  typeId          Int      @map("type_id")
+  regionId        Int      @map("region_id")
+  name            String   @db.VarChar(255)
+  storePage       String?  @map("store_page") @db.VarChar(255)
+  price           Decimal  @db.Decimal(10, 2)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  activationGuide String?  @map("activation_guide")
+  languageSupport String[] @map("language_support")
+  keys            Key[]
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  region          Region   @relation(fields: [regionId], references: [id])
+  store           Store    @relation(fields: [storeId], references: [id])
+  type            Type     @relation(fields: [typeId], references: [id])
+
+  @@unique([productId, storeId, typeId, name])
+  @@index([storeId])
+  @@index([typeId])
+  @@map("Product_Variant")
+}
+
+model Key {
+  id               Int            @id @default(autoincrement())
+  productVariantId Int            @map("product_variant_id")
+  code             String         @db.VarChar(255)
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  status           Key_Status     @default(AVAILABLE)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+}
+
+model Logs {
+  id           Int           @id @default(autoincrement())
+  tableName    Table_Name    @map("table_name")
+  recordId     Int           @map("record_id")
+  updateAction Update_Action @map("update_action")
+  updateDiff   Json          @map("update_diff")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy    String        @map("updated_by") @db.Uuid
+  admin        Admin         @relation(fields: [updatedBy], references: [id])
+}
+
+enum Product_Status {
+  ACTIVE
+  INACTIVE
   DRAFT
-  PUBLISHED
-  ARCHIVED
 }
 
-enum OrderStatus {
-  PENDING_PAYMENT
-  PAID
-  FULFILLING
-  COMPLETE
-  CANCELLED
+enum Order_Status {
+  COMPLETED
+  REFUNDED
+  PENDING
+}
+
+enum Key_Status {
+  AVAILABLE
+  SOLD
+}
+
+enum Table_Name {
+  ADMIN
+  CUSTOMER
+  PRODUCT
+  PAYMENT_METHOD
+  PRODUCT_VARIANT
+  STORE
+  TYPE
+  REGION
+  KEY
+}
+
+enum Update_Action {
+  CREATE
+  UPDATE
+  DELETE
 }

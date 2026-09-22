@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -118,3 +119,4 @@ export default function ProductsPageOriginal() {
     </div>
   );
 }
+

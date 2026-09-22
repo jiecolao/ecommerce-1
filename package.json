@@ -8,16 +8,31 @@
     "backend",
     "shared"
   ],
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "predev": "npx kill-port 3000 5173",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "test": "turbo run test",
-    "postinstall": "cd backend && npx prisma generate"
+    "test": "turbo run test"
   },
   "devDependencies": {
     "kill-port": "^2.0.1",
     "turbo": "^2.0.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.1.1",
+    "@prisma/config": {
+      "deepmerge-ts": "^8.1.1"
+    },
+    "multer": "^2.4.0",
+    "mysql2": "^3.24.4"
+  },
+  "dependencies": {
+    "@nestjs/axios": "^12.0.1",
+    "@nestjs/mapped-types": "*",
+    "axios": "^1.20.0"
   }
 }

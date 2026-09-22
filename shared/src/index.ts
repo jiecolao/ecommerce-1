@@ -1,10 +1,3 @@
-// User Types
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
 export interface ApiResponse<T> {
   data: T;
   message?: string;
@@ -12,17 +5,34 @@ export interface ApiResponse<T> {
 }
 
 // Product & Catalog Types
-export type ProductStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-
 export interface Product {
-  id: string;
+  id: number;
+  adminId: string;
   title: string;
+  media: string[];
   description: string;
-  priceCents: number;
-  inventoryCount: number;
-  isFeatured: boolean;
-  status: ProductStatus;
-  sellerId: string;
+  developer?: string;
+  publisher?: string;
+  systemRequirements?: string;
+  tags?: string[];
+  status: string;
+  rating?: string;
+  createdAt: string;
+  updatedAt: string;
+  productVariants?: ProductVariant[];
+}
+
+export interface ProductVariant {
+  id: number;
+  productId: number;
+  storeId: number;
+  typeId: number;
+  name: string;
+  region: number;
+  languageSupport: string[];
+  activationGuide?: string;
+  storePage?: string;
+  price: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,10 +40,24 @@ export interface Product {
 export interface CreateProductDto {
   title: string;
   description: string;
-  priceCents: number;
-  inventoryCount: number;
-  isFeatured?: boolean;
-  status?: ProductStatus;
+  developer?: string;
+  publisher?: string;
+  systemRequirements?: string;
+  tags?: string;
+  status?: string;
+  rating?: string;
+  media?: string[];
+  variants?: {
+    storeId: number;
+    typeId: number;
+    name: string;
+    region: number;
+    languageSupport: string[];
+    activationGuide?: string;
+    storePage?: string;
+    price: number;
+    keys?: string[];
+  }[];
 }
 
 export interface UpdateProductDto extends Partial<CreateProductDto> {}
@@ -44,56 +68,36 @@ export interface ListCatalogQueryDto {
 }
 
 // Buyer Types
-export interface CheckoutItemDto {
-  productId: string;
-  quantity: number;
-}
-
 export interface CheckoutDto {
-  billingName: string;
-  billingEmail: string;
-  notes?: string;
-  items: CheckoutItemDto[];
-}
-
-export interface OrderItem {
-  id: string;
-  orderId: string;
-  productId: string;
-  quantity: number;
-  priceCents: number;
-  product?: Product;
+  productId: number;
+  totalAmount: number;
+  discountCode?: string;
 }
 
 export interface Order {
-  id: string;
-  buyerId: string;
-  totalCents: number;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  id: number;
+  customerId: string;
+  productId: number;
+  orderDate: string;
+  totalAmount: number;
+  discountCode?: string | null;
+  discountAmount?: number;
+  paymentMethodId?: number | null;
+  amountPaid?: number;
+  status: string;
   createdAt: string;
-  items: OrderItem[];
+  product?: Product; // Populated by relations
 }
 
-export interface OrderInvoice {
-  orderId: string;
-  buyerName: string;
-  buyerEmail: string;
-  totalCents: number;
-  date: string;
-  items: {
-    title: string;
-    quantity: number;
-    priceCents: number;
-  }[];
-}
-
-// Seller Dashboard Types
-export interface SellerReport {
+// admin Dashboard Types
+export interface AdminReport {
   totalRevenueCents: number;
   totalOrders: number;
   topSellingProducts: {
-    productId: string;
+    productId: number;
     title: string;
     quantitySold: number;
+    revenueCents: number;
   }[];
 }
+

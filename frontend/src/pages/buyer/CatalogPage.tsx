@@ -68,12 +68,12 @@ export default function CatalogPage() {
           </div>
           <div className="flex flex-wrap items-center justify-between gap-6">
             <div className="flex flex-wrap items-center gap-3">
-            <button className="catalog-tab catalog-tab-active">All</button>
-            {['Game Keys', 'Top-Ups', 'Subscriptions'].map((tab) => (
-              <button key={tab} className="catalog-tab">
-                {tab}
-              </button>
-            ))}
+              <button className="catalog-tab catalog-tab-active">All</button>
+              {['Game Keys', 'Top-Ups', 'Subscriptions'].map((tab) => (
+                <button key={tab} className="catalog-tab">
+                  {tab}
+                </button>
+              ))}
             </div>
             <label className="flex h-[47px] w-[202px] items-center border border-[#49345d] bg-[#191221] px-3 text-sm font-bold text-[#91879f]">
               Sort by:

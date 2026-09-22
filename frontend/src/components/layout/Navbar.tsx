@@ -4,6 +4,7 @@ import { ChevronDown, Heart, KeyRound, Search, ShoppingCart } from 'lucide-react
 export default function Navbar() {
   const location = useLocation();
   const isSeller = location.pathname.startsWith('/seller');
+  const isAdmin = location.pathname.startsWith('/admin');
   const isOrderComplete = location.pathname === '/checkout/success';
   const isAccountPage = ['/profile', '/wishlist', '/payment-methods', '/buyer/orders'].includes(location.pathname);
 
@@ -18,7 +19,7 @@ export default function Navbar() {
         <nav className="hidden items-center gap-4 md:flex">
           <Link
             to="/catalog"
-            className={`font-display text-[10px] font-bold uppercase ${!isSeller ? 'text-[#f4b72b]' : 'text-[#9d90a8] hover:text-white'}`}
+            className={`font-display text-[10px] font-bold uppercase ${!isSeller && !isAdmin ? 'text-[#f4b72b]' : 'text-[#9d90a8] hover:text-white'}`}
           >
             Store
           </Link>
@@ -27,6 +28,12 @@ export default function Navbar() {
             className={`font-display text-[10px] font-bold uppercase ${isSeller ? 'text-[#f4b72b]' : 'text-[#9d90a8] hover:text-white'}`}
           >
             Seller
+          </Link>
+          <Link
+            to="/admin/dashboard"
+            className={`font-display text-[10px] font-bold uppercase ${isAdmin ? 'text-[#f4b72b]' : 'text-[#9d90a8] hover:text-white'}`}
+          >
+            Admin
           </Link>
         </nav>
 

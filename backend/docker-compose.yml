@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:15
+    container_name: cse3_local_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cse3_local
+    ports:
+      - '54321:5432'
+    volumes:
+      - cse3_db_data_v2:/var/lib/postgresql/data
+
+volumes:
+  cse3_db_data_v2:
