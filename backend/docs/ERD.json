@@ -1,5 +1,5 @@
 {
-  "version": "31.4.1",
+  "version": "31.5.3",
   "pages": [
     {
       "id": "k4vZEWUCvI8hoS_lffrF",
@@ -155,7 +155,7 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-247",
           "type": "node",
           "parent": "1",
-          "label": "Customer"
+          "label": "Shopper"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-248",
@@ -272,6 +272,28 @@
           "html": "<span style=\"\">VARCHAR(255)</span>"
         },
         {
+          "id": "5Ac5IU_I0pAz7pey36tg-18",
+          "type": "node",
+          "parent": "L2mE2fW-k_Jq8dcg_3Jt-247"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-19",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-18"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-20",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-18",
+          "label": "username"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-21",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-18",
+          "label": "VARCHAR(255)"
+        },
+        {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-268",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-247"
@@ -316,6 +338,28 @@
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-288",
           "label": "VARCHAR(255)",
           "html": "<span style=\"\">VARCHAR(255)</span>"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-22",
+          "type": "node",
+          "parent": "L2mE2fW-k_Jq8dcg_3Jt-247"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-23",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-22"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-24",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-22",
+          "label": "profile_pic"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-25",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-22",
+          "label": "TEXT"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-276",
@@ -699,7 +743,7 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-340",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-338",
-          "label": "customer_id"
+          "label": "shopper_id"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-341",
@@ -722,13 +766,13 @@
           "id": "L2mE2fW-k_Jq8dcg_3Jt-344",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-342",
-          "label": "product_id"
+          "label": "order_line_id"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-345",
           "type": "node",
           "parent": "L2mE2fW-k_Jq8dcg_3Jt-342",
-          "label": "INTEGER"
+          "label": "INTEGER[]"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-346",
@@ -832,13 +876,35 @@
           "id": "i_FDFGtU8EpzfX5PTMpN-63",
           "type": "node",
           "parent": "i_FDFGtU8EpzfX5PTMpN-61",
-          "label": "payment_method_id"
+          "label": "payment_details_id"
         },
         {
           "id": "i_FDFGtU8EpzfX5PTMpN-64",
           "type": "node",
           "parent": "i_FDFGtU8EpzfX5PTMpN-61",
           "label": "INTEGER"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-40",
+          "type": "node",
+          "parent": "L2mE2fW-k_Jq8dcg_3Jt-333"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-41",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-40"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-42",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-40",
+          "label": "platform_fee"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-43",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-40",
+          "label": "NUMERIC(10,2)"
         },
         {
           "id": "LFtwTpQlXKIATiaBW1PW-23",
@@ -912,13 +978,6 @@
           "parent": "1",
           "source": "L2mE2fW-k_Jq8dcg_3Jt-297",
           "target": "L2mE2fW-k_Jq8dcg_3Jt-207"
-        },
-        {
-          "id": "L2mE2fW-k_Jq8dcg_3Jt-421",
-          "type": "edge",
-          "parent": "1",
-          "source": "L2mE2fW-k_Jq8dcg_3Jt-342",
-          "target": "L2mE2fW-k_Jq8dcg_3Jt-293"
         },
         {
           "id": "L2mE2fW-k_Jq8dcg_3Jt-422",
@@ -1488,6 +1547,28 @@
           "label": "VARCHAR(255)"
         },
         {
+          "id": "BiqXATxdFfXo90FfViS0-10",
+          "type": "node",
+          "parent": "a6tu12li3iriKLEBhwRI-1"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-11",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-10"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-12",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-10",
+          "label": "code_type"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-13",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-10",
+          "label": "ENUM"
+        },
+        {
           "id": "LFtwTpQlXKIATiaBW1PW-27",
           "type": "node",
           "parent": "a6tu12li3iriKLEBhwRI-1"
@@ -1705,7 +1786,7 @@
           "id": "i_FDFGtU8EpzfX5PTMpN-8",
           "type": "node",
           "parent": "i_FDFGtU8EpzfX5PTMpN-6",
-          "label": "customer_id"
+          "label": "shopper_id"
         },
         {
           "id": "i_FDFGtU8EpzfX5PTMpN-9",
@@ -1727,7 +1808,7 @@
           "id": "i_FDFGtU8EpzfX5PTMpN-20",
           "type": "node",
           "parent": "i_FDFGtU8EpzfX5PTMpN-18",
-          "label": "product_id"
+          "label": "product_variant_id"
         },
         {
           "id": "i_FDFGtU8EpzfX5PTMpN-21",
@@ -1866,13 +1947,6 @@
           "type": "node",
           "parent": "i_FDFGtU8EpzfX5PTMpN-57",
           "label": "TIMESTAMPTZ"
-        },
-        {
-          "id": "i_FDFGtU8EpzfX5PTMpN-65",
-          "type": "edge",
-          "parent": "1",
-          "source": "i_FDFGtU8EpzfX5PTMpN-61",
-          "target": "i_FDFGtU8EpzfX5PTMpN-41"
         },
         {
           "id": "LFtwTpQlXKIATiaBW1PW-39",
@@ -2211,6 +2285,12 @@
           "label": "SOLD"
         },
         {
+          "id": "5Ac5IU_I0pAz7pey36tg-107",
+          "type": "node",
+          "parent": "B6RZHLYE3ugkqKHjFZ_i-51",
+          "label": "REFUNDED"
+        },
+        {
           "id": "B6RZHLYE3ugkqKHjFZ_i-55",
           "type": "edge",
           "parent": "1",
@@ -2247,6 +2327,392 @@
           "parent": "1",
           "source": "L2mE2fW-k_Jq8dcg_3Jt-354",
           "target": "B6RZHLYE3ugkqKHjFZ_i-56"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-26",
+          "type": "node",
+          "parent": "1",
+          "label": "Payment_Details"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-27",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-26"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-28",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-27",
+          "label": "PK"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-29",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-27",
+          "label": "id"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-30",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-27",
+          "label": "INTEGER"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-31",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-26"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-32",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-31"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-33",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-31",
+          "label": "payment_method_id"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-34",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-31",
+          "label": "INTEGER"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-43",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-26"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-44",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-43"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-45",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-43",
+          "label": "details"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-46",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-43",
+          "label": "JSONB"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-35",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-26"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-36",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-35"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-37",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-35",
+          "label": "created_at"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-38",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-35",
+          "label": "TIMESTAMPTZ"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-39",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-26"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-40",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-39"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-41",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-39",
+          "label": "updated_at"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-42",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-39",
+          "label": "TIMESTAMPTZ"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-47",
+          "type": "edge",
+          "parent": "1",
+          "source": "i_FDFGtU8EpzfX5PTMpN-61",
+          "target": "5Ac5IU_I0pAz7pey36tg-27"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-48",
+          "type": "edge",
+          "parent": "1",
+          "source": "5Ac5IU_I0pAz7pey36tg-31",
+          "target": "i_FDFGtU8EpzfX5PTMpN-41"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-53",
+          "type": "node",
+          "parent": "1",
+          "label": "Order_Line"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-54",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-53"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-55",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-54",
+          "label": "PK"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-56",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-54",
+          "label": "id"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-57",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-54",
+          "label": "INTEGER"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-58",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-53"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-59",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-58",
+          "label": "FK"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-60",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-58",
+          "label": "product_variant_id"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-61",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-58",
+          "label": "UUID"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-62",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-53"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-63",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-62",
+          "label": "FK"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-64",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-62",
+          "label": "key_id"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-65",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-62",
+          "label": "INTEGER[]"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-66",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-53"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-67",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-66",
+          "label": "FK"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-68",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-66",
+          "label": "unit_price"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-69",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-66",
+          "label": "NUMERIC(10,2)"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-99",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-53"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-100",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-99"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-101",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-99",
+          "label": "quantity"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-102",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-99",
+          "label": "INTEGER"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-6",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-53"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-7",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-6"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-8",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-6",
+          "label": "delivered_to"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-9",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-6",
+          "label": "VARCHAR(255)"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-2",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-53"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-3",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-2"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-4",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-2",
+          "label": "target_account"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-5",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-2",
+          "label": "VARCHAR(255)"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-94",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-53"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-95",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-94"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-96",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-94",
+          "label": "created_at"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-97",
+          "type": "node",
+          "parent": "5Ac5IU_I0pAz7pey36tg-94",
+          "label": "TIMESTAMPTZ"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-103",
+          "type": "edge",
+          "parent": "1",
+          "source": "5Ac5IU_I0pAz7pey36tg-54",
+          "target": "L2mE2fW-k_Jq8dcg_3Jt-342"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-104",
+          "type": "edge",
+          "parent": "1",
+          "source": "5Ac5IU_I0pAz7pey36tg-58",
+          "target": "5ThVSRgdGXeH_72jmp8c-1"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-105",
+          "type": "edge",
+          "parent": "1",
+          "source": "5Ac5IU_I0pAz7pey36tg-62",
+          "target": "a6tu12li3iriKLEBhwRI-2"
+        },
+        {
+          "id": "5Ac5IU_I0pAz7pey36tg-106",
+          "type": "edge",
+          "parent": "1",
+          "source": "5Ac5IU_I0pAz7pey36tg-66",
+          "target": "L2mE2fW-k_Jq8dcg_3Jt-441"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-14",
+          "type": "node",
+          "parent": "1",
+          "label": "Key_Code_Type"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-15",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-14",
+          "label": "Key"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-16",
+          "type": "node",
+          "parent": "BiqXATxdFfXo90FfViS0-14",
+          "label": "SKU"
+        },
+        {
+          "id": "BiqXATxdFfXo90FfViS0-18",
+          "type": "edge",
+          "parent": "1",
+          "source": "BiqXATxdFfXo90FfViS0-10"
+        }
+      ]
+    },
+    {
+      "id": "DmZQJkZ0XlAuzsY0UjZa",
+      "name": "tasks accomplished",
+      "cells": [
+        {
+          "id": "1",
+          "type": "layer"
+        },
+        {
+          "id": "PX_4oLdh4B4oabhmUuxt-1",
+          "type": "node",
+          "parent": "1",
+          "label": "Changes not in remote db: \n\n\n\ndone:\n- logs table (define JSONB structure)\n-product.status\n- key.status\n- order.total_amount to NUMERIC, discount_code, discount_amount, amount_paid\n- payment_method table\n- order.status to ENUM\n- rating\n- price to NUMERIC(10,2)\n- product_variant.activation_guide\n- define ENUMS\n- tags to TEXT[]",
+          "html": "<font style=\"font-size: 18px;\">Changes not in remote db:&nbsp;<br><br><br><br>done:<br>- logs table (define JSONB structure)<br>-product.status<br>- key.status<br>- order.total_amount to NUMERIC, discount_code, discount_amount, amount_paid<br style=\"\">- payment_method table<br>- order.status to ENUM<br>- rating<br>- price to NUMERIC(10,2)<br>- product_variant.activation_guide<br>- define ENUMS<br>- tags to TEXT[]</font><span style=\"font-size: 28px;\"></span><span style=\"font-size: 28px;\"></span><span style=\"font-size: 23px;\"></span><span style=\"font-size: 23px;\"></span>"
         }
       ]
     }
