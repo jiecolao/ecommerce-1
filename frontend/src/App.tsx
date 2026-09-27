@@ -24,7 +24,6 @@ import CreateProductPage from './pages/seller/CreateProductPage';
 import SellerOrdersPage from './pages/seller/SellerOrdersPage';
 import CustomersPage from './pages/seller/CustomersPage';
 import ActivityLogsPage from './pages/seller/ActivityLogsPage';
-import PromoTestPage from './pages/PromoTestPage';
 import { Toaster } from './components/ui/toaster';
 import { Auth } from './pages/auth/Auth';
 import CatalogPageOriginal from './pages/test/CatalogPageOriginal';
@@ -60,7 +59,6 @@ function AppShell() {
             <Route path="/checkout/success" element={<OrderCompletePage />} />
             <Route path="/checkout/:id" element={<CheckoutPage />} />
             <Route path="/buyer/orders" element={<OrdersPage />} />
-            <Route path="/promo-test" element={<PromoTestPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/wishlist" element={<WishlistPage />} />

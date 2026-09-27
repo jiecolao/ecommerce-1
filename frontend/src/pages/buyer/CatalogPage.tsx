@@ -1,18 +1,7 @@
 import { Monitor, ShoppingCart, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { catalogProducts, type CatalogProduct } from '../../data/catalog';
-
-function CatalogHero() {
-  return (
-    <section className="relative flex h-[clamp(360px,43vw,660px)] items-center overflow-hidden">
-      <img
-        src="/image.png"
-        alt="Featured game promotion"
-        className="mx-auto h-full w-auto max-w-full object-contain"
-      />
-    </section>
-  );
-}
+import FeaturedPromoBanner from '../../components/FeaturedPromoBanner';
 
 function ProductCard({ product, highlighted }: { product: CatalogProduct; highlighted?: boolean }) {
   return (
@@ -58,7 +47,7 @@ export default function CatalogPage() {
   return (
     <div className="min-h-screen bg-[#1c191f] px-5 pb-16 font-sans text-[#f3edf8] sm:px-8 lg:px-16">
       <div className="mx-auto max-w-[1440px]">
-        <CatalogHero />
+        <FeaturedPromoBanner />
 
         <div className="mt-10 border-b border-[#49345d] pb-8">
           <div className="mb-5 flex items-center gap-3">
