@@ -19,18 +19,18 @@ model Admin {
 }
 
 model Shopper {
-  id          String     @id @default(uuid()) @db.Uuid
-  email       String     @unique @db.VarChar(255)
-  firstName   String     @map("first_name") @db.VarChar(255)
-  lastName    String     @map("last_name") @db.VarChar(255)
-  username    String     @unique @db.VarChar(255)
-  phone       String?    @db.VarChar(16)
-  address     String?    @db.VarChar(255)
-  profilePic  String     @default("") @map("profile_pic") @db.VarChar(255)
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
-  orders      Order[]
-  wishlists   Wishlist[]
+  id         String     @id @default(uuid()) @db.Uuid
+  email      String     @unique @db.VarChar(255)
+  firstName  String     @map("first_name") @db.VarChar(255)
+  lastName   String     @map("last_name") @db.VarChar(255)
+  username   String     @unique @db.VarChar(255)
+  phone      String?    @db.VarChar(16)
+  address    String?    @db.VarChar(255)
+  profilePic String     @default("") @map("profile_pic") @db.VarChar(255)
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  orders     Order[]
+  wishlists  Wishlist[]
 }
 
 model Wishlist {
@@ -61,20 +61,20 @@ model Product {
 }
 
 model Order {
-  id                Int             @id @default(autoincrement())
-  shopperId         String          @map("shopper_id") @db.Uuid
-  orderDate         DateTime        @default(now()) @map("order_date") @db.Timestamptz(6)
-  totalAmount       Decimal         @map("total_amount") @db.Decimal(10, 2)
-  platformFee       Decimal         @default(0.00) @map("platform_fee") @db.Decimal(10, 2)
-  discountCode      String?         @map("discount_code") @db.VarChar(255)
-  discountAmount    Decimal         @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
-  paymentDetailsId  Int?            @map("payment_details_id")
-  amountPaid        Decimal         @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
-  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  status            Order_Status
-  shopper           Shopper         @relation(fields: [shopperId], references: [id], onDelete: Cascade)
-  paymentDetails    PaymentDetails? @relation(fields: [paymentDetailsId], references: [id])
-  orderLines        OrderLine[]
+  id               Int             @id @default(autoincrement())
+  shopperId        String          @map("shopper_id") @db.Uuid
+  orderDate        DateTime        @default(now()) @map("order_date") @db.Timestamptz(6)
+  totalAmount      Decimal         @map("total_amount") @db.Decimal(10, 2)
+  platformFee      Decimal         @default(0.00) @map("platform_fee") @db.Decimal(10, 2)
+  discountCode     String?         @map("discount_code") @db.VarChar(255)
+  discountAmount   Decimal         @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  paymentDetailsId Int?            @map("payment_details_id")
+  amountPaid       Decimal         @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  status           Order_Status
+  shopper          Shopper         @relation(fields: [shopperId], references: [id], onDelete: Cascade)
+  paymentDetails   PaymentDetails? @relation(fields: [paymentDetailsId], references: [id])
+  orderLines       OrderLine[]
 }
 
 model OrderLine {
