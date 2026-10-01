@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, Check, CircleDollarSign, CreditCard, Heart, MailCheck, Plus, QrCode, ShieldCheck, Star, WalletCards, Zap } from 'lucide-react';
+import { ArrowRight, Check, CircleDollarSign, CreditCard, Heart, MailCheck, Plus, QrCode, ShieldCheck, Star, WalletCards, Zap, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { catalogProducts } from '../../data/catalog';
 
 const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
@@ -17,6 +17,25 @@ export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const product = catalogProducts.find((item) => item.id === id) ?? catalogProducts[0];
   const [selectedPackage, setSelectedPackage] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const galleryImages = [
+    "/palworld-cover.jpg",
+    "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80"
+  ];
+
+  const openLightbox = (index: number) => setLightboxIndex(index);
+  const closeLightbox = () => setLightboxIndex(null);
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIndex((prev) => (prev !== null ? (prev + 1) % galleryImages.length : null));
+  };
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIndex((prev) => (prev !== null ? (prev - 1 + galleryImages.length) % galleryImages.length : null));
+  };
 
   const packages = [
     { label: 'Standard Package', price: product.price, badge: 'Popular' },
@@ -43,6 +62,18 @@ export default function ProductDetailsPage() {
               <span className="font-display text-[10px] font-bold uppercase text-[#f4b72b]">{product.platform}</span>
               <h2 className="font-display mt-3 text-xl font-black uppercase leading-tight text-white">{product.title}</h2>
             </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2">
+            {galleryImages.map((img, idx) => (
+              <button 
+                key={idx} 
+                onClick={() => openLightbox(idx)}
+                className="relative aspect-video overflow-hidden border border-[#49345d] transition-transform hover:-translate-y-1 hover:border-[#f4b72b]"
+              >
+                <img src={img} alt={`Gallery ${idx + 1}`} className="absolute inset-0 h-full w-full object-cover" />
+              </button>
+            ))}
           </div>
 
           <section className="comic-panel p-6">
@@ -146,6 +177,29 @@ export default function ProductDetailsPage() {
           </p>
         </section>
       </div>
+
+      {lightboxIndex !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={closeLightbox}>
+          <button className="absolute right-6 top-6 text-white hover:text-[#f4b72b]" onClick={closeLightbox}>
+            <X className="h-8 w-8" />
+          </button>
+          
+          <button className="absolute left-6 text-white hover:text-[#f4b72b]" onClick={prevImage}>
+            <ChevronLeft className="h-12 w-12" />
+          </button>
+          
+          <img 
+            src={galleryImages[lightboxIndex]} 
+            alt="Lightbox" 
+            className="max-h-[90vh] max-w-[90vw] object-contain border border-[#49345d] shadow-[7px_7px_0_#f4b72b]" 
+            onClick={(e) => e.stopPropagation()}
+          />
+          
+          <button className="absolute right-6 text-white hover:text-[#f4b72b]" onClick={nextImage}>
+            <ChevronRight className="h-12 w-12" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
