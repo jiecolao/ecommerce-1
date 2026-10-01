@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -42,6 +42,10 @@ const DashboardPage = lazy(() => import('./pages/seller/DashboardPage'));
 
 function AppShell() {
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
   const isCatalog = location.pathname === '/catalog' || location.pathname === '/';
   const isAuth = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].includes(location.pathname);
   const isSeller = location.pathname.startsWith('/seller') || location.pathname.startsWith('/test/seller');
