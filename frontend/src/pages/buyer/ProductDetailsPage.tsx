@@ -6,10 +6,10 @@ import { catalogProducts } from '../../data/catalog';
 const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
 const paymentMethods = [
-  { name: 'GCash', icon: WalletCards },
-  { name: 'Maya', icon: WalletCards },
-  { name: 'PayPal', icon: CircleDollarSign },
-  { name: 'Visa', icon: CreditCard },
+  { name: 'GCash', img: 'https://www.google.com/s2/favicons?domain=gcash.com&sz=128' },
+  { name: 'Maya', img: 'https://www.google.com/s2/favicons?domain=maya.ph&sz=128' },
+  { name: 'PayPal', img: 'https://www.google.com/s2/favicons?domain=paypal.com&sz=128' },
+  { name: 'Visa', img: 'https://www.google.com/s2/favicons?domain=visa.com&sz=128' },
   { name: 'QR PH', icon: QrCode },
 ];
 
@@ -24,6 +24,9 @@ export default function ProductDetailsPage() {
   const product = catalogProducts.find((item) => item.id === id) ?? catalogProducts[0];
   const [selectedPackage, setSelectedPackage] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  
+  const [gameUserId, setGameUserId] = useState('');
+  const [serverId, setServerId] = useState('');
 
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
@@ -163,6 +166,39 @@ export default function ProductDetailsPage() {
             </button>
           </div>
 
+          {product.isTopUp && (
+            <div className="mt-10 border border-[#49345d] bg-[#252028] p-6 shadow-[4px_4px_0_#1c191f]">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="grid h-8 w-8 place-items-center bg-[#f4b72b] font-display text-xs font-black text-[#171419]">2</span>
+                <h2 className="font-display text-sm font-black uppercase text-white">Account Details</h2>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="gameUserId" className="mb-2 block font-display text-xs font-bold uppercase text-[#8f8398]">Game User ID <span className="text-[#f4b72b]">*</span></label>
+                  <input
+                    type="text"
+                    id="gameUserId"
+                    value={gameUserId}
+                    onChange={(e) => setGameUserId(e.target.value)}
+                    placeholder="Enter your Game User ID"
+                    className="w-full border border-[#49345d] bg-[#1c191f] px-4 py-3 text-sm text-white focus:border-[#f4b72b] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="serverId" className="mb-2 block font-display text-xs font-bold uppercase text-[#8f8398]">Server ID <span className="text-[#f4b72b]">*</span></label>
+                  <input
+                    type="text"
+                    id="serverId"
+                    value={serverId}
+                    onChange={(e) => setServerId(e.target.value)}
+                    placeholder="Enter Server ID"
+                    className="w-full border border-[#49345d] bg-[#1c191f] px-4 py-3 text-sm text-white focus:border-[#f4b72b] focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="comic-panel mt-10 p-6 sm:p-8">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -180,9 +216,13 @@ export default function ProductDetailsPage() {
             <div className="mt-8 border-t border-[#49345d] pt-7">
               <p className="font-display text-center text-[9px] font-bold uppercase text-[#8f8398]">Supported payment methods</p>
               <div className="mt-5 flex flex-wrap justify-center gap-3">
-                {paymentMethods.map(({ name, icon: PaymentIcon }) => (
+                {paymentMethods.map(({ name, icon: PaymentIcon, img }) => (
                   <span key={name} className="flex min-w-20 flex-col items-center gap-2 border border-[#49345d] bg-[#1c191f] px-4 py-3 text-[10px] font-bold text-[#b9adc4]">
-                    <PaymentIcon className="h-5 w-5 text-[#f4b72b]" />
+                    {img ? (
+                      <img src={img} alt={name} className="h-5 w-5 rounded-sm object-contain" />
+                    ) : (
+                      PaymentIcon && <PaymentIcon className="h-5 w-5 text-[#f4b72b]" />
+                    )}
                     {name}
                   </span>
                 ))}

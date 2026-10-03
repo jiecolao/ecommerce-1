@@ -16,11 +16,11 @@ const initialItems: CartItem[] = [
 ];
 
 const paymentMethods = [
-  { id: 'gcash', label: 'GCash', icon: WalletCards },
-  { id: 'maya', label: 'Maya', icon: WalletCards },
-  { id: 'card', label: 'Credit / Debit Card', icon: CreditCard },
-  { id: 'paypal', label: 'PayPal', icon: CircleDollarSign },
-] as const;
+  { id: 'gcash', label: 'GCash', img: 'https://www.google.com/s2/favicons?domain=gcash.com&sz=128' },
+  { id: 'maya', label: 'Maya', img: 'https://www.google.com/s2/favicons?domain=maya.ph&sz=128' },
+  { id: 'card', label: 'Credit / Debit Card', img: 'https://www.google.com/s2/favicons?domain=visa.com&sz=128' },
+  { id: 'paypal', label: 'PayPal', img: 'https://www.google.com/s2/favicons?domain=paypal.com&sz=128' },
+];
 
 const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
@@ -121,7 +121,7 @@ export default function CartPage() {
               <h2 className="font-display text-xs font-black uppercase text-white">Payment channel</h2>
             </div>
             <div className="mt-6 space-y-3">
-              {paymentMethods.map(({ id, label, icon: PaymentIcon }) => {
+              {paymentMethods.map(({ id, label, icon: PaymentIcon, img }: any) => {
                 const isSelected = paymentMethod === id;
                 return (
                   <button
@@ -135,7 +135,11 @@ export default function CartPage() {
                       {isSelected && <span className="h-2.5 w-2.5 bg-[#f4b72b]" />}
                     </span>
                     <span className="flex-1 text-sm font-bold text-white">{label}</span>
-                    <PaymentIcon className="h-5 w-5 text-[#f4b72b]" />
+                    {img ? (
+                      <img src={img} alt={label} className="h-5 w-5 rounded-sm object-contain" />
+                    ) : (
+                      PaymentIcon && <PaymentIcon className="h-5 w-5 text-[#f4b72b]" />
+                    )}
                   </button>
                 );
               })}

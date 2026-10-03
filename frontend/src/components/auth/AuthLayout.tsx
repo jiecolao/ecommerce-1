@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 type AuthLayoutProps = {
   title: string;
-  subtitle: string;
+  subtitle: string | ReactNode;
   children: ReactNode;
 };
 
