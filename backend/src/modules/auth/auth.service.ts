@@ -3,6 +3,13 @@ import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+export interface SteamProfile {
+  steamId: string;
+  personaName?: string;
+  avatar?: string;
+  profileUrl?: string;
+}
+
 @Injectable()
 export class AuthService {
   private supabase: SupabaseClient;
@@ -57,5 +64,36 @@ export class AuthService {
     }
 
     return { session: data.session, user: data.user };
+  }
+
+  async validateOrCreateSteamUser(steamProfile: SteamProfile) {
+    if (!steamProfile || !steamProfile.steamId) {
+      throw new Error('Invalid Steam user profile');
+    }
+
+    // Example logic using Prisma (adjust model/field names to your schema.prisma):
+    /*
+    let user = await this.prisma.user.findUnique({
+      where: { steamId: steamProfile.steamId },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          steamId: steamProfile.steamId,
+          username: steamProfile.personaName || `SteamUser_${steamProfile.steamId}`,
+          avatarUrl: steamProfile.avatar,
+        },
+      });
+    }
+
+    return user;
+    */
+
+    return {
+      steamId: steamProfile.steamId,
+      personaName: steamProfile.personaName,
+      avatar: steamProfile.avatar,
+    };
   }
 }

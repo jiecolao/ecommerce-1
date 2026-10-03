@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +17,15 @@ async function bootstrap() {
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
+    }),
+  );
+
+  app.use(
+    session({
+      secret: process.env.STEAM_SESSION_SECRET || 'STEAM_SESSION_SECRET',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { maxAge: 3600000 },
     }),
   );
 
