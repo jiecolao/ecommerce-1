@@ -1,7 +1,11 @@
 import { Controller, Post, Body, Get, UseGuards, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AuthService } from './auth.service';
+import { AuthService, SteamProfile } from './auth.service';
 import { SteamAuthGuard } from './guards/steam.guard';
+
+type SteamRequest = Omit<Request, 'user'> & {
+  user?: SteamProfile;
+};
 
 @Controller('auth')
 export class AuthController {
@@ -25,7 +29,7 @@ export class AuthController {
 
   @Get('steam/return')
   @UseGuards(SteamAuthGuard)
-  async steamReturn(@Req() req: Request, @Res() res: Response) {
+  async steamReturn(@Req() req: SteamRequest, @Res() res: Response) {
     const steamUser = req.user;
 
     if (!steamUser) {

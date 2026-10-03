@@ -3,6 +3,13 @@ import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+export interface SteamProfile {
+  steamId: string;
+  personaName?: string;
+  avatar?: string;
+  profileUrl?: string;
+}
+
 @Injectable()
 export class AuthService {
   private supabase: SupabaseClient;
@@ -59,12 +66,7 @@ export class AuthService {
     return { session: data.session, user: data.user };
   }
 
-  async validateOrCreateSteamUser(steamProfile: {
-    steamId: string;
-    personaName?: string;
-    avatar?: string;
-    profileUrl?: string;
-  }) {
+  async validateOrCreateSteamUser(steamProfile: SteamProfile) {
     if (!steamProfile || !steamProfile.steamId) {
       throw new Error('Invalid Steam user profile');
     }
