@@ -1,12 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
-
-const connectionString = process.env.DATABASE_URL;
-
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   console.log('Wiping database before seeding...');
@@ -15,14 +8,16 @@ async function main() {
   await prisma.logs.deleteMany();
   await prisma.wishlist.deleteMany();
   await prisma.key.deleteMany();
+  await prisma.orderLine.deleteMany();
   await prisma.productVariant.deleteMany();
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.paymentDetails.deleteMany();
   await prisma.paymentMethod.deleteMany();
   await prisma.store.deleteMany();
   await prisma.type.deleteMany();
   await prisma.region.deleteMany();
-  await prisma.customer.deleteMany();
+  await prisma.shopper.deleteMany();
   await prisma.admin.deleteMany();
 
   console.log('Seeding database lookup tables...');
@@ -37,16 +32,18 @@ async function main() {
     },
   });
 
-  // Seed Customer
-  const customerId = '11111111-1111-1111-1111-111111111111';
-  await prisma.customer.create({
+  // Seed Shopper
+  const shopperId = '11111111-1111-1111-1111-111111111111';
+  await prisma.shopper.create({
     data: {
-      id: customerId,
-      email: 'demo-customer@example.com',
+      id: shopperId,
+      email: 'demo-shopper@example.com',
       firstName: 'Demo',
-      lastName: 'Customer',
+      lastName: 'Shopper',
+      username: 'demoshopper',
       phone: '0987654321',
       address: '123 Demo St',
+      profilePic: 'https://example.com/avatar.png',
     },
   });
 
@@ -92,5 +89,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await pool.end();
   });

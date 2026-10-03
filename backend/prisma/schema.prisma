@@ -1,45 +1,194 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
+  url      = env("DIRECT_URL")
 }
 
 model Admin {
-  id           String    @id @default(uuid()) @db.Uuid
-  email        String    @unique @db.VarChar(255)
-  name         String    @db.VarChar(255)
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-
-  products     Product[]
-  logs         Logs[]
+  id        String    @id @default(uuid()) @db.Uuid
+  email     String    @unique @db.VarChar(255)
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  logs      Logs[]
+  products  Product[]
 }
 
-model Customer {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique @db.VarChar(255)
-  firstName String   @map("first_name") @db.VarChar(255)
-  lastName  String   @map("last_name") @db.VarChar(255)
-  phone     String?  @db.VarChar(16)
-  address   String?  @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
-
-  orders    Order[]
-  wishlists Wishlist[]
+model Shopper {
+  id         String     @id @default(uuid()) @db.Uuid
+  email      String     @unique @db.VarChar(255)
+  firstName  String     @map("first_name") @db.VarChar(255)
+  lastName   String     @map("last_name") @db.VarChar(255)
+  username   String     @unique @db.VarChar(255)
+  phone      String?    @db.VarChar(16)
+  address    String?    @db.VarChar(255)
+  profilePic String     @default("") @map("profile_pic") @db.VarChar(255)
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  orders     Order[]
+  wishlists  Wishlist[]
 }
 
 model Wishlist {
-  id          Int      @id @default(autoincrement())
-  customerId  String   @map("customer_id") @db.Uuid
-  productId   Int      @map("product_id")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id               Int            @id @default(autoincrement())
+  shopperId        String         @map("shopper_id") @db.Uuid
+  productVariantId Int            @map("product_variant_id")
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  shopper          Shopper        @relation(fields: [shopperId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+}
 
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+model Product {
+  id                 Int              @id @default(autoincrement())
+  adminId            String           @map("admin_id") @db.Uuid
+  title              String           @db.VarChar(255)
+  media              String[]
+  description        String
+  rating             String?
+  developer          String?          @db.VarChar(255)
+  publisher          String?          @db.VarChar(255)
+  systemRequirements String?          @map("system_requirements")
+  tags               String[]         @db.VarChar(255)
+  status             Product_Status   @default(DRAFT)
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  admin              Admin            @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  productVariants    ProductVariant[]
+}
+
+model Order {
+  id               Int             @id @default(autoincrement())
+  shopperId        String          @map("shopper_id") @db.Uuid
+  orderDate        DateTime        @default(now()) @map("order_date") @db.Timestamptz(6)
+  totalAmount      Decimal         @map("total_amount") @db.Decimal(10, 2)
+  platformFee      Decimal         @default(0.00) @map("platform_fee") @db.Decimal(10, 2)
+  discountCode     String?         @map("discount_code") @db.VarChar(255)
+  discountAmount   Decimal         @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  paymentDetailsId Int?            @map("payment_details_id")
+  amountPaid       Decimal         @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  status           Order_Status
+  shopper          Shopper         @relation(fields: [shopperId], references: [id], onDelete: Cascade)
+  paymentDetails   PaymentDetails? @relation(fields: [paymentDetailsId], references: [id])
+  orderLines       OrderLine[]
+}
+
+model OrderLine {
+  id               Int            @id @default(autoincrement())
+  orderId          Int            @map("order_id")
+  productVariantId Int            @map("product_variant_id")
+  unitPrice        Decimal        @map("unit_price") @db.Decimal(10, 2)
+  quantity         Int
+  deliveredTo      String?        @map("delivered_to") @db.VarChar(255)
+  targetAccount    String?        @map("target_account") @db.VarChar(255)
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  keys             Key[]
+
+  @@map("Order_Line")
+}
+
+model PaymentMethod {
+  id             Int              @id @default(autoincrement())
+  name           String           @db.VarChar(255)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  paymentDetails PaymentDetails[]
+
+  @@map("Payment_Method")
+}
+
+model PaymentDetails {
+  id              Int           @id @default(autoincrement())
+  paymentMethodId Int           @map("payment_method_id")
+  details         Json
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  orders          Order[]
+
+  @@map("Payment_Details")
+}
+
+model Store {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  productVariants ProductVariant[]
+}
+
+model Type {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  productVariants ProductVariant[]
+}
+
+model Region {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  productVariants ProductVariant[]
+}
+
+model ProductVariant {
+  id              Int         @id @default(autoincrement())
+  productId       Int         @map("product_id")
+  storeId         Int         @map("store_id")
+  typeId          Int         @map("type_id")
+  regionId        Int         @map("region_id")
+  name            String      @db.VarChar(255)
+  storePage       String?     @map("store_page") @db.VarChar(255)
+  price           Decimal     @db.Decimal(10, 2)
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  activationGuide String?     @map("activation_guide")
+  languageSupport String[]    @map("language_support")
+  keys            Key[]
+  orderLines      OrderLine[]
+  wishlists       Wishlist[]
+  product         Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  region          Region      @relation(fields: [regionId], references: [id])
+  store           Store       @relation(fields: [storeId], references: [id])
+  type            Type        @relation(fields: [typeId], references: [id])
+
+  @@unique([productId, storeId, typeId, name])
+  @@index([storeId])
+  @@index([typeId])
+  @@map("Product_Variant")
+}
+
+model Key {
+  id               Int            @id @default(autoincrement())
+  productVariantId Int            @map("product_variant_id")
+  orderLineId      Int?           @map("order_line_id")
+  code             String         @db.VarChar(255)
+  codeType         Key_Code_Type  @default(KEY) @map("code_type")
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  status           Key_Status     @default(AVAILABLE)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  orderLine        OrderLine?     @relation(fields: [orderLineId], references: [id])
+}
+
+model Logs {
+  id           Int           @id @default(autoincrement())
+  tableName    Table_Name    @map("table_name")
+  recordId     Int           @map("record_id")
+  updateAction Update_Action @map("update_action")
+  updateDiff   Json          @map("update_diff")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy    String        @map("updated_by") @db.Uuid
+  admin        Admin         @relation(fields: [updatedBy], references: [id])
 }
 
 enum Product_Status {
@@ -47,152 +196,41 @@ enum Product_Status {
   INACTIVE
   DRAFT
 }
-model Product {
-  id                 Int      @id @default(autoincrement())
-  adminId            String   @map("admin_id") @db.Uuid
-  title              String   @db.VarChar(255)
-  media              String[]
-  description        String   @db.Text
-  rating             String?  @db.Text
-  developer          String?  @db.VarChar(255)
-  publisher          String?  @db.VarChar(255)
-  systemRequirements String?  @map("system_requirements") @db.Text
-  tags               String[] @db.VarChar(255)
-  status             Product_Status @default(DRAFT)
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
-
-  admin           Admin           @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  orders          Order[]
-  productVariants ProductVariant[]
-  wishlists       Wishlist[]
-}
 
 enum Order_Status {
   COMPLETED
   REFUNDED
   PENDING
-}
-model Order {
-  id                Int      @id @default(autoincrement())
-  customerId        String   @map("customer_id") @db.Uuid
-  productId         Int      @map("product_id")
-  orderDate         DateTime @default(now()) @map("order_date") @db.Timestamptz
-  totalAmount       Decimal  @db.Decimal(10,2) @map("total_amount")
-  discountCode      String?  @db.VarChar(255) @map("discount_code")
-  discountAmount    Decimal  @db.Decimal(10,2) @map("discount_amount") @default(0.00)
-  paymentMethodId   Int?     @map("payment_method_id")
-  amountPaid        Decimal  @db.Decimal(10,2) @map("amount_paid") @default(0.00)
-  status            Order_Status
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
-
-  customer   Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
-}
-
-model PaymentMethod {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
-  orders    Order[]
-
-  @@map("Payment_Method")
-}
-
-model Store {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
-
-  productVariants ProductVariant[]
-}
-
-model Type {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
-
-  productVariants ProductVariant[]
-}
-
-model Region {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
-
-  productVariants ProductVariant[]
-}
-
-model ProductVariant {
-  id              Int      @id @default(autoincrement())
-  productId       Int      @map("product_id")
-  storeId         Int      @map("store_id")
-  typeId          Int      @map("type_id")
-  regionId        Int      @map("region_id")
-  name            String   @db.VarChar(255)
-  activationGuide String?  @db.Text @map("activation_guide")
-  languageSupport String[] @map("language_support")
-  storePage       String?  @map("store_page") @db.VarChar(255)
-  price           Decimal  @db.Decimal(10,2)
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  store   Store   @relation(fields: [storeId], references: [id])
-  type    Type    @relation(fields: [typeId], references: [id])
-  region  Region  @relation(fields: [regionId], references: [id])
-
-  @@map("Product_Variant")
-  @@unique([productId, storeId, typeId, name])
-  @@index([storeId])
-  @@index([typeId])
-  keys Key[]
+  CART
 }
 
 enum Key_Status {
   AVAILABLE
   SOLD
+  REFUNDED
 }
-model Key {
-  id               Int      @id @default(autoincrement())
-  productVariantId Int      @map("product_variant_id")
-  code             String   @db.VarChar(255)
-  status           Key_Status @default(AVAILABLE)
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+enum Key_Code_Type {
+  KEY
+  SKU
 }
 
 enum Table_Name {
   ADMIN
-  CUSTOMER
+  SHOPPER
   PRODUCT
   PAYMENT_METHOD
+  PAYMENT_DETAILS
+  ORDER_LINE
   PRODUCT_VARIANT
   STORE
   TYPE
   REGION
   KEY
 }
+
 enum Update_Action {
   CREATE
   UPDATE
   DELETE
-}
-model Logs {
-  id                Int           @id @default(autoincrement())
-  updatedBy         String        @db.Uuid @map("updated_by")
-  tableName         Table_Name    @map("table_name")
-  recordId          Int           @map("record_id")
-  updateAction      Update_Action @map("update_action")
-  updateDiff        Json          @map("update_diff")
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
-
-  admin   Admin   @relation(fields: [updatedBy], references: [id])
 }

@@ -13,7 +13,7 @@ export class SteamService {
     const url = `https://store.steampowered.com/api/appdetails?appids=${steamAppId}`;
 
     try {
-      const response = await firstValueFrom(this.httpService.get(url));
+      const response = await firstValueFrom(this.httpService.get(url)) as any;
       const data = response.data;
 
       if (data[steamAppId] && data[steamAppId].success) {
@@ -58,7 +58,7 @@ export class SteamService {
               cursor: cursor,
             },
           }),
-        );
+        ) as any;
 
         const reviews = data?.reviews || [];
         if (reviews.length === 0) {

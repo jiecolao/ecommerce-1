@@ -4,6 +4,7 @@ dist
 .next
 .env
 coverage
-
+**/package-lock.json
 .vercel
 .env*.local
+.env*

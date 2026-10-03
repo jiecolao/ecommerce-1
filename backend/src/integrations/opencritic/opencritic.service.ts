@@ -34,7 +34,7 @@ export class OpencriticService {
           ); 
         })
       ),
-    );
+    ) as any;
     
     return data;
   }
@@ -54,7 +54,7 @@ export class OpencriticService {
           ); 
         })
       ),
-    );
+    ) as any;
     
     return data;
   }

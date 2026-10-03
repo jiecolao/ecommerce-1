@@ -1,135 +1,150 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { useParams, Link } from 'react-router-dom';
-import type { Product } from 'shared';
-import { Button } from '../../components/ui/button';
-import { ShoppingCart, KeyRound, Heart } from 'lucide-react';
-import { API_URL } from '../../lib/api';
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowRight, Check, CircleDollarSign, CreditCard, Heart, MailCheck, Plus, QrCode, ShieldCheck, Star, WalletCards, Zap } from 'lucide-react';
+import { catalogProducts } from '../../data/catalog';
 
-const fetchProduct = async (id: string) => {
-  const { data } = await axios.get<Product>(`${API_URL}/catalog/products/${id}`);
-  return data;
-};
+const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+
+const paymentMethods = [
+  { name: 'GCash', icon: WalletCards },
+  { name: 'Maya', icon: WalletCards },
+  { name: 'PayPal', icon: CircleDollarSign },
+  { name: 'Visa', icon: CreditCard },
+  { name: 'QR PH', icon: QrCode },
+];
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const queryClient = useQueryClient();
+  const product = catalogProducts.find((item) => item.id === id) ?? catalogProducts[0];
+  const [selectedPackage, setSelectedPackage] = useState(0);
 
-  const { data: product, isLoading, error } = useQuery({
-    queryKey: ['product', id],
-    queryFn: () => fetchProduct(id as string),
-    enabled: !!id,
-  });
-
-  const { data: wishlist } = useQuery({
-    queryKey: ['wishlist'],
-    queryFn: async () => {
-      const { data } = await axios.get<Product[]>(`${API_URL}/buyer/wishlist`, {
-        headers: { 'x-actor-id': '11111111-1111-1111-1111-111111111111' }
-      });
-      return data;
-    }
-  });
-
-  const isWishlisted = wishlist?.some(item => item.id === product?.id);
-
-  const wishlistMutation = useMutation({
-    mutationFn: async () => {
-      if (!product) return;
-      if (isWishlisted) {
-        await axios.delete(`${API_URL}/buyer/wishlist/${product.id}`, {
-          headers: { 'x-actor-id': '11111111-1111-1111-1111-111111111111' }
-        });
-      } else {
-        await axios.post(`${API_URL}/buyer/wishlist`, { productId: product.id }, {
-          headers: { 'x-actor-id': '11111111-1111-1111-1111-111111111111' }
-        });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-    }
-  });
-
-  if (isLoading) return <div className="text-center py-10">Loading game details...</div>;
-  if (error || !product) return <div className="text-center py-10 text-red-500">Failed to load product.</div>;
+  const packages = [
+    { label: 'Standard Package', price: product.price, badge: 'Popular' },
+    { label: 'Plus Package', price: Math.round(product.price * 2.75) },
+    { label: 'Ultimate Package', price: Math.round(product.price * 5.4) },
+  ];
+  const activePackage = packages[selectedPackage];
 
   return (
-    <div className="max-w-4xl mx-auto py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div className="bg-slate-200 rounded-xl aspect-square flex items-center justify-center p-8">
-          {product.media && product.media.length > 0 ? (
-             <img src={product.media[0]} alt={product.title} className="w-full h-full object-cover rounded-xl" />
-          ) : (
-            <KeyRound className="w-32 h-32 text-slate-400" />
-          )}
-        </div>
-        <div className="flex flex-col justify-center">
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{product.title}</h1>
-          
-          {product.rating && (
-            <div className="flex items-center space-x-1 mt-2">
-              <span className="text-yellow-500 text-lg">★</span>
-              <span className="text-sm text-slate-600 font-semibold">{product.rating}</span>
-            </div>
-          )}
+    <div className="pb-10">
+      <nav className="font-display mb-9 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase text-[#8f8398]">
+        <Link to="/catalog" className="hover:text-[#f4b72b]">Home</Link>
+        <span>/</span>
+        <Link to="/catalog" className="hover:text-[#f4b72b]">Game Keys</Link>
+        <span>/</span>
+        <span className="text-white">{product.title}</span>
+      </nav>
 
-          <p className="mt-4 text-3xl text-slate-900 font-bold">
-            ${((product.productVariants?.[0]?.price ?? 1000) / 100).toFixed(2)}
-          </p>
-
-          {product.tags && product.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {product.tags.map(tag => (
-                <span key={tag} className="text-xs bg-slate-100 text-slate-800 font-medium px-2.5 py-0.5 rounded-full border border-slate-200">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-          
-          <div className="mt-8">
-            <h3 className="text-sm font-medium text-slate-900">Description</h3>
-            <div className="mt-2 prose prose-sm text-slate-500">
-              <p>{product.description}</p>
-            </div>
-          </div>
-          
-          <div className="mt-6">
-            <div className="flex flex-col space-y-2">
-              {product.developer && <span className="text-sm text-slate-600">Developer: <span className="font-semibold text-slate-900">{product.developer}</span></span>}
-              {product.publisher && <span className="text-sm text-slate-600">Publisher: <span className="font-semibold text-slate-900">{product.publisher}</span></span>}
+      <div className="grid gap-10 lg:grid-cols-[minmax(300px,430px)_1fr] xl:gap-14">
+        <aside className="space-y-7">
+          <div className="relative min-h-[560px] overflow-hidden border border-[#49345d] bg-[#241333] shadow-[7px_7px_0_#2c0c46]">
+            <img src="/palworld-cover.jpg" alt={product.title} className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-x-0 bottom-0 bg-[#241333]/95 p-7">
+              <span className="font-display text-[10px] font-bold uppercase text-[#f4b72b]">{product.platform}</span>
+              <h2 className="font-display mt-3 text-xl font-black uppercase leading-tight text-white">{product.title}</h2>
             </div>
           </div>
 
-          {product.systemRequirements && (
-            <div className="mt-6">
-              <h3 className="text-sm font-medium text-slate-900">System Requirements</h3>
-              <div className="mt-2 text-xs text-slate-500 bg-slate-50 p-4 rounded-lg border border-slate-200 whitespace-pre-line font-mono leading-relaxed">
-                {product.systemRequirements}
+          <section className="comic-panel p-6">
+            <h2 className="font-display text-sm font-black uppercase text-white">How to redeem</h2>
+            <ol className="mt-5 space-y-4 text-sm leading-6 text-[#b9adc4]">
+              <li className="flex gap-3"><strong className="text-[#f4b72b]">1.</strong><span>Sign in to your account on the supported platform.</span></li>
+              <li className="flex gap-3"><strong className="text-[#f4b72b]">2.</strong><span>Open the store and select the redeem code option.</span></li>
+              <li className="flex gap-3"><strong className="text-[#f4b72b]">3.</strong><span>Enter the digital key sent by MystiKeys.</span></li>
+              <li className="flex gap-3"><strong className="text-[#f4b72b]">4.</strong><span>Confirm and start playing immediately.</span></li>
+            </ol>
+          </section>
+
+          <div className="flex items-center gap-4 border border-[#49345d] bg-[#252028] p-5">
+            <ShieldCheck className="h-7 w-7 shrink-0 text-[#f4b72b]" />
+            <div>
+              <p className="font-display text-xs font-bold uppercase text-white">Instant delivery</p>
+              <p className="mt-1 text-sm text-[#a99bb5]">Keys and top-ups are processed in seconds.</p>
+            </div>
+          </div>
+        </aside>
+
+        <section>
+          <div className="flex items-start gap-5">
+            <div className="min-w-0 flex-1">
+              <div className="mb-4 flex flex-wrap gap-2">
+                <span className="bg-[#f4b72b] px-3 py-2 font-display text-[9px] font-black uppercase text-[#171419]">{product.region}</span>
+                <span className="border border-[#675376] bg-[#252028] px-3 py-2 font-display text-[9px] font-bold uppercase text-white">{product.platform}</span>
+              </div>
+              <h1 className="comic-title text-3xl font-black leading-tight sm:text-4xl">{product.title}</h1>
+              <div className="mt-4 flex items-center gap-2 text-sm text-[#b9adc4]">
+                <Star className="h-4 w-4 fill-[#f4b72b] text-[#f4b72b]" />
+                <span className="font-bold text-white">4.8/5</span>
+                <span>(124 reviews)</span>
               </div>
             </div>
-          )}
-
-          <div className="mt-10 flex space-x-4">
-            <Link to={`/checkout/${product.id}`} className="flex-1">
-              <Button size="lg" className="w-full flex items-center justify-center space-x-2">
-                <ShoppingCart className="w-5 h-5" />
-                <span>Buy Now</span>
-              </Button>
-            </Link>
-            
-            <Button
-              variant="outline"
-              size="lg"
-              className={`flex items-center justify-center ${isWishlisted ? 'text-red-500 hover:text-red-600 border-red-200 bg-red-50' : 'text-slate-500 hover:text-slate-600'}`}
-              onClick={() => wishlistMutation.mutate()}
-              disabled={wishlistMutation.isPending}
-            >
-              <Heart className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} />
-            </Button>
+            <button aria-label="Add to wishlist" className="grid h-12 w-12 shrink-0 place-items-center border border-[#675376] bg-[#252028] text-[#b9adc4] transition-transform hover:-translate-y-0.5 hover:text-[#f4b72b]">
+              <Heart className="h-5 w-5" />
+            </button>
           </div>
-        </div>
+
+          <p className="mt-6 max-w-3xl text-base leading-7 text-[#b9adc4]">
+            Get instant access to the complete digital experience. Your key is delivered by email and ready to redeem on {product.platform}.
+          </p>
+
+          <div className="mt-10 flex items-center gap-3">
+            <span className="grid h-8 w-8 place-items-center bg-[#f4b72b] font-display text-xs font-black text-[#171419]">1</span>
+            <h2 className="font-display text-sm font-black uppercase text-white">Select package</h2>
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {packages.map((item, index) => (
+              <button
+                key={item.label}
+                onClick={() => setSelectedPackage(index)}
+                className={`relative min-h-28 border p-5 text-left transition-transform hover:-translate-y-0.5 ${
+                  selectedPackage === index
+                    ? 'border-[#f4b72b] bg-[#2b183c] shadow-[4px_4px_0_#f4b72b]'
+                    : 'border-[#554260] bg-[#252028]'
+                }`}
+              >
+                {item.badge && <span className="absolute -top-3 left-4 bg-[#f4b72b] px-3 py-1 font-display text-[8px] font-black uppercase text-[#171419]">{item.badge}</span>}
+                <span className="block text-sm font-semibold text-[#b9adc4]">{item.label}</span>
+                <span className="font-display mt-2 block text-xl font-black text-white">{formatPrice(item.price)}</span>
+                {selectedPackage === index && <Check className="absolute right-4 top-4 h-5 w-5 text-[#f4b72b]" />}
+              </button>
+            ))}
+            <button className="flex min-h-28 items-center justify-center gap-2 border border-dashed border-[#675376] bg-[#211d23] font-display text-[10px] font-bold uppercase text-[#8f8398] hover:text-white">
+              <Plus className="h-4 w-4" /> More options
+            </button>
+          </div>
+
+          <div className="comic-panel mt-10 p-6 sm:p-8">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[#a99bb5]">Subtotal</p>
+                <p className="font-display mt-2 text-3xl font-black text-white">{formatPrice(activePackage.price)}</p>
+              </div>
+              <div className="sm:text-right">
+                <p className="mb-3 flex items-center gap-2 text-xs text-[#a99bb5] sm:justify-end"><Zap className="h-4 w-4 text-[#f4b72b]" /> Guest checkout enabled</p>
+                <Link to={`/checkout/${product.id}`} className="font-display inline-flex h-13 items-center gap-3 bg-[#f4b72b] px-8 text-xs font-black uppercase text-[#171419] transition-transform hover:-translate-y-0.5 hover:bg-[#ffd45e]">
+                  Buy now <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-8 border-t border-[#49345d] pt-7">
+              <p className="font-display text-center text-[9px] font-bold uppercase text-[#8f8398]">Supported payment methods</p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                {paymentMethods.map(({ name, icon: PaymentIcon }) => (
+                  <span key={name} className="flex min-w-20 flex-col items-center gap-2 border border-[#49345d] bg-[#1c191f] px-4 py-3 text-[10px] font-bold text-[#b9adc4]">
+                    <PaymentIcon className="h-5 w-5 text-[#f4b72b]" />
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-7 flex items-center justify-center gap-3 text-center text-sm text-[#8f8398]">
+            <MailCheck className="h-5 w-5" /> No account required. Confirmation and keys are sent to your email.
+          </p>
+        </section>
       </div>
     </div>
   );
