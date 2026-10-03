@@ -1,0 +1,214 @@
+.featured-promo__frame {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 28px 64px;
+  container-type: inline-size;
+}
+
+.featured-promo__mobile-panel {
+  position: absolute;
+  inset: 72px 0 0;
+  z-index: -1;
+  width: 100%;
+  height: calc(100% - 72px);
+  overflow: visible;
+  filter: drop-shadow(0 12px 18px rgb(13 9 18 / 35%));
+  pointer-events: none;
+}
+
+.featured-promo__desktop-art {
+  display: none;
+}
+
+.featured-promo__mobile-art {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  margin: 0 auto 16px;
+  filter: drop-shadow(4px 4px 0 #f5b829);
+}
+
+.featured-promo__overlay,
+.featured-promo__content {
+  min-width: 0;
+}
+
+.featured-promo__badge {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 14px 30px 18px 36px;
+  margin: 0 0 16px -26px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  overflow-wrap: anywhere;
+}
+
+.featured-promo__mobile-ribbon {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.featured-promo__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-promo__title {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.15;
+  letter-spacing: 0.015em;
+  overflow-wrap: anywhere;
+}
+
+.featured-promo__description {
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.featured-promo__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.featured-promo__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 20px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+.featured-promo__price {
+  order: -1;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .featured-promo__frame {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 24px;
+    padding: 56px 40px 64px;
+  }
+
+  .featured-promo__mobile-panel {
+    inset: 16px 0 0;
+    height: calc(100% - 16px);
+  }
+
+  .featured-promo__mobile-art {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 360px;
+    margin: 0;
+  }
+
+  .featured-promo__overlay {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .featured-promo__frame {
+    display: block;
+    aspect-ratio: 1243 / 697;
+    padding: 0;
+  }
+
+  .featured-promo__mobile-panel,
+  .featured-promo__mobile-ribbon,
+  .featured-promo__mobile-art {
+    display: none;
+  }
+
+  .featured-promo__desktop-art {
+    display: block;
+  }
+
+  .featured-promo__overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .featured-promo__badge {
+    position: absolute;
+    left: 2.41%;
+    top: 26.25%;
+    width: 15.68%;
+    height: 6.17%;
+    padding: 0;
+    margin: 0;
+    background: none;
+    clip-path: none;
+    font-size: clamp(8px, 1.05cqi, 13px);
+  }
+
+  .featured-promo__content {
+    position: absolute;
+    left: 9.65%;
+    top: 35.5%;
+    width: 30%;
+    max-width: 350px;
+    pointer-events: auto;
+  }
+
+  .featured-promo__title {
+    font-size: clamp(18px, 3.6cqi, 43px);
+    line-height: 1.08;
+  }
+
+  .featured-promo__description {
+    margin-top: clamp(8px, 1.8cqi, 22px);
+    font-size: clamp(9.5px, 1.12cqi, 13.5px);
+    line-height: 1.45;
+  }
+
+  .featured-promo__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(12px, 2cqi, 24px);
+    margin-top: clamp(12px, 2.8cqi, 36px);
+  }
+
+  .featured-promo__button {
+    flex-shrink: 0;
+    min-width: clamp(90px, 11.26cqi, 140px);
+    min-height: 44px;
+    padding: clamp(6px, 1.1cqi, 14px) clamp(16px, 2.5cqi, 30px);
+    font-size: clamp(10px, 1.13cqi, 14px);
+  }
+
+  .featured-promo__price {
+    order: 0;
+    font-size: clamp(14px, 2.1cqi, 26px);
+    white-space: nowrap;
+  }
+}

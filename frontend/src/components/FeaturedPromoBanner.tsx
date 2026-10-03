@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './FeaturedPromoBanner.css';
 import {
   BANNER_PURPLE_SHADOW,
   BANNER_PURPLE_MAIN,
@@ -116,22 +117,15 @@ export default function FeaturedPromoBanner({
   };
 
   return (
-    <section className={`relative mx-auto w-full max-w-[1243px] overflow-visible py-2 sm:py-4 ${className}`}>
-      {/* Aspect-ratio locked container with CSS container queries for responsive real HTML text */}
-      <div
-        className="relative w-full overflow-visible"
-        style={{
-          aspectRatio: '1243 / 697',
-          containerType: 'inline-size',
-        }}
-      >
+    <section className={`featured-promo relative mx-auto w-full max-w-[1243px] overflow-visible py-2 sm:py-4 ${className}`}>
+      <div className="featured-promo__frame">
         {/* SVG Graphic Layer: Polygons, ribbon geometry, and artwork with one-sided shadow */}
         <svg
           viewBox="0 0 1243 697"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           xmlnsXlink="http://www.w3.org/1999/xlink"
-          className="absolute inset-0 h-full w-full overflow-visible drop-shadow-[0_16px_32px_rgba(13,9,18,0.55)]"
+          className="featured-promo__desktop-art absolute inset-0 h-full w-full overflow-visible drop-shadow-[0_16px_32px_rgba(13,9,18,0.55)]"
           aria-hidden="true"
         >
           <defs>
@@ -188,93 +182,58 @@ export default function FeaturedPromoBanner({
           <path d={RIBBON_FOLD_GOLD} fill="#C99C40" />
         </svg>
 
-        {/* REAL HTML TEXT OVERLAY LAYER (Selectable, accessible, dynamic real text) */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Ribbon Badge Text */}
-          <div
-            className="absolute flex items-center justify-center font-display font-black uppercase text-[#060608]"
-            style={{
-              left: '2.41%',
-              top: '26.25%',
-              width: '15.68%',
-              height: '6.17%',
-              fontSize: 'clamp(8px, 1.05cqi, 13px)',
-              letterSpacing: '0.12em',
-            }}
-          >
+        {/* The mobile panel stretches with the copy; the artwork keeps its own proportions. */}
+        <svg
+          className="featured-promo__mobile-panel"
+          viewBox="0 0 360 600"
+          preserveAspectRatio="none"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path d="M38 58L358 14L338 134L356 550L314 598L22 574L8 202L38 58Z" fill="#892AC9" />
+          <path d="M28 44L348 0L328 120L346 536L304 584L12 560L0 188L28 44Z" fill="#600EA8" />
+          <path d="M348 0L238 100L216 210L252 580L304 584L346 536L328 120L348 0Z" fill="#4F2B75" fillOpacity={0.6} />
+        </svg>
+
+        <img className="featured-promo__mobile-art" src={imageSrc} alt="" />
+
+        <div className="featured-promo__overlay">
+          <div className="featured-promo__badge font-display font-black uppercase text-[#060608]">
+            <svg
+              className="featured-promo__mobile-ribbon"
+              viewBox="0 178 230 60"
+              preserveAspectRatio="none"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d={RIBBON_SHADOW} fill="#460055" />
+              <path d={RIBBON_GOLD} fill="#C99C40" />
+              <path d={RIBBON_FOLD_SHADOW} fill="#460055" />
+              <path d={RIBBON_FOLD_GOLD} fill="#C99C40" />
+            </svg>
             <span className="select-text">{badgeText}</span>
           </div>
 
-          {/* Main Content: Thinner width column to protect the PNG artwork space */}
-          <div
-            className="pointer-events-auto absolute flex flex-col"
-            style={{
-              left: '9.65%',
-              top: '35.5%',
-              width: '30%',
-              maxWidth: '350px',
-            }}
-          >
-            {/* Real Heading Text: Larger, emphasized font size (Orbitron 900) */}
-            <h2
-              className="font-display font-black text-[#F5F2FA] select-text"
-              style={{
-                fontSize: 'clamp(18px, 3.6cqi, 43px)',
-                lineHeight: 1.08,
-                letterSpacing: '0.015em',
-                margin: 0,
-              }}
-            >
+          <div className="featured-promo__content">
+            <h2 className="featured-promo__title font-display font-black text-[#F5F2FA] select-text">
               {renderTitleLines()}
             </h2>
 
-            {/* Real Description Text (Space Grotesk) - comfortably fits in thinner column */}
-            <p
-              className="font-sans font-normal text-[#FAF2D9] select-text"
-              style={{
-                fontSize: 'clamp(9.5px, 1.12cqi, 13.5px)',
-                lineHeight: 1.45,
-                marginTop: 'clamp(8px, 1.8cqi, 22px)',
-                marginBottom: 0,
-              }}
-            >
+            <p className="featured-promo__description font-sans font-normal text-[#FAF2D9] select-text">
               {descText}
             </p>
 
-            {/* Real Interactive Buy Button & Price Row */}
-            <div
-              className="flex items-center"
-              style={{
-                marginTop: 'clamp(12px, 2.8cqi, 36px)',
-                gap: 'clamp(12px, 2cqi, 24px)',
-              }}
-            >
+            <div className="featured-promo__actions">
               <button
                 type="button"
                 onClick={handleBuy}
                 aria-label={buttonText}
-                className="font-display font-black uppercase text-[#060608] bg-[#F5B829] border border-[#3D3347] transition-all duration-150 hover:bg-[#ffd45e] hover:shadow-[3px_3px_0_#2c0c46] active:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#f4b72b] cursor-pointer"
-                style={{
-                  fontSize: 'clamp(10px, 1.13cqi, 14px)',
-                  letterSpacing: '0.04em',
-                  padding: 'clamp(6px, 1.1cqi, 14px) clamp(16px, 2.5cqi, 30px)',
-                  minWidth: 'clamp(90px, 11.26cqi, 140px)',
-                  height: 'clamp(32px, 3.86cqi, 48px)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                className="featured-promo__button font-display font-black uppercase text-[#060608] bg-[#F5B829] border border-[#3D3347] transition-all duration-150 motion-reduce:transition-none hover:bg-[#ffd45e] hover:shadow-[3px_3px_0_#2c0c46] active:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#f4b72b] cursor-pointer"
               >
                 {buttonText}
               </button>
 
-              <span
-                className="font-display font-extrabold text-[#F5F2FA] select-text whitespace-nowrap"
-                style={{
-                  fontSize: 'clamp(14px, 2.1cqi, 26px)',
-                  letterSpacing: '0.04em',
-                }}
-              >
+              <span className="featured-promo__price font-display font-extrabold text-[#F5F2FA] select-text">
                 {price}
               </span>
             </div>
