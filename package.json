@@ -1,0 +1,42 @@
+{
+  "name": "cse3-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@11.6.0",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "predev": "npx kill-port 3000 5173",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "@types/passport-steam": "^1.0.6",
+    "kill-port": "^2.0.1",
+    "turbo": "^2.0.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.1.1",
+    "@prisma/config": {
+      "deepmerge-ts": "^8.1.1"
+    },
+    "multer": "^2.4.0",
+    "mysql2": "^3.24.4"
+  },
+  "dependencies": {
+    "@nestjs/axios": "^12.0.1",
+    "@nestjs/mapped-types": "*",
+    "@nestjs/passport": "^12.0.0",
+    "axios": "^1.20.0",
+    "passport": "^0.7.0",
+    "passport-steam": "^1.0.18"
+  }
+}

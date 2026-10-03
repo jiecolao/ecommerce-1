@@ -1,0 +1,5 @@
+interface:
+  display_name: "MystiKeys UI"
+  short_description: "Build the MystiKeys comic storefront UI"
+  brand_color: "#F4B72B"
+  default_prompt: "Use $mystikeys-ui to build or refine a MystiKeys frontend page."
