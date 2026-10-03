@@ -164,7 +164,13 @@ export class AdminService {
   async getadminReport(adminId: string) {
     const products = await this.prisma.product.findMany({
       where: { adminId },
-      include: { orders: true },
+      include: {
+        productVariants: {
+          include: {
+            orderLines: true
+          }
+        }
+      },
     });
 
     let totalRevenueCents = 0;
@@ -172,8 +178,15 @@ export class AdminService {
 
     const topSellingProducts = products
       .map((product) => {
-        let quantitySold = product.orders.length; // 1 order = 1 product in this schema
-        let revenueCents = product.orders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
+        let quantitySold = 0;
+        let revenueCents = 0;
+
+        for (const variant of product.productVariants) {
+          for (const orderLine of variant.orderLines) {
+            quantitySold += orderLine.quantity;
+            revenueCents += orderLine.quantity * Number(orderLine.unitPrice);
+          }
+        }
         
         totalOrders += quantitySold;
         totalRevenueCents += revenueCents;
