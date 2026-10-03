@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, CircleDollarSign, CreditCard, Info, Plus, QrCode, ShieldCheck, Smartphone, Trash2, WalletCards, X } from 'lucide-react';
+import { Check, CreditCard, Info, Plus, QrCode, ShieldCheck, Smartphone, Trash2, WalletCards, X } from 'lucide-react';
 import AccountSidebar from '../../components/account/AccountSidebar';
 
 type PaymentMethod = {

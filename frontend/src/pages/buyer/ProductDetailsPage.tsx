@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, Check, CircleDollarSign, CreditCard, Heart, MailCheck, Plus, QrCode, ShieldCheck, Star, WalletCards, Zap, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Check, Heart, MailCheck, Plus, QrCode, ShieldCheck, Star, Zap, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { catalogProducts } from '../../data/catalog';
 
 const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
