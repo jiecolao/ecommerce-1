@@ -1,4 +1,5 @@
-import { useState, useRef, KeyboardEvent, useEffect } from 'react';
+import { useState, useRef } from 'react';
+import type { KeyboardEvent } from 'react';
 import { RefreshCw, Check } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CircleDollarSign, CreditCard, LockKeyhole, Minus, Plus, ShieldCheck, Trash2, WalletCards } from 'lucide-react';
+import { LockKeyhole, Minus, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 type CartItem = {
