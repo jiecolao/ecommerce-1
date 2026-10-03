@@ -1,3 +1,17 @@
+# Project Guidelines & Context
+
+## Tech Stack
+- Frontend: Nest.js (App Router), React, Tailwind CSS
+- Backend / DB: Supabase PostgreSQL with Prisma ORM
+- Language: TypeScript (strict mode enabled)
+
+## Code Standards & Conventions
+- 
+
+## Dev Workflow
+- Start dev server: `npm run dev`
+- Run test suite: `npm test`
+
 - [x] Verify that the copilot-instructions.md file in the .github directory is created.
 - [x] Clarify project requirements.
 - [x] Scaffold the project.
