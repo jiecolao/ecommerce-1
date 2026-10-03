@@ -1,5 +1,4 @@
 # CSE3 Monorepo (NestJS + React)
-
 This project is a monorepo managed with [Turborepo](https://turbo.build/) and npm workspaces. It contains a NestJS backend and a Vite + React frontend.
 
 ## Prerequisites
