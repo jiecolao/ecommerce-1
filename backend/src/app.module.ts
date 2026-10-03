@@ -13,7 +13,6 @@ import { RawgModule } from "./integrations/rawg/rawg.module";
 import { OpencriticModule } from "./integrations/opencritic/opencritic.module";
 import { IgdbModule } from "./integrations/igdb/igdb.module";
 import { MailModule } from "./modules/mail/mail.module";
-import { GoogleModule } from "./integrations/google/google.module";
 
 @Module({
     imports: [
@@ -33,7 +32,6 @@ import { GoogleModule } from "./integrations/google/google.module";
         OpencriticModule,
         IgdbModule,
         MailModule,
-        GoogleModule
     ],
 })
 export class AppModule {}
