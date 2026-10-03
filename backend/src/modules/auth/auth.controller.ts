@@ -1,12 +1,10 @@
 import { Controller, Post, Body, Get, UseGuards, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AuthService, SteamProfile } from './auth.service';
+import { AuthService } from './auth.service';
 import { SteamAuthGuard } from './guards/steam.guard';
 import { GoogleAuthGuard } from './guards/google.guard';
+import { SteamProfile } from 'shared';
 
-type SteamRequest = Omit<Request, 'user'> & {
-  user?: SteamProfile;
-};
 
 @Controller('auth')
 export class AuthController {
@@ -22,11 +20,11 @@ export class AuthController {
     return this.authService.login(body.email, body.password);
   }
 
-  @Get('login')
+  @Get('login/google')
   @UseGuards(GoogleAuthGuard)
   async googleLogin() {}
 
-  @Get()
+  @Get('login/google/return')
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     // req.user contains the normalized profile returned by validate()
@@ -38,30 +36,22 @@ export class AuthController {
     });
   }  
 
-  @Get('steam')
+  @Get('login/steam')
   @UseGuards(SteamAuthGuard)
   async steamLogin() {}
 
-  @Get('steam/return')
+  @Get('login/steam/return')
   @UseGuards(SteamAuthGuard)
-  async steamReturn(@Req() req: SteamRequest, @Res() res: Response) {
-    const steamUser = req.user;
+  async steamReturn(@Req() req: Request, @Res() res: Response) {
+    const steamUser = req.user as SteamProfile;
 
     if (!steamUser) {
       throw new UnauthorizedException('Steam authentication failed');
     }
 
-    // const result = await this.authService.validateOrCreateSteamUser(steamUser);
-
-    const result = {
-      steamId: steamUser.steamId,
-      username: steamUser.personaName || `SteamUser_${steamUser.steamId}`,
-      avatarUrl: steamUser.avatar,
-    }
-    
     return res.status(200).json({
       message: 'Steam login successful',
-      user: result,
+      user: steamUser,
     });
   }
 }

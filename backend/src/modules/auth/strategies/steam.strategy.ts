@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-steam';
 import { ConfigService } from '@nestjs/config';
+import { SteamProfile } from 'shared'
 
 @Injectable()
 export class SteamStrategy extends PassportStrategy(Strategy, 'steam') {
@@ -18,8 +19,7 @@ export class SteamStrategy extends PassportStrategy(Strategy, 'steam') {
     identifier: string,
     profile: any,
     done: (err: any, user: any) => void,
-  ): Promise<any> {
-    // identifier format: "https://steamcommunity.com/openid/id/76561198..."
+  ): Promise<SteamProfile> {
     const steamId = profile?._json?.steamid || profile?.id;
 
     const user = {
@@ -29,6 +29,6 @@ export class SteamStrategy extends PassportStrategy(Strategy, 'steam') {
       profileUrl: profile?._json?.profileurl,
     };
 
-    done(null, user);
+    return user;
   }
 }
