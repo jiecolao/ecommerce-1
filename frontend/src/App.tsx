@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -19,13 +19,8 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import OrdersPage from './pages/buyer/OrdersPage';
-import ProductsPage from './pages/seller/ProductsPage';
-import CreateProductPage from './pages/seller/CreateProductPage';
-import SellerOrdersPage from './pages/seller/SellerOrdersPage';
-import CustomersPage from './pages/seller/CustomersPage';
-import ActivityLogsPage from './pages/seller/ActivityLogsPage';
 import { Toaster } from './components/ui/toaster';
-import { Auth } from './pages/Auth/Auth';
+import { Auth } from './pages/auth/Auth';
 import CatalogPageOriginal from './pages/test/CatalogPageOriginal';
 import ProductDetailsPageOriginal from './pages/test/ProductDetailsPageOriginal';
 import CheckoutPageOriginal from './pages/test/CheckoutPageOriginal';
@@ -36,8 +31,7 @@ import CreateProductPageOriginal from './pages/test/CreateProductPageOriginal';
 import AdminDashboardPage from './pages/admin/DashboardPage';
 import AdminProductsPage from './pages/admin/ProductsPage';
 import AdminCreateProductPage from './pages/admin/CreateProductPage';
-
-const DashboardPage = lazy(() => import('./pages/seller/DashboardPage'));
+import AdminActivityLogsPage from './pages/admin/ActivityLogsPage';
 
 function AppShell() {
   const location = useLocation();
@@ -76,20 +70,22 @@ function AppShell() {
             {/* Auth (upstream) */}
             <Route path="/auth" element={<Auth />} />
 
-            {/* Seller Routes */}
-            <Route path="/seller" element={<Navigate to="/seller/products" replace />} />
-            <Route path="/seller/dashboard" element={<Suspense fallback={<div className="font-display p-10 text-center text-[#f4b72b]">Loading analytics...</div>}><DashboardPage /></Suspense>} />
-            <Route path="/seller/products" element={<ProductsPage />} />
-            <Route path="/seller/products/new" element={<CreateProductPage />} />
-            <Route path="/seller/products/:id/edit" element={<CreateProductPage />} />
-            <Route path="/seller/orders" element={<SellerOrdersPage />} />
-            <Route path="/seller/customers" element={<CustomersPage />} />
-            <Route path="/seller/activity-logs" element={<ActivityLogsPage />} />
+            {/* Seller / Admin Routes (Standardized) */}
+            <Route path="/seller" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/seller/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/seller/products" element={<AdminProductsPage />} />
+            <Route path="/seller/products/new" element={<AdminCreateProductPage />} />
+            <Route path="/seller/products/:id/edit" element={<AdminCreateProductPage />} />
+            <Route path="/seller/orders" element={<AdminDashboardPage />} />
+            <Route path="/seller/customers" element={<AdminDashboardPage />} />
+            <Route path="/seller/activity-logs" element={<AdminActivityLogsPage />} />
 
-            {/* Admin Routes (upstream's pages, accessible for reference) */}
+            {/* Admin Routes */}
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/products" element={<AdminProductsPage />} />
             <Route path="/admin/products/new" element={<AdminCreateProductPage />} />
+            <Route path="/admin/activity-logs" element={<AdminActivityLogsPage />} />
 
             {/* Test Routes — original team's pages preserved for reference */}
             <Route path="/test/catalog" element={<CatalogPageOriginal />} />

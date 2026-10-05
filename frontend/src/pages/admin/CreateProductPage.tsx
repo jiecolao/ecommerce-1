@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import type { CreateProductDto } from 'shared';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { API_URL } from '../../lib/api';
+import api from '../../lib/api';
 
 const compressImage = (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
@@ -65,7 +64,7 @@ export default function CreateProductPage() {
   const { data: metadata } = useQuery({
     queryKey: ['admin-metadata'],
     queryFn: async () => {
-      const res = await axios.get(`${API_URL}/admin/metadata`);
+      const res = await api.get('/admin/metadata');
       return res.data;
     }
   });
@@ -113,11 +112,7 @@ export default function CreateProductPage() {
         throw new Error('Please select a product image.');
       }
       
-      await axios.post(`${API_URL}/admin/products`, formData, {
-        headers: { 
-          'x-actor-id': '22222222-2222-2222-2222-222222222222'
-        }
-      });
+      await api.post('/admin/products', formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
