@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { HeartOff, ShoppingCart, Trash2, Loader2 } from 'lucide-react';
+import { HeartOff, ShoppingCart, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AccountSidebar from '../../components/account/AccountSidebar';
 import api from '../../lib/api';
+import { WishlistSkeleton } from '../../components/ui/skeleton';
 
 const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
@@ -81,10 +82,7 @@ export default function WishlistPage() {
         </div>
 
         {isLoading ? (
-          <div className="py-24 text-center font-display text-lg text-[#f4b72b]">
-            <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin" />
-            Loading your saved drops...
-          </div>
+          <WishlistSkeleton />
         ) : items.length > 0 ? (
           <div className="mt-9 space-y-5">
             {items.map((item: any) => {

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import api from '../../lib/api';
+import { CheckoutPageSkeleton } from '../../components/ui/skeleton';
 
 export default function CheckoutPage() {
   const { id } = useParams<{ id: string }>();
@@ -71,7 +72,7 @@ export default function CheckoutPage() {
     });
   };
 
-  if (isLoading) return <div className="font-display py-16 text-center text-[#f4b72b]">Preparing checkout...</div>;
+  if (isLoading) return <CheckoutPageSkeleton />;
   if (!product) return <div className="font-display py-16 text-center text-[#ff5c80]">Product not found.</div>;
 
   const originalPrice = basePrice;

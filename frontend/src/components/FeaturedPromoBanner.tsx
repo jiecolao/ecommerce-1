@@ -119,17 +119,17 @@ export default function FeaturedPromoBanner({
   return (
     <section className={`featured-promo relative mx-auto w-full max-w-[1243px] overflow-visible py-2 sm:py-4 ${className}`}>
       <div className="featured-promo__frame">
-        {/* SVG Graphic Layer: Polygons, ribbon geometry, and artwork with one-sided shadow */}
+        {/* SVG Graphic Layer: Polygons, ribbon geometry, and artwork with comic cel shadow */}
         <svg
           viewBox="0 0 1243 697"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           xmlnsXlink="http://www.w3.org/1999/xlink"
-          className="featured-promo__desktop-art absolute inset-0 h-full w-full overflow-visible drop-shadow-[0_16px_32px_rgba(13,9,18,0.55)]"
+          className="featured-promo__desktop-art absolute inset-0 h-full w-full overflow-visible"
           aria-hidden="true"
         >
           <defs>
-            {/* One-sided yellow cast shadow: thinner outline (dx=6, dy=5, radius=1) */}
+            {/* Comic cel-shaded character shadow: solid ink outline + warm amber rim */}
             <filter
               id={shadowFilterId}
               x="-20%"
@@ -138,32 +138,53 @@ export default function FeaturedPromoBanner({
               height="150%"
               colorInterpolationFilters="sRGB"
             >
-              {/* Thinner 1px dilation for sharp silhouette */}
-              <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="dilated" />
-              {/* Shifted down and right (dx=6, dy=5) for a refined one-sided cast shadow */}
-              <feOffset in="dilated" dx="6" dy="5" result="shifted" />
-              {/* Gold / yellow accent flood (#F5B829) matching Figma */}
-              <feFlood floodColor="#F5B829" floodOpacity="1" result="yellowFlood" />
-              {/* Composite flood with the shifted silhouette */}
-              <feComposite in="yellowFlood" in2="shifted" operator="in" result="yellowShadow" />
-              {/* Draw original graphic on top so shadow peaks out only on the cast side */}
+              <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="dilated" />
+              {/* Amber rim shadow */}
+              <feOffset in="dilated" dx="7" dy="6" result="amberShifted" />
+              <feFlood floodColor="#e5a93c" floodOpacity="0.85" result="amberFlood" />
+              <feComposite in="amberFlood" in2="amberShifted" operator="in" result="amberShadow" />
+              {/* Solid comic ink shadow */}
+              <feOffset in="dilated" dx="3.5" dy="3" result="inkShifted" />
+              <feFlood floodColor="#0e0917" floodOpacity="1" result="inkFlood" />
+              <feComposite in="inkFlood" in2="inkShifted" operator="in" result="inkShadow" />
+              {/* Composite layers */}
               <feMerge>
-                <feMergeNode in="yellowShadow" />
+                <feMergeNode in="amberShadow" />
+                <feMergeNode in="inkShadow" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
 
-          {/* Layer 1: Background polygon shadow - NO yellow outline */}
-          <path d={BANNER_PURPLE_SHADOW} fill="#892AC9" />
+          {/* Layer 1: Background polygon shadow with comic ink stroke */}
+          <path
+            d={BANNER_PURPLE_SHADOW}
+            fill="#46166e"
+            stroke="#0e0917"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
 
-          {/* Layer 2: Main purple banner polygon - NO yellow outline */}
-          <path d={BANNER_PURPLE_MAIN} fill="#600EA8" />
+          {/* Layer 2: Main plum banner polygon with comic ink stroke */}
+          <path
+            d={BANNER_PURPLE_MAIN}
+            fill="#561b85"
+            stroke="#0e0917"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
 
-          {/* Layer 3: Dark facet overlay polygon - NO yellow outline */}
-          <path d={BANNER_PURPLE_FACET} fill="#4F2B75" fillOpacity={0.6} />
+          {/* Layer 3: Dark facet overlay polygon */}
+          <path
+            d={BANNER_PURPLE_FACET}
+            fill="#360f54"
+            fillOpacity={0.7}
+            stroke="#0e0917"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
 
-          {/* Layer 4: Dynamic Character Artwork PNG with refined one-sided yellow cast shadow */}
+          {/* Layer 4: Dynamic Character Artwork PNG with comic cel-shaded shadow */}
           <image
             href={imageSrc}
             xlinkHref={imageSrc}
@@ -175,11 +196,11 @@ export default function FeaturedPromoBanner({
             filter={`url(#${shadowFilterId})`}
           />
 
-          {/* Layer 5: Ribbon polygon shapes in top-left */}
-          <path d={RIBBON_SHADOW} fill="#460055" />
-          <path d={RIBBON_GOLD} fill="#C99C40" />
-          <path d={RIBBON_FOLD_SHADOW} fill="#460055" />
-          <path d={RIBBON_FOLD_GOLD} fill="#C99C40" />
+          {/* Layer 5: Ribbon polygon shapes in top-left with comic ink stroke */}
+          <path d={RIBBON_SHADOW} fill="#2f0a42" stroke="#0e0917" strokeWidth="2" strokeLinejoin="round" />
+          <path d={RIBBON_GOLD} fill="#e5a93c" stroke="#0e0917" strokeWidth="2.5" strokeLinejoin="round" />
+          <path d={RIBBON_FOLD_SHADOW} fill="#280738" stroke="#0e0917" strokeWidth="2" strokeLinejoin="round" />
+          <path d={RIBBON_FOLD_GOLD} fill="#d2982d" stroke="#0e0917" strokeWidth="2.5" strokeLinejoin="round" />
         </svg>
 
         {/* The mobile panel stretches with the copy; the artwork keeps its own proportions. */}
@@ -190,15 +211,34 @@ export default function FeaturedPromoBanner({
           fill="none"
           aria-hidden="true"
         >
-          <path d="M38 58L358 14L338 134L356 550L314 598L22 574L8 202L38 58Z" fill="#892AC9" />
-          <path d="M28 44L348 0L328 120L346 536L304 584L12 560L0 188L28 44Z" fill="#600EA8" />
-          <path d="M348 0L238 100L216 210L252 580L304 584L346 536L328 120L348 0Z" fill="#4F2B75" fillOpacity={0.6} />
+          <path
+            d="M38 58L358 14L338 134L356 550L314 598L22 574L8 202L38 58Z"
+            fill="#46166e"
+            stroke="#0e0917"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M28 44L348 0L328 120L346 536L304 584L12 560L0 188L28 44Z"
+            fill="#561b85"
+            stroke="#0e0917"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M348 0L238 100L216 210L252 580L304 584L346 536L328 120L348 0Z"
+            fill="#360f54"
+            fillOpacity={0.7}
+            stroke="#0e0917"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
         </svg>
 
         <img className="featured-promo__mobile-art" src={imageSrc} alt="" />
 
         <div className="featured-promo__overlay">
-          <div className="featured-promo__badge font-display font-black uppercase text-[#060608]">
+          <div className="featured-promo__badge font-display font-black uppercase text-[#0e0917]">
             <svg
               className="featured-promo__mobile-ribbon"
               viewBox="0 178 230 60"
@@ -206,20 +246,20 @@ export default function FeaturedPromoBanner({
               fill="none"
               aria-hidden="true"
             >
-              <path d={RIBBON_SHADOW} fill="#460055" />
-              <path d={RIBBON_GOLD} fill="#C99C40" />
-              <path d={RIBBON_FOLD_SHADOW} fill="#460055" />
-              <path d={RIBBON_FOLD_GOLD} fill="#C99C40" />
+              <path d={RIBBON_SHADOW} fill="#2f0a42" stroke="#0e0917" strokeWidth="2" strokeLinejoin="round" />
+              <path d={RIBBON_GOLD} fill="#e5a93c" stroke="#0e0917" strokeWidth="2.5" strokeLinejoin="round" />
+              <path d={RIBBON_FOLD_SHADOW} fill="#280738" stroke="#0e0917" strokeWidth="2" strokeLinejoin="round" />
+              <path d={RIBBON_FOLD_GOLD} fill="#d2982d" stroke="#0e0917" strokeWidth="2.5" strokeLinejoin="round" />
             </svg>
             <span className="select-text">{badgeText}</span>
           </div>
 
           <div className="featured-promo__content">
-            <h2 className="featured-promo__title font-display font-black text-[#F5F2FA] select-text">
+            <h2 className="featured-promo__title font-display font-black text-[#f2edf7] select-text">
               {renderTitleLines()}
             </h2>
 
-            <p className="featured-promo__description font-sans font-normal text-[#FAF2D9] select-text">
+            <p className="featured-promo__description font-sans font-medium text-[#c8bed6] select-text">
               {descText}
             </p>
 
@@ -228,14 +268,17 @@ export default function FeaturedPromoBanner({
                 type="button"
                 onClick={handleBuy}
                 aria-label={buttonText}
-                className="featured-promo__button font-display font-black uppercase text-[#060608] bg-[#F5B829] border border-[#3D3347] transition-all duration-150 motion-reduce:transition-none hover:bg-[#ffd45e] hover:shadow-[3px_3px_0_#2c0c46] active:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#f4b72b] cursor-pointer"
+                className="comic-action-btn featured-promo__button bg-[#e5a93c] text-[#0e0917] hover:bg-[#f0b849] active:translate-x-0.5 active:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#e5a93c] cursor-pointer"
               >
                 {buttonText}
               </button>
 
-              <span className="featured-promo__price font-display font-extrabold text-[#F5F2FA] select-text">
-                {price}
-              </span>
+              <div className="featured-promo__price comic-price-sticker comic-halftone-yellow select-text">
+                <span className="text-[9px] font-black uppercase tracking-wider text-black/75">SPECIAL</span>
+                <span className="font-display font-black leading-none text-black">
+                  {price}
+                </span>
+              </div>
             </div>
           </div>
         </div>

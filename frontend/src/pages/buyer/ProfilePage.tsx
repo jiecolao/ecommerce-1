@@ -3,6 +3,7 @@ import { BadgeCheck, Info, Save, Upload, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AccountSidebar from '../../components/account/AccountSidebar';
 import api from '../../lib/api';
+import { ProfilePageSkeleton } from '../../components/ui/skeleton';
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
@@ -91,12 +92,7 @@ export default function ProfilePage() {
   const fieldClass = 'mt-2 h-12 w-full border border-[#5b4767] bg-[#1c191f] px-4 text-sm text-white outline-none placeholder:text-[#756b7b] focus:border-[#f4b72b]';
 
   if (isLoading) {
-    return (
-      <div className="py-24 text-center font-display text-lg text-[#f4b72b]">
-        <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin" />
-        Loading account center...
-      </div>
-    );
+    return <ProfilePageSkeleton />;
   }
 
   return (

@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Check, ChevronLeft, ChevronRight, Copy, Download, Filter, Info, KeyRound, X, Loader2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Copy, Download, Filter, Info, KeyRound, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import AccountSidebar from '../../components/account/AccountSidebar';
 import api from '../../lib/api';
+import { TableRowSkeleton } from '../../components/ui/skeleton';
 
 type Purchase = {
   id: string;
@@ -58,7 +59,7 @@ export default function OrdersPage() {
     return purchases.filter((purchase) =>
       `${purchase.title} ${purchase.platform} ${purchase.id}`.toLowerCase().includes(normalizedQuery),
     );
-  }, [query]);
+  }, [purchases, query]);
 
   const pageCount = Math.max(1, Math.ceil(filteredPurchases.length / PAGE_SIZE));
   const visiblePurchases = filteredPurchases.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -131,7 +132,7 @@ export default function OrdersPage() {
                     </td>
                   </tr>
                 ))}
-                {isLoading && <tr><td colSpan={5} className="px-5 py-14 text-center text-[#f4b72b]"><Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin" />Loading your orders...</td></tr>}
+                {isLoading && <TableRowSkeleton columns={5} rows={5} />}
                 {!isLoading && visiblePurchases.length === 0 && <tr><td colSpan={5} className="px-5 py-14 text-center text-[#a99bb5]">No purchases found.</td></tr>}
               </tbody>
             </table>

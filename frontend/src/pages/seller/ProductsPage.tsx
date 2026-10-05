@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Plus, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SellerLayout from '../../components/seller/SellerLayout';
+import { Select } from '../../components/ui/select';
 
 type ManagedProduct = {
   id: number;
@@ -60,10 +61,25 @@ export default function ProductsPage() {
       </section>
 
       <section className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center">
-        <label className="flex h-11 min-w-0 flex-1 items-center gap-3 border border-[#5b4767] bg-[#211d23] px-4 xl:max-w-sm"><Search className="h-4 w-4 text-[#f4b72b]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product name or SKU..." className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#756b7b]" /></label>
-        <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white outline-none"><option>All categories</option><option>Game Keys</option><option>Top-Ups</option><option>Subscriptions</option><option>Gift Cards</option></select>
-        <select value={status} onChange={(event) => setStatus(event.target.value)} className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white outline-none"><option>All status</option><option>Active</option><option>Low stock</option><option>Out of stock</option><option>Draft</option></select>
-        <select aria-label="Sort products" className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white outline-none xl:ml-auto"><option>Newest first</option><option>Oldest first</option><option>Stock: Low to high</option></select>
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-3 border border-[#5b4767] bg-[#211d23] px-4 xl:max-w-sm"><Search className="h-4 w-4 text-[#e5a93c]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product name or SKU..." className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#756b7b]" /></label>
+        <Select
+          value={category}
+          onChange={(val) => setCategory(val)}
+          options={['All categories', 'Game Keys', 'Top-Ups', 'Subscriptions', 'Gift Cards']}
+          className="min-w-44"
+        />
+        <Select
+          value={status}
+          onChange={(val) => setStatus(val)}
+          options={['All status', 'Active', 'Low stock', 'Out of stock', 'Draft']}
+          className="min-w-36"
+        />
+        <Select
+          defaultValue="Newest first"
+          options={['Newest first', 'Oldest first', 'Stock: Low to high']}
+          ariaLabel="Sort products"
+          className="min-w-44 xl:ml-auto"
+        />
       </section>
 
       <section className="mt-5 overflow-hidden border border-[#49345d] bg-[#211d23]">

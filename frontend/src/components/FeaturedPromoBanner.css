@@ -14,12 +14,13 @@
   width: 100%;
   height: calc(100% - 72px);
   overflow: visible;
-  filter: drop-shadow(0 12px 18px rgb(13 9 18 / 35%));
+  filter: drop-shadow(4px 4px 0px #0e0917) drop-shadow(7px 7px 0px rgba(65, 20, 105, 0.45));
   pointer-events: none;
 }
 
 .featured-promo__desktop-art {
   display: none;
+  filter: drop-shadow(6px 6px 0px #0e0917) drop-shadow(10px 10px 0px rgba(65, 20, 105, 0.5));
 }
 
 .featured-promo__mobile-art {
@@ -29,7 +30,7 @@
   aspect-ratio: 1;
   object-fit: contain;
   margin: 0 auto 16px;
-  filter: drop-shadow(4px 4px 0 #f5b829);
+  filter: drop-shadow(3px 3px 0px #0e0917) drop-shadow(6px 6px 0px rgba(229, 169, 60, 0.7));
 }
 
 .featured-promo__overlay,
@@ -70,14 +71,16 @@
   margin: 0;
   font-size: 26px;
   line-height: 1.15;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.02em;
   overflow-wrap: anywhere;
+  text-shadow: 2px 2px 0px #0e0917, 4px 4px 0px #351052;
 }
 
 .featured-promo__description {
   margin: 16px 0 0;
   font-size: 15px;
   line-height: 1.5;
+  color: #c8bed6;
   overflow-wrap: anywhere;
 }
 
@@ -102,8 +105,7 @@
 
 .featured-promo__price {
   order: -1;
-  font-size: 22px;
-  letter-spacing: 0.04em;
+  align-self: flex-start;
   overflow-wrap: anywhere;
 }
 
@@ -208,7 +210,7 @@
 
   .featured-promo__price {
     order: 0;
-    font-size: clamp(14px, 2.1cqi, 26px);
+    align-self: center;
     white-space: nowrap;
   }
 }

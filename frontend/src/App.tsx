@@ -32,6 +32,9 @@ import AdminDashboardPage from './pages/admin/DashboardPage';
 import AdminProductsPage from './pages/admin/ProductsPage';
 import AdminCreateProductPage from './pages/admin/CreateProductPage';
 import AdminActivityLogsPage from './pages/admin/ActivityLogsPage';
+import AdminOrdersPage from './pages/admin/SellerOrdersPage';
+import AdminCustomersPage from './pages/admin/CustomersPage';
+import ComicPageDecorations from './components/layout/ComicPageDecorations';
 
 function AppShell() {
   const location = useLocation();
@@ -41,11 +44,13 @@ function AppShell() {
   }, [location.pathname]);
   const isCatalog = location.pathname === '/catalog' || location.pathname === '/';
   const isAuth = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].includes(location.pathname);
+  const isAdmin = location.pathname.startsWith('/admin') || location.pathname.startsWith('/seller');
   return (
     <>
-      <div className="flex min-h-screen flex-col bg-[#1c191f] text-[#f4eef9]">
+      <div className="comic-page-bg relative flex min-h-screen flex-col text-[#eee8f5]">
+        <ComicPageDecorations />
         {!isAuth && <Navbar />}
-        <main className={isAuth || isCatalog ? 'flex-1' : 'app-page flex-1'}>
+        <main className={`relative z-10 ${isAuth || isCatalog || isAdmin ? 'flex-1 w-full flex flex-col' : 'app-page flex-1'}`}>
           <Routes>
             {/* Buyer Routes */}
             <Route path="/" element={<CatalogPage />} />
@@ -76,8 +81,8 @@ function AppShell() {
             <Route path="/seller/products" element={<AdminProductsPage />} />
             <Route path="/seller/products/new" element={<AdminCreateProductPage />} />
             <Route path="/seller/products/:id/edit" element={<AdminCreateProductPage />} />
-            <Route path="/seller/orders" element={<AdminDashboardPage />} />
-            <Route path="/seller/customers" element={<AdminDashboardPage />} />
+            <Route path="/seller/orders" element={<AdminOrdersPage />} />
+            <Route path="/seller/customers" element={<AdminCustomersPage />} />
             <Route path="/seller/activity-logs" element={<AdminActivityLogsPage />} />
 
             {/* Admin Routes */}
@@ -85,6 +90,8 @@ function AppShell() {
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/products" element={<AdminProductsPage />} />
             <Route path="/admin/products/new" element={<AdminCreateProductPage />} />
+            <Route path="/admin/orders" element={<AdminOrdersPage />} />
+            <Route path="/admin/customers" element={<AdminCustomersPage />} />
             <Route path="/admin/activity-logs" element={<AdminActivityLogsPage />} />
 
             {/* Test Routes — original team's pages preserved for reference */}
@@ -97,7 +104,7 @@ function AppShell() {
             <Route path="/test/seller/products/new" element={<CreateProductPageOriginal />} />
           </Routes>
         </main>
-        {!isAuth && <Footer />}
+        {!isAuth && !isAdmin && <Footer />}
       </div>
       <Toaster />
     </>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Heart, KeyRound, Search, ShoppingCart } from 'lucide-react';
+import { Heart, KeyRound, Search, ShoppingCart, ExternalLink, Store, ShieldCheck } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api, { getStoredUser, type StoredUser } from '../../lib/api';
+import { Select } from '../ui/select';
 
 export default function Navbar() {
   const location = useLocation();
@@ -40,86 +41,177 @@ export default function Navbar() {
   const cartCount = cartData?.orderLines?.reduce((sum: number, line: any) => sum + (line.quantity || 1), 0) ?? 0;
   const wishlistCount = Array.isArray(wishlistData) ? wishlistData.length : 0;
 
-  const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email ? user.email.split('@')[0] : 'Member';
-  const initials = user?.firstName ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ''}`.toUpperCase() : 'U';
+  const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email ? user.email.split('@')[0] : 'Admin User';
+  const initials = user?.firstName ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ''}`.toUpperCase() : 'AU';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#49345d] bg-[#18151b]/95 backdrop-blur print:hidden">
-      <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-4 px-5 sm:px-8">
-        <Link to="/catalog" className="flex shrink-0 items-center gap-3 text-white">
-          <KeyRound className="h-6 w-6 text-[#f4b72b]" />
-          <span className="font-display text-sm font-black uppercase sm:text-base">MystiKeys</span>
-        </Link>
+    <header className="sticky top-0 z-50 w-full border-b-[2.5px] border-[#0e0917] bg-[#150d22]/95 backdrop-blur shadow-[0_4px_0_#0e0917] print:hidden">
+      <div className={`mx-auto flex min-h-[72px] items-center gap-3 sm:gap-4 px-4 sm:px-8 ${isAdmin ? 'w-full max-w-none' : 'max-w-[1440px]'}`}>
+        {/* Brand Logo */}
+        <div className="flex items-center gap-2.5">
+          <Link to="/catalog" className="flex shrink-0 items-center gap-2.5 sm:gap-3 text-white group">
+            <span className="grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#e5a93c] text-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917] transition-transform group-hover:-translate-y-0.5 group-hover:shadow-[3.5px_3.5px_0_#0e0917]">
+              <KeyRound className="h-5 w-5 stroke-[2.5]" />
+            </span>
+            <span className="font-display text-base font-black uppercase tracking-wider text-[#f2edf7] drop-shadow-[2px_2px_0_#0e0917] group-hover:text-[#f0b849] transition-colors">
+              MystiKeys
+            </span>
+          </Link>
 
-        <nav className="hidden items-center gap-4 md:flex">
+          {isAdmin && (
+            <span className="hidden sm:inline-flex items-center gap-1 border-2 border-[#0e0917] bg-[#581c87] px-2 py-0.5 font-display text-[9px] font-black uppercase text-[#e5a93c] shadow-[1.5px_1.5px_0_#0e0917] tracking-wider">
+              <ShieldCheck className="h-3 w-3" />
+              Console
+            </span>
+          )}
+        </div>
+
+        {/* Unified Mode Switcher: Store & Admin Panel */}
+        <nav className="flex items-center gap-1.5 sm:gap-2">
           <Link
             to="/catalog"
-            className={`font-display text-[10px] font-bold uppercase ${!isAdmin ? 'text-[#f4b72b]' : 'text-[#9d90a8] hover:text-white'}`}
+            className={`font-display flex items-center gap-1.5 px-3 py-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
+              !isAdmin
+                ? 'border-2 border-[#0e0917] bg-[#e5a93c] text-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]'
+                : 'border-2 border-[#0e0917] bg-[#221437] text-[#d6c7ea] hover:bg-[#301b4c] hover:text-white hover:border-[#e5a93c] shadow-[2px_2px_0_#0e0917]'
+            }`}
           >
-            Store
+            <Store className="h-3.5 w-3.5" />
+            <span>Store</span>
           </Link>
           <Link
             to="/admin/dashboard"
-            className={`font-display text-[10px] font-bold uppercase ${isAdmin ? 'text-[#f4b72b]' : 'text-[#9d90a8] hover:text-white'}`}
+            className={`font-display px-3 py-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
+              isAdmin
+                ? 'border-2 border-[#0e0917] bg-[#e5a93c] text-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]'
+                : 'border-2 border-[#0e0917]/0 text-[#bdaecf] hover:border-[#0e0917] hover:bg-[#25153b] hover:text-white hover:shadow-[2.5px_2.5px_0_#0e0917]'
+            }`}
           >
             Admin Panel
           </Link>
         </nav>
 
-        <div className="ml-auto hidden h-11 max-w-[620px] flex-1 border border-[#675376] bg-[#f7f4f8] lg:flex">
-          <label className="relative flex w-36 shrink-0 items-center border-r border-[#b8aebe] bg-white px-3">
-            <select aria-label="Product category" className="h-full w-full appearance-none bg-transparent pr-5 text-xs font-semibold text-[#403747] outline-none">
-              <option>All Categories</option>
-              <option>Game Keys</option>
-              <option>Top-Ups</option>
-              <option>Subscriptions</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 h-4 w-4 text-[#756681]" />
-          </label>
-          <label className="flex min-w-0 flex-1 items-center gap-3 px-4">
-            <input
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#2b2430] outline-none placeholder:text-[#9c92a3]"
-              placeholder="Search for games, gift cards, or keys..."
-            />
-            <Search className="h-5 w-5 text-[#6f6179]" />
-          </label>
-        </div>
+        {/* ADMIN MODE HEADER VIEW */}
+        {isAdmin ? (
+          <div className="ml-auto flex items-center gap-3 sm:gap-4">
+            {/* Live Store Quick Preview */}
+            <Link
+              to="/catalog"
+              className="comic-action-btn flex h-10 items-center gap-2 border-2 border-[#0e0917] bg-[#25153b] px-3.5 text-[10px] font-black uppercase text-[#e5a93c] hover:bg-[#341b52] hover:text-[#ffd45e] shadow-[2.5px_2.5px_0_#0e0917]"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">View Live Store</span>
+            </Link>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button className="font-display hidden h-10 items-center gap-1 px-2 text-[10px] font-bold text-[#c8bdcf] hover:text-white sm:flex">
-            PHP <ChevronDown className="h-3 w-3" />
-          </button>
-          <Link to="/wishlist" aria-label="Wishlist" className="relative grid h-10 w-10 place-items-center text-[#b9adc4] hover:text-[#f4b72b]">
-            <Heart className="h-5 w-5" />
-            <span className="absolute right-0 top-0 text-[9px] font-bold text-[#f4b72b]">{wishlistCount}</span>
-          </Link>
-          <Link to="/checkout/cart" aria-label="Cart" className="relative grid h-10 w-10 place-items-center text-[#b9adc4] hover:text-[#f4b72b]">
-            <ShoppingCart className="h-5 w-5" />
-            <span className="absolute right-0 top-0 text-[9px] font-bold text-[#f4b72b]">{cartCount}</span>
-          </Link>
-          {user || isAccountPage ? (
-            <Link to="/profile" className="flex items-center gap-3 border-l border-[#49345d] pl-3">
-              <span className="grid h-10 w-10 place-items-center bg-[#6b2fa2] font-display text-[10px] font-black text-white">{initials}</span>
-              <span className="hidden sm:block">
-                <strong className="block text-sm text-white">{displayName}</strong>
-                <span className="block text-[10px] text-[#a99bb5]">{user?.role === 'admin' ? 'Administrator' : 'Shopper'}</span>
+            {/* Admin User Badge */}
+            <Link
+              to="/profile"
+              className="flex items-center gap-2.5 sm:gap-3 border-l-2 border-[#0e0917] pl-3"
+            >
+              <span className="grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#581c87] font-display text-[11px] font-black text-white shadow-[2px_2px_0_#0e0917]">
+                {initials}
+              </span>
+              <span className="hidden md:block">
+                <strong className="block text-xs text-[#f2edf7]">{displayName}</strong>
+                <span className="block text-[10px] font-bold text-[#e5a93c]">Administrator</span>
               </span>
             </Link>
-          ) : (
-            <Link to="/login" className="font-display flex h-10 items-center border border-[#675376] bg-[#242027] px-4 text-[10px] font-bold uppercase text-white transition-colors hover:border-[#f4b72b] sm:px-6">
-              Login
-            </Link>
-          )}
-        </div>
+          </div>
+        ) : (
+          /* STORE MODE HEADER VIEW */
+          <>
+            <div className="ml-auto hidden h-11 max-w-[580px] flex-1 border-2 border-[#0e0917] bg-[#ede7f5] shadow-[3.5px_3.5px_0_#0e0917] transition-all focus-within:shadow-[4.5px_4.5px_0_#e5a93c] lg:flex">
+              <div className="relative w-40 shrink-0 border-r-2 border-[#0e0917] bg-[#e1d7eb]">
+                <Select
+                  variant="navbar"
+                  defaultValue="All Items"
+                  options={['All Items', 'Game Keys', 'Top-Ups', 'Subscriptions']}
+                  ariaLabel="Product category"
+                  className="w-full h-full"
+                />
+              </div>
+              <label className="flex min-w-0 flex-1 items-center gap-3 px-4">
+                <input
+                  className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-[#170e24] outline-none placeholder:text-[#88789c]"
+                  placeholder="Search for games, gift cards, or keys..."
+                />
+                <Search className="h-5 w-5 text-[#241338]" />
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 ml-auto lg:ml-0">
+              <div className="hidden sm:block">
+                <Select
+                  variant="compact"
+                  defaultValue="PHP"
+                  options={['PHP', 'USD', 'EUR']}
+                  ariaLabel="Select currency"
+                  className="w-24"
+                  triggerClassName="h-10 text-[10px] bg-[#25153b] text-[#e0d3ef] shadow-[2.5px_2.5px_0_#0e0917]"
+                />
+              </div>
+              <Link
+                to="/wishlist"
+                aria-label="Wishlist"
+                className="relative grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#25153b] text-[#e0d3ef] shadow-[2.5px_2.5px_0_#0e0917] transition-all hover:-translate-y-0.5 hover:border-[#e5a93c] hover:text-[#f0b849] hover:shadow-[3.5px_3.5px_0_#0e0917]"
+              >
+                <Heart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center border-2 border-[#0e0917] bg-[#e5a93c] px-1 font-display text-[10px] font-black text-[#0e0917] shadow-[1.5px_1.5px_0_#0e0917]">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+              <Link
+                to="/checkout/cart"
+                aria-label="Cart"
+                className="relative grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#25153b] text-[#e0d3ef] shadow-[2.5px_2.5px_0_#0e0917] transition-all hover:-translate-y-0.5 hover:border-[#e5a93c] hover:text-[#f0b849] hover:shadow-[3.5px_3.5px_0_#0e0917]"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center border-2 border-[#0e0917] bg-[#e5a93c] px-1 font-display text-[10px] font-black text-[#0e0917] shadow-[1.5px_1.5px_0_#0e0917]">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+              {user || isAccountPage ? (
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-3 border-l-2 border-[#0e0917] pl-3"
+                >
+                  <span className="grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#581c87] font-display text-[11px] font-black text-white shadow-[2.5px_2.5px_0_#0e0917]">
+                    {initials}
+                  </span>
+                  <span className="hidden sm:block">
+                    <strong className="block text-sm text-[#f2edf7]">{displayName}</strong>
+                    <span className="block text-[10px] text-[#a99bb5]">
+                      {user?.role === 'admin' ? 'Administrator' : 'Shopper'}
+                    </span>
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="comic-action-btn flex h-10 items-center bg-[#e5a93c] px-5 text-[11px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      <label className="mx-5 mb-3 flex h-10 items-center gap-3 border border-[#675376] bg-[#f7f4f8] px-3 lg:hidden">
-        <input
-          className="min-w-0 flex-1 bg-transparent text-sm text-[#2b2430] outline-none placeholder:text-[#9c92a3]"
-          placeholder="Search games, cards, or keys..."
-        />
-        <Search className="h-4 w-4 text-[#6f6179]" />
-      </label>
+      {/* Store mobile search bar */}
+      {!isAdmin && (
+        <label className="mx-5 mb-3 flex h-10 items-center gap-3 border-2 border-[#0e0917] bg-[#ede7f5] px-3 shadow-[3px_3px_0_#0e0917] focus-within:shadow-[4px_4px_0_#e5a93c] lg:hidden">
+          <input
+            className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-[#170e24] outline-none placeholder:text-[#88789c]"
+            placeholder="Search games, cards, or keys..."
+          />
+          <Search className="h-4 w-4 text-[#241338]" />
+        </label>
+      )}
     </header>
   );
 }

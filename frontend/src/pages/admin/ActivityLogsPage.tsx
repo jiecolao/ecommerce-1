@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
 import api from '../../lib/api';
+import { TableRowSkeleton } from '../../components/ui/skeleton';
 
 type LogItem = {
   id: number;
@@ -103,14 +104,7 @@ export default function ActivityLogsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#49345d]">
-              {isLoading && (
-                <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-[#f4b72b]">
-                    <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin" />
-                    Loading audit trail...
-                  </td>
-                </tr>
-              )}
+              {isLoading && <TableRowSkeleton columns={6} rows={6} />}
               {!isLoading && filtered.map((log) => (
                 <tr key={log.id} className="hover:bg-[#29212d]">
                   <td className="px-4 py-4">

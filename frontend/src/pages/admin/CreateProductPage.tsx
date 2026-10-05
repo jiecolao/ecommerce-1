@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import SellerLayout from '../../components/seller/SellerLayout';
 import api from '../../lib/api';
 
 const compressImage = (file: File): Promise<Blob> => {
@@ -145,8 +146,9 @@ export default function CreateProductPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
-      <Card>
+    <SellerLayout pageName="Add product">
+      <div className="max-w-3xl mx-auto py-2">
+        <Card>
         <CardHeader>
           <CardTitle>Add New Product</CardTitle>
           <CardDescription>Upload a new product to your catalog.</CardDescription>
@@ -283,6 +285,7 @@ export default function CreateProductPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </SellerLayout>
   );
 }

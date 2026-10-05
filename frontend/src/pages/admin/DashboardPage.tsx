@@ -1,8 +1,10 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Download, TrendingDown, TrendingUp, Loader2 } from 'lucide-react';
+import { Download, TrendingDown, TrendingUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
 import api from '../../lib/api';
+import { DashboardSkeleton } from '../../components/ui/skeleton';
+import { Select } from '../../components/ui/select';
 
 const revenueData = [
   { day: '1', revenue: 18800 }, { day: '3', revenue: 27600 }, { day: '5', revenue: 24100 }, { day: '7', revenue: 31800 },
@@ -82,28 +84,32 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <SellerLayout pageName="Analytics">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <span className="comic-kicker mb-4">Store intelligence</span>
-          <h1 className="comic-title text-3xl font-black">Analytics</h1>
-          <p className="mt-3 text-sm text-[#a99bb5]">Monitor store performance, revenue, and product demand.</p>
+    <SellerLayout pageName="Analytics" contentClassName="p-0">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-24 2xl:px-36 3xl:px-48 py-6 sm:py-8 max-w-[1760px]">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="comic-kicker mb-4">Store intelligence</span>
+            <h1 className="comic-title text-3xl font-black">Analytics</h1>
+            <p className="mt-3 text-sm text-[#a99bb5]">Monitor store performance, revenue, and product demand.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Select
+              defaultValue="Last 30 days"
+              options={['Last 30 days', 'Last 90 days']}
+              className="min-w-36"
+            />
+            <button
+              onClick={() => window.print()}
+              className="comic-action-btn flex h-11 items-center gap-2 bg-[#e5a93c] px-5 text-[9px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
+            >
+              <Download className="h-4 w-4" /> Export report
+            </button>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <select className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white">
-            <option>Last 30 days</option>
-            <option>Last 90 days</option>
-          </select>
-          <button onClick={() => window.print()} className="font-display flex h-11 items-center gap-2 bg-[#f4b72b] px-5 text-[9px] font-black uppercase text-[#171419]">
-            <Download className="h-4 w-4" /> Export report
-          </button>
-        </div>
-      </div>
 
       {isLoading ? (
-        <div className="py-20 text-center font-display text-lg text-[#f4b72b]">
-          <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin" />
-          Loading store analytics...
+        <div className="mt-7">
+          <DashboardSkeleton />
         </div>
       ) : (
         <>
@@ -222,6 +228,7 @@ export default function AdminDashboardPage() {
           </section>
         </>
       )}
+      </div>
     </SellerLayout>
   );
 }

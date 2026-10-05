@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Plus, Search, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
 import api from '../../lib/api';
+import { TableRowSkeleton } from '../../components/ui/skeleton';
 
 type ManagedProduct = {
   id: number;
@@ -138,14 +139,7 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#49345d]">
-              {isLoading && (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center text-[#f4b72b]">
-                    <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin" />
-                    Loading products...
-                  </td>
-                </tr>
-              )}
+              {isLoading && <TableRowSkeleton columns={5} rows={6} />}
               {!isLoading && filteredProducts.map((product) => (
                 <tr key={product.id} className="bg-[#211d23] hover:bg-[#27212a]">
                   <td className="px-5 py-4 font-bold text-white">{product.title}</td>
