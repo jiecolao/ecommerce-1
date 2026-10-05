@@ -5,6 +5,7 @@
   --color-primary: #e5a93c;
   --color-secondary: #581c87;
   --font-display: "Orbitron", sans-serif;
+  --font-sans: "Space Grotesk", sans-serif;
 }
 
 @keyframes shimmer {
@@ -201,6 +202,10 @@
     flex-direction: column;
     padding: 5px 12px;
     border: 2px solid #0e0917;
+    background-color: #e5a93c;
+    background-image: radial-gradient(#b07b1d 1.5px, transparent 1.5px);
+    background-size: 6px 6px;
+    color: #0e0917;
     box-shadow: 3.5px 3.5px 0px #0e0917;
     transform: rotate(-2deg);
     transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;

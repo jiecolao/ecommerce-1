@@ -46,7 +46,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b-[2.5px] border-[#0e0917] bg-[#150d22]/95 backdrop-blur shadow-[0_4px_0_#0e0917] print:hidden">
-      <div className={`mx-auto flex min-h-[72px] items-center gap-3 sm:gap-4 px-4 sm:px-8 ${isAdmin ? 'w-full max-w-none' : 'max-w-[1440px]'}`}>
+      <div className="mx-auto flex min-h-[72px] items-center gap-3 sm:gap-4 px-4 sm:px-8 max-w-[1440px]">
         {/* Brand Logo */}
         <div className="flex items-center gap-2.5">
           <Link to="/catalog" className="flex shrink-0 items-center gap-2.5 sm:gap-3 text-white group">

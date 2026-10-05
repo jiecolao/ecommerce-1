@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
 import api from '../../lib/api';
 import { TableRowSkeleton } from '../../components/ui/skeleton';
+import { Select } from '../../components/ui/select';
 
 type LogItem = {
   id: number;
@@ -58,40 +59,42 @@ export default function ActivityLogsPage() {
   }, [logs, query, eventType, date]);
 
   return (
-    <SellerLayout pageName="Activity Logs">
-      <div>
-        <span className="comic-kicker mb-4">Audit trail</span>
-        <h1 className="comic-title text-3xl font-black">Activity logs</h1>
-        <p className="mt-3 text-sm text-[#a99bb5]">Monitor audit trails and administrative database actions.</p>
-      </div>
+    <SellerLayout pageName="Activity Logs" contentClassName="p-0">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-24 2xl:px-36 3xl:px-48 py-6 sm:py-8 max-w-[1760px]">
+        <div>
+          <span className="comic-kicker mb-4">Audit trail</span>
+          <h1 className="comic-title text-3xl font-black">Activity logs</h1>
+          <p className="mt-3 text-sm text-[#a99bb5]">Monitor audit trails and administrative database actions.</p>
+        </div>
 
-      <section className="mt-7 flex flex-col gap-3 sm:flex-row">
-        <label className="flex h-11 flex-1 items-center gap-3 border border-[#5b4767] bg-[#211d23] px-4 sm:max-w-sm">
-          <Search className="h-4 w-4 text-[#f4b72b]" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by action or details..."
-            className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+        <section className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <label className="flex h-11 flex-1 items-center gap-3 border border-[#5b4767] bg-[#211d23] px-4 sm:max-w-sm">
+            <Search className="h-4 w-4 text-[#e5a93c]" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by action or details..."
+              className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+            />
+          </label>
+          <Select
+            value={eventType}
+            onChange={setEventType}
+            options={[
+              { value: 'All events', label: 'All events' },
+              { value: 'PRODUCT', label: 'Products' },
+              { value: 'ORDER', label: 'Orders' },
+              { value: 'SHOPPER', label: 'Shoppers' },
+            ]}
+            className="w-36"
           />
-        </label>
-        <select
-          value={eventType}
-          onChange={(event) => setEventType(event.target.value)}
-          className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white"
-        >
-          <option>All events</option>
-          <option value="PRODUCT">Products</option>
-          <option value="ORDER">Orders</option>
-          <option value="SHOPPER">Shoppers</option>
-        </select>
-        <input
-          type="date"
-          value={date}
-          onChange={(event) => setDate(event.target.value)}
-          className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white [color-scheme:dark] sm:ml-auto"
-        />
-      </section>
+          <input
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white [color-scheme:dark] sm:ml-auto"
+          />
+        </section>
 
       <section className="mt-5 overflow-hidden border border-[#49345d] bg-[#211d23]">
         <div className="overflow-x-auto">
@@ -135,6 +138,7 @@ export default function ActivityLogsPage() {
           <span>Total events: {filtered.length}</span>
         </footer>
       </section>
+      </div>
     </SellerLayout>
   );
 }

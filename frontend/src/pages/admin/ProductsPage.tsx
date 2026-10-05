@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
 import api from '../../lib/api';
 import { TableRowSkeleton } from '../../components/ui/skeleton';
+import { Select } from '../../components/ui/select';
 
 type ManagedProduct = {
   id: number;
@@ -78,54 +79,59 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <SellerLayout pageName="Products">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <span className="comic-kicker mb-4">Store inventory</span>
-          <h1 className="comic-title text-3xl font-black">Products</h1>
-          <p className="mt-3 text-sm text-[#a99bb5]">Manage products and listings on the MystiKeys store.</p>
-        </div>
-        <Link to="/admin/products/new" className="font-display flex h-11 items-center justify-center gap-2 bg-[#f4b72b] px-5 text-[9px] font-black uppercase text-[#171419] hover:bg-[#ffd45e]">
-          <Plus className="h-4 w-4" /> Add product
-        </Link>
-      </div>
-
-      <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <article key={stat.label} className="border border-[#49345d] bg-[#252028] p-5">
-            <p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{stat.label}</p>
-            <div className="mt-2 flex items-end gap-2">
-              <strong className="font-display text-2xl font-black text-white">{stat.value}</strong>
-              <span className="pb-1 text-xs text-[#8f8398]">{stat.detail}</span>
-            </div>
-          </article>
-        ))}
-      </section>
-
-      <div className="mt-7 border border-[#49345d] bg-[#1c191f]">
-        <div className="flex flex-col gap-4 border-b border-[#49345d] p-5 sm:flex-row sm:items-center sm:justify-between">
-          <label className="flex h-11 flex-1 items-center gap-3 border border-[#5b4767] bg-[#211d23] px-4">
-            <Search className="h-4 w-4 text-[#8f8398]" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search products by title or SKU..."
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-[#756b7b]"
-            />
-          </label>
-          <div className="flex gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 border border-[#5b4767] bg-[#211d23] px-3 font-display text-[9px] font-bold uppercase text-white outline-none"
-            >
-              <option value="ALL">All status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="DRAFT">Draft</option>
-              <option value="INACTIVE">Inactive</option>
-            </select>
+    <SellerLayout pageName="Products" contentClassName="p-0">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-24 2xl:px-36 3xl:px-48 py-6 sm:py-8 max-w-[1760px]">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="comic-kicker mb-4">Store inventory</span>
+            <h1 className="comic-title text-3xl font-black">Products</h1>
+            <p className="mt-3 text-sm text-[#a99bb5]">Manage products and listings on the MystiKeys store.</p>
           </div>
+          <Link
+            to="/admin/products/new"
+            className="comic-action-btn flex h-11 items-center justify-center gap-2 bg-[#e5a93c] px-5 text-[10px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
+          >
+            <Plus className="h-4 w-4" /> Add product
+          </Link>
         </div>
+
+        <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {stats.map((stat) => (
+            <article key={stat.label} className="border border-[#49345d] bg-[#252028] p-5">
+              <p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{stat.label}</p>
+              <div className="mt-2 flex items-end gap-2">
+                <strong className="font-display text-2xl font-black text-white">{stat.value}</strong>
+                <span className="pb-1 text-xs text-[#8f8398]">{stat.detail}</span>
+              </div>
+            </article>
+          ))}
+        </section>
+
+        <div className="mt-7 border border-[#49345d] bg-[#1c191f]">
+          <div className="flex flex-col gap-4 border-b border-[#49345d] p-5 sm:flex-row sm:items-center sm:justify-between">
+            <label className="flex h-11 flex-1 items-center gap-3 border border-[#5b4767] bg-[#211d23] px-4">
+              <Search className="h-4 w-4 text-[#8f8398]" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search products by title or SKU..."
+                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-[#756b7b]"
+              />
+            </label>
+            <div className="flex gap-3">
+              <Select
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={[
+                  { value: 'ALL', label: 'All status' },
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'DRAFT', label: 'Draft' },
+                  { value: 'INACTIVE', label: 'Inactive' },
+                ]}
+                className="w-36"
+              />
+            </div>
+          </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-sm">
@@ -176,6 +182,7 @@ export default function AdminProductsPage() {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </SellerLayout>
   );
