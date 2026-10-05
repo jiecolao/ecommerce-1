@@ -1,19 +1,9 @@
 import { useMemo, useState } from 'react';
-import { LockKeyhole, Minus, Plus, ShieldCheck, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-
-type CartItem = {
-  id: string;
-  title: string;
-  details: string;
-  price: number;
-  quantity: number;
-};
-
-const initialItems: CartItem[] = [
-  { id: 'palworld', title: 'Palworld', details: 'REGION: GLOBAL | PC GAME KEY', price: 550, quantity: 1 },
-  { id: 'game-pass', title: 'Xbox Game Pass Ultimate', details: 'REGION: GLOBAL | 1 MONTH', price: 1250, quantity: 1 },
-];
+import { LockKeyhole, ShieldCheck, Trash2, ArrowLeft } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '../../lib/api';
+import { CartPageSkeleton } from '../../components/ui/skeleton';
 
 const paymentMethods = [
   { id: 'gcash', label: 'GCash', img: 'https://www.google.com/s2/favicons?domain=gcash.com&sz=128' },
@@ -26,146 +16,225 @@ const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minim
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const [items, setItems] = useState(initialItems);
-  const [email, setEmail] = useState('');
+  const queryClient = useQueryClient();
   const [paymentMethod, setPaymentMethod] = useState('gcash');
+  const [checkingOut, setCheckingOut] = useState(false);
 
-  const subtotal = useMemo(
-    () => items.reduce((total, item) => total + item.price * item.quantity, 0),
-    [items],
-  );
-  const platformFee = items.length > 0 ? 12 : 0;
+  const { data: cartData, isLoading } = useQuery({
+    queryKey: ['cart'],
+    queryFn: async () => {
+      const res = await api.get('/buyer/cart');
+      return res.data;
+    },
+  });
+
+  const orderLines = useMemo(() => cartData?.orderLines || [], [cartData?.orderLines]);
+
+  const subtotal = useMemo(() => {
+    return orderLines.reduce((acc: number, line: any) => {
+      const price = Number(line.unitPrice ?? line.productVariant?.price ?? 0);
+      const qty = line.quantity || 1;
+      return acc + price * qty;
+    }, 0);
+  }, [orderLines]);
+
+  const platformFee = orderLines.length > 0 ? 12 : 0;
   const total = subtotal + platformFee;
 
-  const updateQuantity = (id: string, amount: number) => {
-    setItems((current) => current.map((item) => (
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity + amount) } : item
-    )));
+  const removeMutation = useMutation({
+    mutationFn: async (lineId: number) => {
+      await api.delete(`/buyer/cart/items/${lineId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+    onError: (err: any) => {
+      alert('Failed to remove item: ' + (err.response?.data?.message || err.message));
+    },
+  });
+
+  const handleCompletePurchase = async () => {
+    if (orderLines.length === 0) return;
+    setCheckingOut(true);
+
+    try {
+      // Complete checkout on available backend checkout endpoint
+      for (const line of orderLines) {
+        const variantId = line.productVariantId || line.productVariant?.id;
+        if (variantId) {
+          const itemTotal = Math.round(Number(line.unitPrice || line.productVariant?.price || 0) * (line.quantity || 1));
+          await api.post('/buyer/checkout', {
+            productId: variantId,
+            totalAmount: itemTotal,
+          });
+          // Remove from cart once checked out
+          await api.delete(`/buyer/cart/items/${line.id}`).catch(() => {});
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      navigate('/checkout/success');
+    } catch (err: any) {
+      alert('Checkout failed: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setCheckingOut(false);
+    }
   };
 
-  const removeItem = (id: string) => {
-    setItems((current) => current.filter((item) => item.id !== id));
-  };
+  if (isLoading) {
+    return <CartPageSkeleton />;
+  }
 
   return (
     <div className="pb-8">
       <div className="mb-10">
         <span className="comic-kicker mb-5">Final checkpoint</span>
-        <h1 className="comic-title text-4xl font-black">Checkout</h1>
-        <p className="mt-3 text-[#a99bb5]">Review your order and select a payment method to proceed.</p>
+        <h1 className="comic-title text-4xl font-black">Checkout & Cart</h1>
+        <p className="mt-3 text-[#b2a4c4]">Review your items and proceed with your order.</p>
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(340px,0.8fr)]">
-        <section className="comic-panel overflow-hidden">
-          <header className="border-b border-[#49345d] bg-[#2b2130] px-6 py-5">
-            <h2 className="font-display text-xs font-black uppercase text-white">Your cart ({items.length} items)</h2>
-          </header>
+      {orderLines.length === 0 ? (
+        <div className="comic-panel p-12 text-center">
+          <p className="font-display text-xl font-black text-[#f2edf7]">Your cart is empty.</p>
+          <p className="mt-2 text-sm text-[#b2a4c4]">Browse our vault to add games and top-ups.</p>
+          <Link
+            to="/catalog"
+            className="comic-action-btn mt-6 inline-flex h-12 items-center gap-2 bg-[#e5a93c] px-6 text-xs font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
+          >
+            <ArrowLeft className="h-4 w-4" /> Go to Catalog
+          </Link>
+        </div>
+      ) : (
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(340px,0.8fr)]">
+          <section className="comic-panel overflow-hidden">
+            <header className="border-b-2 border-[#0e0917] bg-[#241338] px-6 py-5">
+              <h2 className="font-display text-xs font-black uppercase tracking-wider text-[#f2edf7]">
+                Order Items ({orderLines.length})
+              </h2>
+            </header>
 
-          {items.length === 0 ? (
-            <div className="px-6 py-20 text-center">
-              <p className="font-display text-sm font-bold uppercase text-white">Your cart is empty</p>
-              <p className="mt-2 text-sm text-[#a99bb5]">Add a game from the catalog to continue.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-[#49345d]">
-              {items.map((item) => (
-                <article key={item.id} className="grid gap-5 p-5 sm:grid-cols-[112px_1fr_auto] sm:items-center sm:p-6">
-                  <img src="/palworld-cover.jpg" alt="" className="h-28 w-28 object-cover" />
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-bold text-white">{item.title}</h3>
-                    <p className="mt-1 font-display text-[9px] font-semibold text-[#a99bb5]">{item.details}</p>
-                    <div className="mt-5 inline-flex h-9 border border-[#5b4767] bg-[#1c191f]">
-                      <button aria-label={`Decrease ${item.title} quantity`} onClick={() => updateQuantity(item.id, -1)} className="grid w-9 place-items-center text-[#a99bb5] hover:bg-[#33253b] hover:text-white">
-                        <Minus className="h-3 w-3" />
-                      </button>
-                      <span className="grid w-11 place-items-center border-x border-[#5b4767] font-display text-xs font-bold text-white">{item.quantity}</span>
-                      <button aria-label={`Increase ${item.title} quantity`} onClick={() => updateQuantity(item.id, 1)} className="grid w-9 place-items-center text-[#a99bb5] hover:bg-[#33253b] hover:text-white">
-                        <Plus className="h-3 w-3" />
+            <div className="divide-y-2 divide-[#0e0917]">
+              {orderLines.map((line: any) => {
+                const variant = line.productVariant;
+                const product = variant?.product;
+                const title = product?.title || variant?.name || 'Digital Game Key';
+                const price = Number(line.unitPrice ?? variant?.price ?? 0);
+                const image = product?.media?.[0] || '/palworld-cover.jpg';
+
+                return (
+                  <article key={line.id} className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
+                    <img
+                      src={image}
+                      alt={title}
+                      className="h-20 w-20 shrink-0 border-2 border-[#0e0917] object-cover shadow-[2px_2px_0_#0e0917]"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-display font-black text-[#f2edf7] text-base">{title}</h3>
+                      <p className="mt-1 text-xs text-[#a99bb5]">
+                        {variant?.name || 'Standard Edition'} (Qty: {line.quantity})
+                      </p>
+                      {line.targetAccount && (
+                        <p className="text-[11px] font-bold text-[#e5a93c]">
+                          Account: {line.targetAccount}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between gap-6 sm:flex-col sm:items-end">
+                      <span className="font-display text-lg font-black text-[#f2edf7] drop-shadow-[1px_1px_0_#0e0917]">
+                        {formatPrice(price * (line.quantity || 1))}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeMutation.mutate(line.id)}
+                        disabled={removeMutation.isPending}
+                        className="text-[#a99bb5] transition-colors hover:text-[#e05275]"
+                        aria-label={`Remove ${title}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-5 sm:h-full sm:flex-col sm:items-end">
-                    <p className="font-display text-lg font-black text-white">{formatPrice(item.price * item.quantity)}</p>
-                    <button onClick={() => removeItem(item.id)} className="flex items-center gap-2 font-display text-[9px] font-bold uppercase text-[#9f929f] hover:text-[#f4b72b]">
-                      <Trash2 className="h-3.5 w-3.5" /> Remove
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <aside className="space-y-7 lg:sticky lg:top-28">
-          <section className="comic-panel p-6">
-            <div className="flex items-center gap-3">
-              <span className="grid h-7 w-7 place-items-center bg-[#f4b72b] font-display text-[10px] font-black text-[#171419]">1</span>
-              <h2 className="font-display text-xs font-black uppercase text-white">Guest details</h2>
-            </div>
-            <label className="mt-6 block">
-              <span className="font-display text-[9px] font-bold uppercase text-[#b9adc4]">Email address</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="john@example.com"
-                className="mt-2 h-12 w-full border border-[#5b4767] bg-[#1c191f] px-4 text-sm text-white outline-none placeholder:text-[#756b7b] focus:border-[#f4b72b]"
-              />
-            </label>
-            <p className="mt-3 text-xs leading-5 text-[#84788c]">Your keys and digital receipts will be sent to this email address.</p>
-          </section>
-
-          <section className="comic-panel p-6">
-            <div className="flex items-center gap-3">
-              <span className="grid h-7 w-7 place-items-center bg-[#f4b72b] font-display text-[10px] font-black text-[#171419]">2</span>
-              <h2 className="font-display text-xs font-black uppercase text-white">Payment channel</h2>
-            </div>
-            <div className="mt-6 space-y-3">
-              {paymentMethods.map(({ id, label, icon: PaymentIcon, img }: any) => {
-                const isSelected = paymentMethod === id;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => setPaymentMethod(id)}
-                    className={`flex h-15 w-full items-center gap-4 border px-4 text-left transition-transform hover:-translate-y-0.5 ${
-                      isSelected ? 'border-[#f4b72b] bg-[#2b183c]' : 'border-[#51405b] bg-[#211d23]'
-                    }`}
-                  >
-                    <span className={`grid h-5 w-5 place-items-center border ${isSelected ? 'border-[#f4b72b]' : 'border-[#74677b]'}`}>
-                      {isSelected && <span className="h-2.5 w-2.5 bg-[#f4b72b]" />}
-                    </span>
-                    <span className="flex-1 text-sm font-bold text-white">{label}</span>
-                    {img ? (
-                      <img src={img} alt={label} className="h-5 w-5 rounded-sm object-contain" />
-                    ) : (
-                      PaymentIcon && <PaymentIcon className="h-5 w-5 text-[#f4b72b]" />
-                    )}
-                  </button>
+                  </article>
                 );
               })}
             </div>
           </section>
 
-          <section className="comic-panel p-6">
-            <h2 className="text-center font-display text-xs font-black uppercase text-white">Order summary</h2>
-            <dl className="mt-6 space-y-3 text-sm">
-              <div className="flex justify-between text-[#a99bb5]"><dt>Subtotal</dt><dd className="font-semibold text-white">{formatPrice(subtotal)}</dd></div>
-              <div className="flex justify-between text-[#a99bb5]"><dt>Platform fee</dt><dd className="font-semibold text-white">{formatPrice(platformFee)}</dd></div>
-              <div className="flex justify-between text-[#a99bb5]"><dt>Discount code</dt><dd>None</dd></div>
-            </dl>
-            <div className="mt-5 flex items-end justify-between border-t border-[#49345d] pt-5">
-              <span className="font-display text-xs font-black uppercase text-white">Total</span>
-              <span className="font-display text-2xl font-black text-[#f4b72b]">{formatPrice(total)}</span>
-            </div>
-            <button onClick={() => navigate('/checkout/success')} disabled={items.length === 0} className="font-display mt-6 flex h-13 w-full items-center justify-center gap-3 bg-[#f4b72b] px-5 text-[11px] font-black uppercase text-[#171419] transition-transform hover:-translate-y-0.5 hover:bg-[#ffd45e] disabled:cursor-not-allowed disabled:opacity-40">
-              Complete purchase <LockKeyhole className="h-4 w-4" />
-            </button>
-            <p className="mt-5 flex items-center justify-center gap-2 text-center text-[10px] text-[#84788c]">
-              <ShieldCheck className="h-3.5 w-3.5" /> Secured with encrypted checkout.
-            </p>
-          </section>
-        </aside>
-      </div>
+          <aside className="space-y-6">
+            <section className="comic-panel p-6">
+              <h2 className="font-display text-xs font-black uppercase tracking-wider text-[#f2edf7]">
+                Select payment method
+              </h2>
+              <div className="mt-4 space-y-3">
+                {paymentMethods.map(({ id, label, img }) => {
+                  const isSelected = paymentMethod === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setPaymentMethod(id)}
+                      className={`flex h-14 w-full items-center gap-4 border-2 border-[#0e0917] px-4 text-left font-semibold transition-all ${
+                        isSelected
+                          ? 'bg-[#2d1544] shadow-[4px_4px_0_#e5a93c] -translate-y-0.5'
+                          : 'bg-[#180e25] text-[#f2edf7] shadow-[3px_3px_0_#0e0917] hover:bg-[#231438] hover:-translate-y-0.5'
+                      }`}
+                    >
+                      <span
+                        className={`grid h-5 w-5 place-items-center border-2 border-[#0e0917] ${
+                          isSelected ? 'bg-[#e5a93c]' : 'bg-[#120a1c]'
+                        }`}
+                      >
+                        {isSelected && <span className="h-2 w-2 bg-[#0e0917]" />}
+                      </span>
+                      <span className="flex-1 text-sm font-bold text-[#f2edf7]">{label}</span>
+                      {img && (
+                        <img
+                          src={img}
+                          alt={label}
+                          className="h-5 w-5 rounded-sm object-contain"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="comic-panel p-6">
+              <h2 className="font-display text-center text-xs font-black uppercase tracking-wider text-[#f2edf7]">
+                Order summary
+              </h2>
+              <dl className="mt-6 space-y-3 text-sm">
+                <div className="flex justify-between text-[#a99bb5]">
+                  <dt>Subtotal</dt>
+                  <dd className="font-semibold text-[#f2edf7]">{formatPrice(subtotal)}</dd>
+                </div>
+                <div className="flex justify-between text-[#a99bb5]">
+                  <dt>Platform fee</dt>
+                  <dd className="font-semibold text-[#f2edf7]">{formatPrice(platformFee)}</dd>
+                </div>
+              </dl>
+              <div className="mt-5 flex items-end justify-between border-t-2 border-[#0e0917] pt-5">
+                <span className="font-display text-xs font-black uppercase text-[#f2edf7]">Total</span>
+                <span className="font-display text-2xl font-black text-[#e5a93c] drop-shadow-[1.5px_1.5px_0_#0e0917]">
+                  {formatPrice(total)}
+                </span>
+              </div>
+              <button
+                onClick={handleCompletePurchase}
+                disabled={orderLines.length === 0 || checkingOut}
+                className="comic-action-btn mt-6 flex h-13 w-full items-center justify-center gap-3 bg-[#e5a93c] px-5 text-[11px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {checkingOut ? 'Processing checkout...' : 'Complete purchase'}{' '}
+                <LockKeyhole className="h-4 w-4 stroke-[2.5]" />
+              </button>
+              <p className="mt-5 flex items-center justify-center gap-2 text-center text-[10px] text-[#84788c]">
+                <ShieldCheck className="h-3.5 w-3.5" /> Secured with encrypted checkout.
+              </p>
+            </section>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }

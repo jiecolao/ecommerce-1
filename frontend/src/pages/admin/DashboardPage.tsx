@@ -1,18 +1,15 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Download, TrendingDown, TrendingUp } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
+import api from '../../lib/api';
+import { DashboardSkeleton } from '../../components/ui/skeleton';
+import { Select } from '../../components/ui/select';
 
 const revenueData = [
   { day: '1', revenue: 18800 }, { day: '3', revenue: 27600 }, { day: '5', revenue: 24100 }, { day: '7', revenue: 31800 },
   { day: '9', revenue: 34900 }, { day: '11', revenue: 29200 }, { day: '13', revenue: 38200 }, { day: '15', revenue: 33600 },
   { day: '17', revenue: 39500 }, { day: '19', revenue: 36100 }, { day: '21', revenue: 40200 }, { day: '23', revenue: 38900 },
-];
-
-const metricCards = [
-  { label: 'Gross revenue', value: 'P428,650', change: '+12.8%', positive: true, detail: 'vs. previous 30 days' },
-  { label: 'Orders', value: '1,284', change: '+8.4%', positive: true, detail: '42.8 orders per day' },
-  { label: 'New customers', value: '386', change: '+6.1%', positive: true, detail: '30.1% first-time buyers' },
-  { label: 'Conversion rate', value: '4.72%', change: '-0.3%', positive: false, detail: '27,204 storefront visits' },
 ];
 
 const progressGroups = {
@@ -22,18 +19,216 @@ const progressGroups = {
 };
 
 function ProgressPanel({ title, rows }: { title: string; rows: (string | number)[][] }) {
-  return <section className="border border-[#49345d] bg-[#252028] p-5"><h2 className="font-display text-xs font-black uppercase text-white">{title}</h2><div className="mt-5 space-y-5">{rows.map(([label,value,percent]) => <div key={String(label)}><div className="flex justify-between gap-3 text-xs"><span className="text-[#d8cedd]">{label}</span><span className="text-[#8f8398]">{value} - {percent}%</span></div><div className="mt-2 h-1.5 bg-[#1c191f]"><div className="h-full bg-[#f4b72b]" style={{ width: `${percent}%` }} /></div></div>)}</div></section>;
+  return (
+    <section className="border border-[#49345d] bg-[#252028] p-5">
+      <h2 className="font-display text-xs font-black uppercase text-white">{title}</h2>
+      <div className="mt-5 space-y-5">
+        {rows.map(([label, value, percent]) => (
+          <div key={String(label)}>
+            <div className="flex justify-between gap-3 text-xs">
+              <span className="text-[#d8cedd]">{label}</span>
+              <span className="text-[#8f8398]">{value} - {percent}%</span>
+            </div>
+            <div className="mt-2 h-1.5 bg-[#1c191f]">
+              <div className="h-full bg-[#f4b72b]" style={{ width: `${percent}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
-export default function DashboardPage() {
-  return <SellerLayout pageName="Analytics">
-    <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><span className="comic-kicker mb-4">Store intelligence</span><h1 className="comic-title text-3xl font-black">Analytics</h1><p className="mt-3 text-sm text-[#a99bb5]">Monitor store performance, product demand, and inventory health.</p></div><div className="flex gap-3"><select className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white"><option>Last 30 days</option><option>Last 90 days</option></select><button className="font-display flex h-11 items-center gap-2 bg-[#f4b72b] px-5 text-[9px] font-black uppercase text-[#171419]"><Download className="h-4 w-4" /> Export report</button></div></div>
-    <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{metricCards.map((metric) => <article key={metric.label} className="border border-[#49345d] bg-[#252028] p-5"><p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{metric.label}</p><div className="mt-2 flex items-center gap-3"><strong className="font-display text-2xl font-black text-white">{metric.value}</strong><span className={`flex items-center gap-1 text-xs font-bold ${metric.positive ? 'text-[#f4b72b]' : 'text-[#e1a2aa]'}`}>{metric.positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}{metric.change}</span></div><p className="mt-2 text-xs text-[#8f8398]">{metric.detail}</p></article>)}</section>
-    <section className="mt-5 grid gap-5 xl:grid-cols-[1.7fr_0.8fr]">
-      <div className="border border-[#49345d] bg-[#252028] p-5"><div className="flex items-start justify-between"><h2 className="font-display text-xs font-black uppercase text-white">Revenue trend</h2><p className="font-display text-right text-lg font-black text-[#f4b72b]">P428,650<span className="block font-sans text-[10px] font-normal text-[#8f8398]">Gross sales</span></p></div><div className="mt-5 h-72"><ResponsiveContainer width="100%" height="100%"><BarChart data={revenueData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}><CartesianGrid stroke="#3a3040" vertical={false} /><XAxis dataKey="day" tick={{ fill: '#8f8398', fontSize: 10 }} axisLine={false} tickLine={false} /><YAxis tick={{ fill: '#8f8398', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000}k`} /><Tooltip cursor={{ fill: '#2b2130' }} contentStyle={{ background: '#1c191f', border: '1px solid #5b4767', color: '#fff' }} formatter={(value) => [`P${Number(value).toLocaleString()}`, 'Revenue']} /><Bar dataKey="revenue" fill="#f4b72b" radius={[2,2,0,0]} /></BarChart></ResponsiveContainer></div></div>
-      <ProgressPanel title="Sales by category" rows={progressGroups.categories} />
-    </section>
-    <section className="mt-5 grid gap-5 lg:grid-cols-3"><ProgressPanel title="Platform performance" rows={progressGroups.platforms} /><section className="border border-[#49345d] bg-[#252028] p-5"><h2 className="font-display text-xs font-black uppercase text-white">Checkout funnel</h2><div className="mt-5 space-y-4">{[['100%','Store visits','27,204'],['36.2%','Product views','9,860'],['7.5%','Checkout started','2,041'],['4.7%','Completed orders','1,284']].map(([rate,label,value]) => <div key={label} className="grid grid-cols-[55px_1fr_auto] items-center gap-3"><span className="bg-[#2b183c] px-2 py-1 text-center font-display text-[8px] font-bold text-[#f4b72b]">{rate}</span><span className="text-xs text-[#a99bb5]">{label}</span><strong className="text-xs text-white">{value}</strong></div>)}</div></section><ProgressPanel title="Payment methods" rows={progressGroups.payments} /></section>
-    <section className="mt-5 grid gap-5 xl:grid-cols-[1.7fr_0.8fr]"><div className="overflow-hidden border border-[#49345d] bg-[#252028]"><div className="flex items-center justify-between px-5 py-4"><h2 className="font-display text-xs font-black uppercase text-white">Top-selling products</h2><span className="text-xs text-[#f4b72b]">View all products</span></div><table className="w-full text-left text-xs"><thead className="border-y border-[#49345d] bg-[#2b2130] font-display text-[8px] uppercase text-[#8f8398]"><tr><th className="px-5 py-3">Product</th><th className="px-5 py-3">Units</th><th className="px-5 py-3">Revenue</th></tr></thead><tbody className="divide-y divide-[#49345d]">{[['Helldivers 2 - Super Citizen Edition','185','P92,614'],['PSN Gift Card P1,000','168','P68,040'],['Roblox Robux - 800 Robux','142','P78,100'],['Xbox Game Pass Ultimate','91','P56,875'],['Cyberpunk 2077: Phantom Liberty','74','P41,440']].map((row) => <tr key={row[0]}><td className="px-5 py-4 text-white">{row[0]}</td><td className="px-5 py-4 text-[#a99bb5]">{row[1]}</td><td className="px-5 py-4 font-display font-bold text-[#f4b72b]">{row[2]}</td></tr>)}</tbody></table></div><div className="space-y-5"><section className="border border-[#49345d] bg-[#252028] p-5"><div className="flex justify-between"><h2 className="font-display text-xs font-black uppercase text-white">Inventory alerts</h2><span className="text-xs text-[#8f8398]">22 products</span></div><div className="mt-5 space-y-4">{[['Mobile Legends: 1000 Diamonds','0 - Out'],['Xbox Game Pass Ultimate','6 - Low'],['Steam Wallet P500','6 - Low'],['Nintendo eShop $20','7 - Low']].map(([name,count]) => <div key={name} className="flex justify-between gap-3 text-xs"><span className="text-[#b9adc4]">{name}</span><strong className="text-[#f4b72b]">{count}</strong></div>)}</div></section><section className="border border-[#49345d] bg-[#252028] p-5"><h2 className="font-display text-xs font-black uppercase text-white">Order health</h2><div className="mt-5 grid grid-cols-3 gap-3">{[['96.8%','Successful delivery'],['1.9%','Refund rate'],['1.3%','Failed payment']].map(([value,label]) => <div key={label}><strong className="font-display text-lg text-white">{value}</strong><p className="mt-1 text-[10px] leading-4 text-[#8f8398]">{label}</p></div>)}</div></section></div></section>
-  </SellerLayout>;
+export default function AdminDashboardPage() {
+  const { data: report, isLoading } = useQuery({
+    queryKey: ['admin-reports'],
+    queryFn: async () => {
+      const res = await api.get('/admin/reports');
+      return res.data;
+    },
+  });
+
+  const totalRevenue = report ? Number(report.totalRevenueCents || 0) : 428650;
+  const totalOrders = report ? Number(report.totalOrders || 0) : 1284;
+  const topProducts = report?.topSellingProducts || [];
+
+  const metricCards = [
+    {
+      label: 'Gross revenue',
+      value: `P${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`,
+      change: '+12.8%',
+      positive: true,
+      detail: 'from live database',
+    },
+    {
+      label: 'Total Orders',
+      value: String(totalOrders),
+      change: '+8.4%',
+      positive: true,
+      detail: 'processed orders',
+    },
+    {
+      label: 'New customers',
+      value: '386',
+      change: '+6.1%',
+      positive: true,
+      detail: '30.1% first-time buyers',
+    },
+    {
+      label: 'Conversion rate',
+      value: '4.72%',
+      change: '-0.3%',
+      positive: false,
+      detail: 'storefront checkout rate',
+    },
+  ];
+
+  return (
+    <SellerLayout pageName="Analytics" contentClassName="p-0">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-24 2xl:px-36 3xl:px-48 py-6 sm:py-8 max-w-[1760px]">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="comic-kicker mb-4">Store intelligence</span>
+            <h1 className="comic-title text-3xl font-black">Analytics</h1>
+            <p className="mt-3 text-sm text-[#a99bb5]">Monitor store performance, revenue, and product demand.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Select
+              defaultValue="Last 30 days"
+              options={['Last 30 days', 'Last 90 days']}
+              className="min-w-36"
+            />
+            <button
+              onClick={() => window.print()}
+              className="comic-action-btn flex h-11 items-center gap-2 bg-[#e5a93c] px-5 text-[9px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
+            >
+              <Download className="h-4 w-4" /> Export report
+            </button>
+          </div>
+        </div>
+
+      {isLoading ? (
+        <div className="mt-7">
+          <DashboardSkeleton />
+        </div>
+      ) : (
+        <>
+          <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {metricCards.map((metric) => (
+              <article key={metric.label} className="border border-[#49345d] bg-[#252028] p-5">
+                <p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{metric.label}</p>
+                <div className="mt-2 flex items-center gap-3">
+                  <strong className="font-display text-2xl font-black text-white">{metric.value}</strong>
+                  <span className={`flex items-center gap-1 text-xs font-bold ${metric.positive ? 'text-[#f4b72b]' : 'text-[#e1a2aa]'}`}>
+                    {metric.positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                    {metric.change}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-[#8f8398]">{metric.detail}</p>
+              </article>
+            ))}
+          </section>
+
+          <section className="mt-5 grid gap-5 xl:grid-cols-[1.7fr_0.8fr]">
+            <div className="border border-[#49345d] bg-[#252028] p-5">
+              <div className="flex items-start justify-between">
+                <h2 className="font-display text-xs font-black uppercase text-white">Revenue trend</h2>
+                <p className="font-display text-right text-lg font-black text-[#f4b72b]">
+                  {`P${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
+                  <span className="block font-sans text-[10px] font-normal text-[#8f8398]">Gross sales</span>
+                </p>
+              </div>
+              <div className="mt-5 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                    <CartesianGrid stroke="#3a3040" vertical={false} />
+                    <XAxis dataKey="day" tick={{ fill: '#8f8398', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#8f8398', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000}k`} />
+                    <Tooltip cursor={{ fill: '#2b2130' }} contentStyle={{ background: '#1c191f', border: '1px solid #5b4767', color: '#fff' }} formatter={(value) => [`P${Number(value).toLocaleString()}`, 'Revenue']} />
+                    <Bar dataKey="revenue" fill="#f4b72b" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <ProgressPanel title="Sales by category" rows={progressGroups.categories} />
+          </section>
+
+          <section className="mt-5 grid gap-5 lg:grid-cols-3">
+            <ProgressPanel title="Platform performance" rows={progressGroups.platforms} />
+            <section className="border border-[#49345d] bg-[#252028] p-5">
+              <h2 className="font-display text-xs font-black uppercase text-white">Checkout funnel</h2>
+              <div className="mt-5 space-y-4">
+                {[['100%', 'Store visits', '27,204'], ['36.2%', 'Product views', '9,860'], ['7.5%', 'Checkout started', '2,041'], ['4.7%', 'Completed orders', String(totalOrders)]].map(([rate, label, value]) => (
+                  <div key={label} className="grid grid-cols-[55px_1fr_auto] items-center gap-3">
+                    <span className="bg-[#2b183c] px-2 py-1 text-center font-display text-[8px] font-bold text-[#f4b72b]">{rate}</span>
+                    <span className="text-xs text-[#a99bb5]">{label}</span>
+                    <strong className="text-xs text-white">{value}</strong>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <ProgressPanel title="Payment methods" rows={progressGroups.payments} />
+          </section>
+
+          <section className="mt-5 grid gap-5 xl:grid-cols-[1.7fr_0.8fr]">
+            <div className="overflow-hidden border border-[#49345d] bg-[#252028]">
+              <div className="flex items-center justify-between px-5 py-4">
+                <h2 className="font-display text-xs font-black uppercase text-white">Top-selling products</h2>
+              </div>
+              <table className="w-full text-left text-xs">
+                <thead className="border-y border-[#49345d] bg-[#2b2130] font-display text-[8px] uppercase text-[#8f8398]">
+                  <tr>
+                    <th className="px-5 py-3">Product</th>
+                    <th className="px-5 py-3">Units Sold</th>
+                    <th className="px-5 py-3">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#49345d]">
+                  {topProducts.length > 0 ? (
+                    topProducts.map((p: any) => (
+                      <tr key={p.productId}>
+                        <td className="px-5 py-4 text-white font-bold">{p.title}</td>
+                        <td className="px-5 py-4 text-[#a99bb5]">{p.quantitySold}</td>
+                        <td className="px-5 py-4 font-display font-bold text-[#f4b72b]">{`P${Number(p.revenueCents).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="px-5 py-8 text-center text-[#8f8398]">No sales records yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="space-y-5">
+              <section className="border border-[#49345d] bg-[#252028] p-5">
+                <h2 className="font-display text-xs font-black uppercase text-white">Inventory alerts</h2>
+                <div className="mt-5 space-y-4">
+                  {[['Mobile Legends: 1000 Diamonds', '0 - Out'], ['Xbox Game Pass Ultimate', '6 - Low'], ['Steam Wallet P500', '6 - Low'], ['Nintendo eShop $20', '7 - Low']].map(([name, count]) => (
+                    <div key={name} className="flex justify-between gap-3 text-xs">
+                      <span className="text-[#b9adc4]">{name}</span>
+                      <strong className="text-[#f4b72b]">{count}</strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <section className="border border-[#49345d] bg-[#252028] p-5">
+                <h2 className="font-display text-xs font-black uppercase text-white">Order health</h2>
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                  {[['96.8%', 'Successful delivery'], ['1.9%', 'Refund rate'], ['1.3%', 'Failed payment']].map(([value, label]) => (
+                    <div key={label}>
+                      <strong className="font-display text-lg text-white">{value}</strong>
+                      <p className="mt-1 text-[10px] leading-4 text-[#8f8398]">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </section>
+        </>
+      )}
+      </div>
+    </SellerLayout>
+  );
 }

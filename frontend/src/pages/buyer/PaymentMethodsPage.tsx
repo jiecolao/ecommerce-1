@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, CreditCard, Info, Plus, QrCode, ShieldCheck, Smartphone, Trash2, WalletCards, X } from 'lucide-react';
 import AccountSidebar from '../../components/account/AccountSidebar';
+import { Select } from '../../components/ui/select';
 
 type PaymentMethod = {
   id: number;
@@ -136,12 +137,18 @@ export default function PaymentMethodsPage() {
               <div><span className="comic-kicker mb-4">New channel</span><h2 id="add-payment-title" className="font-display text-xl font-black uppercase text-white">Add payment method</h2></div>
               <button type="button" onClick={() => setShowAddMethod(false)} aria-label="Close" className="grid h-10 w-10 place-items-center border border-[#5b4767] text-[#a99bb5] hover:text-white"><X className="h-4 w-4" /></button>
             </div>
-            <label className="mt-7 block font-display text-[10px] font-bold uppercase text-[#b9adc4]">
-              Method
-              <select value={methodType} onChange={(event) => setMethodType(event.target.value as typeof methodType)} className="mt-2 h-12 w-full border border-[#5b4767] bg-[#1c191f] px-4 text-sm text-white outline-none focus:border-[#f4b72b]">
-                <option>GCash</option><option>Maya</option><option>Visa card</option>
-              </select>
-            </label>
+            <div className="mt-7">
+              <span className="block font-display text-[10px] font-bold uppercase text-[#b9adc4] mb-2">
+                Method
+              </span>
+              <Select
+                value={methodType}
+                onChange={(val) => setMethodType(val as typeof methodType)}
+                options={['GCash', 'Maya', 'Visa card']}
+                className="w-full"
+                triggerClassName="w-full"
+              />
+            </div>
             <label className="mt-5 block font-display text-[10px] font-bold uppercase text-[#b9adc4]">
               Last four digits
               <input value={accountEnding} onChange={(event) => setAccountEnding(event.target.value)} inputMode="numeric" maxLength={4} required placeholder="1234" className="mt-2 h-12 w-full border border-[#5b4767] bg-[#1c191f] px-4 text-sm text-white outline-none placeholder:text-[#756b7b] focus:border-[#f4b72b]" />

@@ -63,8 +63,9 @@ export default function CreateProductPage() {
   };
 
   return (
-    <SellerLayout pageName="Add / Edit Product">
-      <form onSubmit={handleSubmit(saveProduct)}>
+    <SellerLayout pageName="Add / Edit Product" contentClassName="p-0">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-24 2xl:px-36 3xl:px-48 py-6 sm:py-8 max-w-[1760px]">
+        <form onSubmit={handleSubmit(saveProduct)}>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div><span className="comic-kicker mb-4">Catalog editor</span><h1 className="comic-title text-3xl font-black">{isEditing ? 'Edit product' : 'Add product'}</h1><p className="mt-3 text-sm text-[#a99bb5]">Update the product information shown on the MystiKeys storefront.</p></div>
           <div className="flex gap-3"><button type="button" onClick={() => navigate('/seller/products')} className="font-display h-11 border border-[#5b4767] bg-[#211d23] px-5 text-[9px] font-bold uppercase text-white hover:border-[#f4b72b]">Cancel</button><button className="font-display h-11 bg-[#f4b72b] px-5 text-[9px] font-black uppercase text-[#171419] hover:bg-[#ffd45e]">{saved ? 'Saved' : 'Save product'}</button></div>
@@ -99,6 +100,7 @@ export default function CreateProductPage() {
           </div>
         </div>
       </form>
+      </div>
     </SellerLayout>
   );
 }

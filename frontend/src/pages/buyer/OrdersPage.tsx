@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, Copy, Download, Filter, Info, KeyRound, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import AccountSidebar from '../../components/account/AccountSidebar';
+import api from '../../lib/api';
+import { TableRowSkeleton } from '../../components/ui/skeleton';
 
 type Purchase = {
   id: string;
@@ -12,21 +15,6 @@ type Purchase = {
   key: string;
 };
 
-const purchases: Purchase[] = [
-  { id: 'MK-3000', date: 'Oct 24, 2026', title: 'Steam Wallet Code - P250 Global', platform: 'Steam', price: 250, status: 'Completed', key: 'STMW-7K3M-Q9TX-4R2C' },
-  { id: 'MK-2984', date: 'Oct 12, 2026', title: 'Elden Ring: Shadow of the Erdtree', platform: 'Steam', price: 2450, status: 'Completed', key: 'ERSE-4F8P-W2KL-9D7M' },
-  { id: 'MK-2941', date: 'Sep 30, 2026', title: 'Cyberpunk 2077 - Phantom Liberty', platform: 'PC', price: 1899, status: 'Completed', key: 'CP77-9H2N-R6TX-3K8Q' },
-  { id: 'MK-2907', date: 'Sep 15, 2026', title: 'Xbox Game Pass Ultimate - 3 Months', platform: 'Xbox / PC', price: 1250, status: 'Refunded', key: '' },
-  { id: 'MK-2866', date: 'Aug 28, 2026', title: 'Palworld', platform: 'Steam', price: 910, status: 'Completed', key: 'PALW-2R7M-K9DX-5Q4T' },
-  { id: 'MK-2813', date: 'Aug 10, 2026', title: 'PlayStation Store Gift Card P1,000', platform: 'PlayStation', price: 1000, status: 'Completed', key: 'PSN1-8M4Q-V7KL-3P2X' },
-  { id: 'MK-2772', date: 'Jul 22, 2026', title: 'Mobile Legends - 1000 Diamonds', platform: 'Mobile', price: 850, status: 'Completed', key: 'MLBB-4X8P-N2DM-7R5K' },
-  { id: 'MK-2701', date: 'Jun 18, 2026', title: 'Apple Gift Card $25', platform: 'Apple', price: 1450, status: 'Completed', key: 'APPL-6T9K-Q3XR-8M2W' },
-  { id: 'MK-2644', date: 'May 09, 2026', title: 'Animal Crossing: New Horizons', platform: 'Nintendo', price: 2120, status: 'Completed', key: 'ACNH-5P2R-W8KM-4X7D' },
-  { id: 'MK-2588', date: 'Apr 20, 2026', title: 'Genshin Impact - Blessing of the Welkin Moon', platform: 'Mobile', price: 290, status: 'Completed', key: 'GENS-7D3M-T9QK-2R6X' },
-  { id: 'MK-2510', date: 'Mar 14, 2026', title: 'Helldivers 2 - Super Citizen Edition', platform: 'Steam', price: 1499, status: 'Completed', key: 'HDV2-3K8R-X5MP-9T2Q' },
-  { id: 'MK-2442', date: 'Feb 02, 2026', title: 'PC Game Pass - 1 Month', platform: 'Xbox / PC', price: 589, status: 'Completed', key: 'PCGP-9Q4T-M2XR-6K8D' },
-];
-
 const PAGE_SIZE = 4;
 const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
@@ -36,13 +24,42 @@ export default function OrdersPage() {
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const { data: serverOrders, isLoading } = useQuery({
+    queryKey: ['orders'],
+    queryFn: async () => {
+      const res = await api.get('/buyer/orders');
+      return res.data;
+    },
+  });
+
+  const purchases: Purchase[] = useMemo(() => {
+    if (!Array.isArray(serverOrders)) return [];
+    return serverOrders.map((o: any) => {
+      const firstLine = o.orderLines?.[0];
+      const prod = firstLine?.productVariant?.product;
+      const title = prod?.title || firstLine?.productVariant?.name || `Order #${o.id}`;
+      const platform = 'Digital Key';
+      const key = firstLine?.keys?.[0]?.code || 'MK-KEY-PENDING-DISPATCH';
+
+      return {
+        id: `MK-${o.id}`,
+        date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+        title,
+        platform,
+        price: Number(o.totalAmount ?? o.amountPaid ?? 0),
+        status: o.status === 'REFUNDED' ? 'Refunded' : 'Completed',
+        key,
+      };
+    });
+  }, [serverOrders]);
+
   const filteredPurchases = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return purchases;
     return purchases.filter((purchase) =>
       `${purchase.title} ${purchase.platform} ${purchase.id}`.toLowerCase().includes(normalizedQuery),
     );
-  }, [query]);
+  }, [purchases, query]);
 
   const pageCount = Math.max(1, Math.ceil(filteredPurchases.length / PAGE_SIZE));
   const visiblePurchases = filteredPurchases.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -115,7 +132,8 @@ export default function OrdersPage() {
                     </td>
                   </tr>
                 ))}
-                {visiblePurchases.length === 0 && <tr><td colSpan={5} className="px-5 py-14 text-center text-[#a99bb5]">No purchases match that search.</td></tr>}
+                {isLoading && <TableRowSkeleton columns={5} rows={5} />}
+                {!isLoading && visiblePurchases.length === 0 && <tr><td colSpan={5} className="px-5 py-14 text-center text-[#a99bb5]">No purchases found.</td></tr>}
               </tbody>
             </table>
           </div>

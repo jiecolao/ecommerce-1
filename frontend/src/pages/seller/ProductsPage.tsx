@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Plus, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SellerLayout from '../../components/seller/SellerLayout';
+import { Select } from '../../components/ui/select';
 
 type ManagedProduct = {
   id: number;
@@ -49,21 +50,37 @@ export default function ProductsPage() {
   };
 
   return (
-    <SellerLayout pageName="Products">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div><span className="comic-kicker mb-4">Store inventory</span><h1 className="comic-title text-3xl font-black">Products</h1><p className="mt-3 text-sm text-[#a99bb5]">Manage every product available on the MystiKeys store.</p></div>
-        <Link to="/seller/products/new" className="font-display flex h-11 items-center justify-center gap-2 bg-[#f4b72b] px-5 text-[9px] font-black uppercase text-[#171419] hover:bg-[#ffd45e]"><Plus className="h-4 w-4" /> Add product</Link>
-      </div>
+    <SellerLayout pageName="Products" contentClassName="p-0">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-24 2xl:px-36 3xl:px-48 py-6 sm:py-8 max-w-[1760px]">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div><span className="comic-kicker mb-4">Store inventory</span><h1 className="comic-title text-3xl font-black">Products</h1><p className="mt-3 text-sm text-[#a99bb5]">Manage every product available on the MystiKeys store.</p></div>
+          <Link to="/seller/products/new" className="comic-action-btn flex h-11 items-center justify-center gap-2 bg-[#e5a93c] px-5 text-[10px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"><Plus className="h-4 w-4" /> Add product</Link>
+        </div>
 
       <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => <article key={stat.label} className="border border-[#49345d] bg-[#252028] p-5"><p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{stat.label}</p><div className="mt-2 flex items-end gap-2"><strong className="font-display text-2xl font-black text-white">{stat.value}</strong><span className="pb-1 text-xs text-[#8f8398]">{stat.detail}</span></div></article>)}
       </section>
 
       <section className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center">
-        <label className="flex h-11 min-w-0 flex-1 items-center gap-3 border border-[#5b4767] bg-[#211d23] px-4 xl:max-w-sm"><Search className="h-4 w-4 text-[#f4b72b]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product name or SKU..." className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#756b7b]" /></label>
-        <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white outline-none"><option>All categories</option><option>Game Keys</option><option>Top-Ups</option><option>Subscriptions</option><option>Gift Cards</option></select>
-        <select value={status} onChange={(event) => setStatus(event.target.value)} className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white outline-none"><option>All status</option><option>Active</option><option>Low stock</option><option>Out of stock</option><option>Draft</option></select>
-        <select aria-label="Sort products" className="h-11 border border-[#5b4767] bg-[#211d23] px-4 text-sm text-white outline-none xl:ml-auto"><option>Newest first</option><option>Oldest first</option><option>Stock: Low to high</option></select>
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-3 border border-[#5b4767] bg-[#211d23] px-4 xl:max-w-sm"><Search className="h-4 w-4 text-[#e5a93c]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product name or SKU..." className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#756b7b]" /></label>
+        <Select
+          value={category}
+          onChange={(val) => setCategory(val)}
+          options={['All categories', 'Game Keys', 'Top-Ups', 'Subscriptions', 'Gift Cards']}
+          className="min-w-44"
+        />
+        <Select
+          value={status}
+          onChange={(val) => setStatus(val)}
+          options={['All status', 'Active', 'Low stock', 'Out of stock', 'Draft']}
+          className="min-w-36"
+        />
+        <Select
+          defaultValue="Newest first"
+          options={['Newest first', 'Oldest first', 'Stock: Low to high']}
+          ariaLabel="Sort products"
+          className="min-w-44 xl:ml-auto"
+        />
       </section>
 
       <section className="mt-5 overflow-hidden border border-[#49345d] bg-[#211d23]">
@@ -80,6 +97,7 @@ export default function ProductsPage() {
         </div>
         <footer className="flex flex-col gap-4 border-t border-[#49345d] bg-[#1f1b22] px-4 py-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs text-[#8f8398]">Showing {filteredProducts.length} of 240 products</p><div className="flex items-center gap-2"><button className="grid h-8 w-8 place-items-center border border-[#49345d] text-[#756b7b]"><ChevronLeft className="h-4 w-4" /></button><button className="h-8 w-8 bg-[#f4b72b] font-display text-[9px] font-black text-[#171419]">1</button><button className="h-8 w-8 border border-[#49345d] font-display text-[9px] text-white">2</button><button className="h-8 w-8 border border-[#49345d] font-display text-[9px] text-white">3</button><span className="px-1 text-[#8f8398]">...</span><button className="h-8 w-8 border border-[#49345d] font-display text-[9px] text-white">40</button><button className="grid h-8 w-8 place-items-center border border-[#49345d] text-white"><ChevronRight className="h-4 w-4" /></button></div></footer>
       </section>
+      </div>
     </SellerLayout>
   );
 }

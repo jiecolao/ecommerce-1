@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, Check, Heart, MailCheck, Plus, QrCode, ShieldCheck, Star, Zap, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { catalogProducts } from '../../data/catalog';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { ArrowRight, Check, Heart, MailCheck, QrCode, ShieldCheck, Star, X, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '../../lib/api';
+import { Select } from '../../components/ui/select';
+import { ProductDetailsSkeleton } from '../../components/ui/skeleton';
 
 const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
@@ -21,9 +24,13 @@ const initialReviews = [
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const product = catalogProducts.find((item) => item.id === id) ?? catalogProducts[0];
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const [selectedPackage, setSelectedPackage] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
   
   const [gameUserId, setGameUserId] = useState('');
   const [serverId, setServerId] = useState('');
@@ -34,18 +41,103 @@ export default function ProductDetailsPage() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [sortBy, setSortBy] = useState<'recent' | 'highest' | 'lowest'>('recent');
 
+  const { data: serverProduct, isLoading } = useQuery({
+    queryKey: ['product-details', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const res = await api.get(`/catalog/products/${id}`);
+      return res.data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: wishlistData } = useQuery({
+    queryKey: ['wishlist'],
+    queryFn: async () => {
+      const res = await api.get('/buyer/wishlist');
+      return res.data;
+    },
+  });
+
+  const variants = serverProduct?.productVariants || [];
+  const packages: Array<{ id: number; label: string; price: number; badge?: string }> = variants.length > 0 
+    ? variants.map((v: any, idx: number) => ({
+        id: v.id,
+        label: v.name || `Edition ${idx + 1}`,
+        price: Number(v.price) || 0,
+        badge: idx === 0 ? 'Standard' : undefined,
+      }))
+    : [{ id: 0, label: 'Standard Edition', price: 999, badge: 'Standard' }];
+
+  const activePackage = packages[selectedPackage] || packages[0];
+  const isWishlisted = Array.isArray(wishlistData) && wishlistData.some((w: any) => w.id === activePackage.id);
+
+  const galleryImages: string[] = serverProduct?.media && serverProduct.media.length > 0
+    ? serverProduct.media
+    : [
+        "/palworld-cover.jpg",
+        "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&w=800&q=80",
+      ];
+
+  const handleAddToCart = async () => {
+    if (!activePackage?.id) return;
+    try {
+      await api.post('/buyer/cart/items', {
+        productVariantId: activePackage.id,
+        quantity: 1,
+        targetAccount: gameUserId || undefined,
+        deliveredTo: serverId || undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    } catch (err: any) {
+      alert('Failed to add to cart: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!activePackage?.id) {
+      navigate('/checkout/cart');
+      return;
+    }
+    setBuyingNow(true);
+    try {
+      await api.post('/buyer/cart/items', {
+        productVariantId: activePackage.id,
+        quantity: 1,
+        targetAccount: gameUserId || undefined,
+        deliveredTo: serverId || undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      navigate('/checkout/cart');
+    } catch (err: any) {
+      alert('Failed to process buy now: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setBuyingNow(false);
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!activePackage?.id) return;
+    try {
+      if (isWishlisted) {
+        await api.delete(`/buyer/wishlist/${activePackage.id}`);
+      } else {
+        await api.post('/buyer/wishlist', { productVariantId: activePackage.id });
+      }
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+    } catch (err: any) {
+      alert('Wishlist update failed: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   const sortedReviews = [...initialReviews].sort((a, b) => {
     if (sortBy === 'highest') return b.rating - a.rating;
     if (sortBy === 'lowest') return a.rating - b.rating;
     return 0; // recent
   });
-
-  const galleryImages = [
-    "/palworld-cover.jpg",
-    "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80"
-  ];
 
   const openLightbox = (index: number) => setLightboxIndex(index);
   const closeLightbox = () => setLightboxIndex(null);
@@ -58,39 +150,39 @@ export default function ProductDetailsPage() {
     setLightboxIndex((prev) => (prev !== null ? (prev - 1 + galleryImages.length) % galleryImages.length : null));
   };
 
-  const packages = [
-    { label: 'Standard Package', price: product.price, badge: 'Popular' },
-    { label: 'Plus Package', price: Math.round(product.price * 2.75) },
-    { label: 'Ultimate Package', price: Math.round(product.price * 5.4) },
-  ];
-  const activePackage = packages[selectedPackage];
+  const displayTitle = serverProduct?.title || 'Game Details';
+  const displayDescription = serverProduct?.description || 'Get instant access to the complete digital experience. Your key is delivered by email and ready to redeem.';
+
+  if (isLoading) {
+    return <ProductDetailsSkeleton />;
+  }
 
   return (
     <div className="pb-10">
       <nav className="font-display mb-9 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase text-[#8f8398]">
-        <Link to="/catalog" className="hover:text-[#f4b72b]">Home</Link>
+        <Link to="/catalog" className="hover:text-[#f0b849]">Home</Link>
         <span>/</span>
-        <Link to="/catalog" className="hover:text-[#f4b72b]">Game Keys</Link>
+        <Link to="/catalog" className="hover:text-[#f0b849]">Game Keys</Link>
         <span>/</span>
-        <span className="text-white">{product.title}</span>
+        <span className="text-[#f2edf7]">{displayTitle}</span>
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(300px,430px)_1fr] xl:gap-14">
         <aside className="space-y-7">
-          <div className="relative min-h-[560px] overflow-hidden border border-[#49345d] bg-[#241333] shadow-[7px_7px_0_#2c0c46]">
-            <img src="/palworld-cover.jpg" alt={product.title} className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-x-0 bottom-0 bg-[#241333]/95 p-7">
-              <span className="font-display text-[10px] font-bold uppercase text-[#f4b72b]">{product.platform}</span>
-              <h2 className="font-display mt-3 text-xl font-black uppercase leading-tight text-white">{product.title}</h2>
+          <div className="relative min-h-[560px] overflow-hidden border-2 border-[#0e0917] bg-[#170e24] shadow-[6px_6px_0_#0e0917]">
+            <img src={galleryImages[0] || '/palworld-cover.jpg'} alt={displayTitle} className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-x-0 bottom-0 border-t-2 border-[#0e0917] bg-[#170e24]/95 p-7">
+              <span className="font-display text-[10px] font-black uppercase text-[#e5a93c] drop-shadow-[1px_1px_0_#0e0917]">PC / DIGITAL</span>
+              <h2 className="font-display mt-3 text-xl font-black uppercase leading-tight text-[#f2edf7]">{displayTitle}</h2>
             </div>
           </div>
 
           <div className="grid grid-cols-4 gap-2">
-            {galleryImages.map((img, idx) => (
+            {galleryImages.map((img: string, idx: number) => (
               <button 
                 key={idx} 
                 onClick={() => openLightbox(idx)}
-                className="relative aspect-video overflow-hidden border border-[#49345d] transition-transform hover:-translate-y-1 hover:border-[#f4b72b]"
+                className="relative aspect-video overflow-hidden border-2 border-[#0e0917] shadow-[2px_2px_0_#0e0917] transition-all hover:-translate-y-1 hover:border-[#e5a93c] hover:shadow-[3px_3px_0_#0e0917]"
               >
                 <img src={img} alt={`Gallery ${idx + 1}`} className="absolute inset-0 h-full w-full object-cover" />
               </button>
@@ -98,19 +190,19 @@ export default function ProductDetailsPage() {
           </div>
 
           <section className="comic-panel p-6">
-            <h2 className="font-display text-sm font-black uppercase text-white">How to redeem</h2>
+            <h2 className="font-display text-sm font-black uppercase tracking-wider text-[#f2edf7]">How to redeem</h2>
             <ol className="mt-5 space-y-4 text-sm leading-6 text-[#b9adc4]">
-              <li className="flex gap-3"><strong className="text-[#f4b72b]">1.</strong><span>Sign in to your account on the supported platform.</span></li>
-              <li className="flex gap-3"><strong className="text-[#f4b72b]">2.</strong><span>Open the store and select the redeem code option.</span></li>
-              <li className="flex gap-3"><strong className="text-[#f4b72b]">3.</strong><span>Enter the digital key sent by MystiKeys.</span></li>
-              <li className="flex gap-3"><strong className="text-[#f4b72b]">4.</strong><span>Confirm and start playing immediately.</span></li>
+              <li className="flex gap-3"><strong className="text-[#e5a93c]">1.</strong><span>Sign in to your account on the supported platform.</span></li>
+              <li className="flex gap-3"><strong className="text-[#e5a93c]">2.</strong><span>Open the store and select the redeem code option.</span></li>
+              <li className="flex gap-3"><strong className="text-[#e5a93c]">3.</strong><span>Enter the digital key sent by MystiKeys.</span></li>
+              <li className="flex gap-3"><strong className="text-[#e5a93c]">4.</strong><span>Confirm and start playing immediately.</span></li>
             </ol>
           </section>
 
-          <div className="flex items-center gap-4 border border-[#49345d] bg-[#252028] p-5">
-            <ShieldCheck className="h-7 w-7 shrink-0 text-[#f4b72b]" />
+          <div className="flex items-center gap-4 border-2 border-[#0e0917] bg-[#170e24] p-5 shadow-[4px_4px_0_#0e0917]">
+            <ShieldCheck className="h-7 w-7 shrink-0 text-[#e5a93c]" />
             <div>
-              <p className="font-display text-xs font-bold uppercase text-white">Instant delivery</p>
+              <p className="font-display text-xs font-black uppercase tracking-wider text-[#f2edf7]">Instant delivery</p>
               <p className="mt-1 text-sm text-[#a99bb5]">Keys and top-ups are processed in seconds.</p>
             </div>
           </div>
@@ -120,79 +212,81 @@ export default function ProductDetailsPage() {
           <div className="flex items-start gap-5">
             <div className="min-w-0 flex-1">
               <div className="mb-4 flex flex-wrap gap-2">
-                <span className="bg-[#f4b72b] px-3 py-2 font-display text-[9px] font-black uppercase text-[#171419]">{product.region}</span>
-                <span className="border border-[#675376] bg-[#252028] px-3 py-2 font-display text-[9px] font-bold uppercase text-white">{product.platform}</span>
+                <span className="border-2 border-[#0e0917] bg-[#e5a93c] px-3 py-1 font-display text-[9px] font-black uppercase text-[#0e0917] shadow-[2px_2px_0_#0e0917]">GLOBAL</span>
+                <span className="border-2 border-[#0e0917] bg-[#231438] px-3 py-1 font-display text-[9px] font-black uppercase text-white shadow-[2px_2px_0_#0e0917]">PC</span>
               </div>
-              <h1 className="comic-title text-3xl font-black leading-tight sm:text-4xl">{product.title}</h1>
+              <h1 className="comic-title text-3xl font-black leading-tight sm:text-4xl">{displayTitle}</h1>
               <div className="mt-4 flex items-center gap-2 text-sm text-[#b9adc4]">
-                <Star className="h-4 w-4 fill-[#f4b72b] text-[#f4b72b]" />
-                <span className="font-bold text-white">4.8/5</span>
+                <Star className="h-4 w-4 fill-[#e5a93c] text-[#e5a93c]" />
+                <span className="font-bold text-[#f2edf7]">4.8/5</span>
                 <span>(124 reviews)</span>
               </div>
             </div>
-            <button aria-label="Add to wishlist" className="grid h-12 w-12 shrink-0 place-items-center border border-[#675376] bg-[#252028] text-[#b9adc4] transition-transform hover:-translate-y-0.5 hover:text-[#f4b72b]">
-              <Heart className="h-5 w-5" />
+            <button 
+              type="button"
+              onClick={handleToggleWishlist}
+              aria-label="Toggle wishlist" 
+              className={`grid h-12 w-12 shrink-0 place-items-center border-2 border-[#0e0917] bg-[#231438] shadow-[3px_3px_0_#0e0917] transition-transform hover:-translate-y-0.5 hover:border-[#e5a93c] ${isWishlisted ? 'text-[#e5a93c]' : 'text-[#b9adc4]'}`}
+            >
+              <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
             </button>
           </div>
 
           <p className="mt-6 max-w-3xl text-base leading-7 text-[#b9adc4]">
-            Get instant access to the complete digital experience. Your key is delivered by email and ready to redeem on {product.platform}.
+            {displayDescription}
           </p>
 
           <div className="mt-10 flex items-center gap-3">
-            <span className="grid h-8 w-8 place-items-center bg-[#f4b72b] font-display text-xs font-black text-[#171419]">1</span>
-            <h2 className="font-display text-sm font-black uppercase text-white">Select package</h2>
+            <span className="grid h-8 w-8 place-items-center border-2 border-[#0e0917] bg-[#e5a93c] font-display text-xs font-black text-[#0e0917] shadow-[2px_2px_0_#0e0917]">1</span>
+            <h2 className="font-display text-sm font-black uppercase tracking-wider text-[#f2edf7]">Select package</h2>
           </div>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {packages.map((item, index) => (
+            {packages.map((item: { id: number; label: string; price: number; badge?: string }, index: number) => (
               <button
                 key={item.label}
                 onClick={() => setSelectedPackage(index)}
-                className={`relative min-h-28 border p-5 text-left transition-transform hover:-translate-y-0.5 ${
+                className={`relative min-h-28 border-2 border-[#0e0917] p-5 text-left transition-all ${
                   selectedPackage === index
-                    ? 'border-[#f4b72b] bg-[#2b183c] shadow-[4px_4px_0_#f4b72b]'
-                    : 'border-[#554260] bg-[#252028]'
+                    ? 'bg-[#2b1442] shadow-[4px_4px_0_#e5a93c] -translate-y-0.5'
+                    : 'bg-[#180e25] text-white shadow-[3px_3px_0_#0e0917] hover:bg-[#231438] hover:-translate-y-0.5'
                 }`}
               >
-                {item.badge && <span className="absolute -top-3 left-4 bg-[#f4b72b] px-3 py-1 font-display text-[8px] font-black uppercase text-[#171419]">{item.badge}</span>}
-                <span className="block text-sm font-semibold text-[#b9adc4]">{item.label}</span>
-                <span className="font-display mt-2 block text-xl font-black text-white">{formatPrice(item.price)}</span>
-                {selectedPackage === index && <Check className="absolute right-4 top-4 h-5 w-5 text-[#f4b72b]" />}
+                {item.badge && <span className="absolute -top-3 left-4 border border-[#0e0917] bg-[#e5a93c] px-3 py-0.5 font-display text-[8px] font-black uppercase text-[#0e0917] shadow-[1.5px_1.5px_0_#0e0917]">{item.badge}</span>}
+                <span className="block font-semibold text-[#b9adc4] text-sm">{item.label}</span>
+                <span className="font-display mt-2 block text-xl font-black text-[#f2edf7]">{formatPrice(item.price)}</span>
+                {selectedPackage === index && <Check className="absolute right-4 top-4 h-5 w-5 stroke-[3] text-[#e5a93c]" />}
               </button>
             ))}
-            <button className="flex min-h-28 items-center justify-center gap-2 border border-dashed border-[#675376] bg-[#211d23] font-display text-[10px] font-bold uppercase text-[#8f8398] hover:text-white">
-              <Plus className="h-4 w-4" /> More options
-            </button>
           </div>
 
-          {product.isTopUp && (
-            <div className="mt-10 border border-[#49345d] bg-[#252028] p-6 shadow-[4px_4px_0_#1c191f]">
+          {gameUserId && (
+            <div className="mt-10 border-2 border-[#0e0917] bg-[#170e24] p-6 shadow-[4px_4px_0_#0e0917]">
               <div className="mb-4 flex items-center gap-3">
-                <span className="grid h-8 w-8 place-items-center bg-[#f4b72b] font-display text-xs font-black text-[#171419]">2</span>
-                <h2 className="font-display text-sm font-black uppercase text-white">Account Details</h2>
+                <span className="grid h-8 w-8 place-items-center border-2 border-[#0e0917] bg-[#e5a93c] font-display text-xs font-black text-[#0e0917] shadow-[2px_2px_0_#0e0917]">2</span>
+                <h2 className="font-display text-sm font-black uppercase tracking-wider text-[#f2edf7]">Account Details</h2>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="gameUserId" className="mb-2 block font-display text-xs font-bold uppercase text-[#8f8398]">Game User ID <span className="text-[#f4b72b]">*</span></label>
+                  <label htmlFor="gameUserId" className="mb-2 block font-display text-xs font-bold uppercase text-[#8f8398]">Game User ID <span className="text-[#e5a93c]">*</span></label>
                   <input
                     type="text"
                     id="gameUserId"
                     value={gameUserId}
                     onChange={(e) => setGameUserId(e.target.value)}
                     placeholder="Enter your Game User ID"
-                    className="w-full border border-[#49345d] bg-[#1c191f] px-4 py-3 text-sm text-white focus:border-[#f4b72b] focus:outline-none"
+                    className="w-full border-2 border-[#0e0917] bg-[#12091c] px-4 py-3 text-sm text-[#f2edf7] shadow-[2.5px_2.5px_0_#0e0917] focus:border-[#e5a93c] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label htmlFor="serverId" className="mb-2 block font-display text-xs font-bold uppercase text-[#8f8398]">Server ID <span className="text-[#f4b72b]">*</span></label>
+                  <label htmlFor="serverId" className="mb-2 block font-display text-xs font-bold uppercase text-[#8f8398]">Server ID <span className="text-[#e5a93c]">*</span></label>
                   <input
                     type="text"
                     id="serverId"
                     value={serverId}
                     onChange={(e) => setServerId(e.target.value)}
                     placeholder="Enter Server ID"
-                    className="w-full border border-[#49345d] bg-[#1c191f] px-4 py-3 text-sm text-white focus:border-[#f4b72b] focus:outline-none"
+                    className="w-full border-2 border-[#0e0917] bg-[#12091c] px-4 py-3 text-sm text-[#f2edf7] shadow-[2.5px_2.5px_0_#0e0917] focus:border-[#e5a93c] focus:outline-none"
                   />
                 </div>
               </div>
@@ -202,26 +296,37 @@ export default function ProductDetailsPage() {
           <div className="comic-panel mt-10 p-6 sm:p-8">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold text-[#a99bb5]">Subtotal</p>
-                <p className="font-display mt-2 text-3xl font-black text-white">{formatPrice(activePackage.price)}</p>
+                <p className="font-semibold text-[#a99bb5] text-sm">Subtotal</p>
+                <p className="font-display mt-2 text-3xl font-black text-[#f2edf7]">{formatPrice(activePackage.price)}</p>
               </div>
-              <div className="sm:text-right">
-                <p className="mb-3 flex items-center gap-2 text-xs text-[#a99bb5] sm:justify-end"><Zap className="h-4 w-4 text-[#f4b72b]" /> Guest checkout enabled</p>
-                <Link to={`/checkout/${product.id}`} className="font-display inline-flex h-13 items-center gap-3 bg-[#f4b72b] px-8 text-xs font-black uppercase text-[#171419] transition-transform hover:-translate-y-0.5 hover:bg-[#ffd45e]">
-                  Buy now <ArrowRight className="h-4 w-4" />
-                </Link>
+              <div className="flex flex-wrap items-center gap-3 sm:text-right">
+                <button 
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="comic-action-btn inline-flex h-13 items-center gap-2 border-2 border-[#0e0917] bg-[#25153b] px-6 text-xs font-black uppercase text-[#f2edf7] hover:bg-[#301a4c]"
+                >
+                  <ShoppingCart className="h-4 w-4" /> {addedToCart ? 'Added!' : 'Add to cart'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={buyingNow}
+                  className="comic-action-btn inline-flex h-13 items-center gap-3 bg-[#e5a93c] px-8 text-xs font-black uppercase text-[#0e0917] hover:bg-[#f0b849] disabled:opacity-50"
+                >
+                  {buyingNow ? 'Processing...' : 'Buy now'} <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
-            <div className="mt-8 border-t border-[#49345d] pt-7">
-              <p className="font-display text-center text-[9px] font-bold uppercase text-[#8f8398]">Supported payment methods</p>
+            <div className="mt-8 border-t-2 border-[#0e0917] pt-7">
+              <p className="font-display text-center text-[9px] font-black uppercase tracking-wider text-[#a99bb5]">Supported payment methods</p>
               <div className="mt-5 flex flex-wrap justify-center gap-3">
                 {paymentMethods.map(({ name, icon: PaymentIcon, img }) => (
-                  <span key={name} className="flex min-w-20 flex-col items-center gap-2 border border-[#49345d] bg-[#1c191f] px-4 py-3 text-[10px] font-bold text-[#b9adc4]">
+                  <span key={name} className="flex min-w-20 flex-col items-center gap-2 border-2 border-[#0e0917] bg-[#140b1e] px-4 py-3 text-[10px] font-bold text-[#b9adc4] shadow-[2.5px_2.5px_0_#0e0917]">
                     {img ? (
                       <img src={img} alt={name} className="h-5 w-5 rounded-sm object-contain" />
                     ) : (
-                      PaymentIcon && <PaymentIcon className="h-5 w-5 text-[#f4b72b]" />
+                      PaymentIcon && <PaymentIcon className="h-5 w-5 text-[#e5a93c]" />
                     )}
                     {name}
                   </span>
@@ -231,27 +336,29 @@ export default function ProductDetailsPage() {
           </div>
 
           <p className="mt-7 flex items-center justify-center gap-3 text-center text-sm text-[#8f8398]">
-            <MailCheck className="h-5 w-5" /> No account required. Confirmation and keys are sent to your email.
+            <MailCheck className="h-5 w-5 text-[#e5a93c]" /> No account required. Confirmation and keys are sent to your email.
           </p>
         </section>
       </div>
 
-      <section className="mt-16 border-t border-[#49345d] pt-12">
+      <section className="mt-16 border-t border-[#372648] pt-12">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <h2 className="comic-title text-2xl font-black text-white">Player Reviews</h2>
+          <h2 className="comic-title text-2xl font-black text-[#f2edf7]">Player Reviews</h2>
           <div className="flex flex-wrap items-center gap-4">
-            <select 
+            <Select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-[#252028] border border-[#49345d] text-[#b9adc4] px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-[#f4b72b] transition-colors"
-            >
-              <option value="recent">Most Recent</option>
-              <option value="highest">Highest Rating</option>
-              <option value="lowest">Lowest Rating</option>
-            </select>
+              onChange={(val) => setSortBy(val as any)}
+              options={[
+                { value: 'recent', label: 'Most Recent' },
+                { value: 'highest', label: 'Highest Rating' },
+                { value: 'lowest', label: 'Lowest Rating' },
+              ]}
+              ariaLabel="Sort reviews"
+              className="w-44"
+            />
             <button 
               onClick={() => setIsReviewModalOpen(true)}
-              className="font-display bg-[#f4b72b] px-6 py-2.5 text-xs font-black uppercase text-[#171419] transition-transform hover:-translate-y-0.5 hover:bg-[#ffd45e] shadow-[4px_4px_0_#49345d]"
+              className="comic-action-btn bg-[#e5a93c] px-6 py-2.5 text-xs font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
             >
               Review Now
             </button>
@@ -260,19 +367,19 @@ export default function ProductDetailsPage() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {sortedReviews.map(review => (
-            <div key={review.id} className="border border-[#49345d] bg-[#252028] p-6 shadow-[4px_4px_0_#1c191f]">
+            <div key={review.id} className="comic-panel p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="font-bold text-white">{review.name}</p>
+                  <p className="font-bold text-[#f2edf7]">{review.name}</p>
                   <p className="text-xs text-[#a99bb5] mt-0.5">{review.date}</p>
                 </div>
-                <div className="flex text-[#f4b72b] gap-0.5">
+                <div className="flex text-[#e5a93c] gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-current' : 'text-[#49345d]'}`} />
+                    <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-current' : 'text-[#3d2f4f]'}`} />
                   ))}
                 </div>
               </div>
-              <p className="text-sm text-[#b9adc4] leading-relaxed">{review.text}</p>
+              <p className="text-sm text-[#c8bed6] leading-relaxed">{review.text}</p>
             </div>
           ))}
         </div>
@@ -280,14 +387,14 @@ export default function ProductDetailsPage() {
 
       {isReviewModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="comic-panel w-full max-w-4xl bg-[#1c191f] flex flex-col md:flex-row overflow-hidden max-h-[90vh] overflow-y-auto relative shadow-[10px_10px_0_#f4b72b]">
-            <button className="absolute right-4 top-4 text-[#a99bb5] hover:text-[#f4b72b] z-10 transition-colors" onClick={() => setIsReviewModalOpen(false)}>
+          <div className="comic-panel w-full max-w-4xl bg-[#191222] flex flex-col md:flex-row overflow-hidden max-h-[90vh] overflow-y-auto relative shadow-[8px_8px_0_#0e0917]">
+            <button className="absolute right-4 top-4 text-[#a99bb5] hover:text-[#f0b849] z-10 transition-colors" onClick={() => setIsReviewModalOpen(false)}>
               <X className="h-6 w-6" />
             </button>
             
-            <div className="flex-1 p-8 border-b md:border-b-0 md:border-r border-[#49345d]">
-              <h2 className="font-display text-2xl font-black uppercase text-white mb-3">Write a Review</h2>
-              <p className="text-sm text-[#a99bb5] mb-8 leading-relaxed">
+            <div className="flex-1 p-8 border-b md:border-b-0 md:border-r border-[#372648]">
+              <h2 className="font-display text-2xl font-black uppercase text-[#f2edf7] mb-3">Write a Review</h2>
+              <p className="text-sm text-[#b2a4c4] mb-8 leading-relaxed">
                 Share your thoughts! Detail your experience with the game's mechanics, visuals, audio, and narrative to help fellow players decide.
               </p>
               
@@ -301,7 +408,7 @@ export default function ProductDetailsPage() {
                       onClick={() => setReviewRating(star)}
                       className="focus:outline-none transition-transform hover:scale-110"
                     >
-                      <Star className={`h-8 w-8 ${star <= reviewRating ? 'fill-[#f4b72b] text-[#f4b72b]' : 'text-[#49345d]'}`} />
+                      <Star className={`h-8 w-8 ${star <= reviewRating ? 'fill-[#e5a93c] text-[#e5a93c]' : 'text-[#3d2f4f]'}`} />
                     </button>
                   ))}
                 </div>
@@ -312,7 +419,7 @@ export default function ProductDetailsPage() {
                 <textarea 
                   value={reviewText}
                   onChange={(e) => setReviewText(e.target.value)}
-                  className="w-full bg-[#241333] border border-[#49345d] text-white p-4 h-36 resize-none focus:outline-none focus:border-[#f4b72b] transition-colors"
+                  className="w-full bg-[#12091c] border-2 border-[#0e0917] text-[#f2edf7] p-4 h-36 resize-none shadow-[2.5px_2.5px_0_#0e0917] focus:outline-none focus:border-[#e5a93c] transition-colors"
                   placeholder="What did you think about the game?"
                 ></textarea>
               </div>
@@ -321,50 +428,50 @@ export default function ProductDetailsPage() {
                 <button 
                   type="button"
                   onClick={() => setIsAnonymous(!isAnonymous)}
-                  className={`flex h-5 w-5 items-center justify-center border transition-colors ${isAnonymous ? 'border-[#f4b72b] bg-[#f4b72b]' : 'border-[#49345d] bg-[#241333]'}`}
+                  className={`flex h-5 w-5 items-center justify-center border-2 border-[#0e0917] transition-colors ${isAnonymous ? 'bg-[#e5a93c]' : 'bg-[#12091c]'}`}
                 >
-                  {isAnonymous && <Check className="h-4 w-4 text-[#171419]" />}
+                  {isAnonymous && <Check className="h-4 w-4 text-[#0e0917] stroke-[3]" />}
                 </button>
                 <span className="text-sm text-[#b9adc4] font-medium cursor-pointer" onClick={() => setIsAnonymous(!isAnonymous)}>Post anonymously (e.g. J***n)</span>
               </div>
               
               <button 
                 onClick={() => setIsReviewModalOpen(false)}
-                className="font-display w-full bg-[#f4b72b] py-4 text-sm font-black uppercase text-[#171419] transition-transform hover:-translate-y-1 hover:bg-[#ffd45e] shadow-[4px_4px_0_#49345d]"
+                className="comic-action-btn w-full bg-[#e5a93c] py-4 text-sm font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
               >
                 Submit Review
               </button>
             </div>
             
-            <div className="w-full md:w-80 bg-[#252028] p-8 flex flex-col items-center justify-center text-center">
-              <div className="w-48 aspect-[3/4] relative border border-[#49345d] mb-6 shadow-[5px_5px_0_#1c191f]">
-                <img src="/palworld-cover.jpg" alt={product.title} className="absolute inset-0 w-full h-full object-cover" />
+            <div className="w-full md:w-80 bg-[#140e1d] p-8 flex flex-col items-center justify-center text-center">
+              <div className="w-48 aspect-[3/4] relative border-2 border-[#0e0917] mb-6 shadow-[5px_5px_0_#0e0917]">
+                <img src={galleryImages[0] || '/palworld-cover.jpg'} alt={displayTitle} className="absolute inset-0 w-full h-full object-cover" />
               </div>
-              <h3 className="font-display text-xl font-black uppercase text-white mb-2 leading-tight">{product.title}</h3>
-              <p className="text-sm font-bold text-[#f4b72b] bg-[#f4b72b]/10 px-3 py-1 rounded-full">{product.platform}</p>
+              <h3 className="font-display text-xl font-black uppercase text-[#f2edf7] mb-2 leading-tight">{displayTitle}</h3>
+              <p className="text-sm font-bold text-[#e5a93c] bg-[#e5a93c]/10 border border-[#e5a93c]/30 px-3 py-1 rounded-sm">PC / DIGITAL</p>
             </div>
           </div>
         </div>
       )}
 
       {lightboxIndex !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={closeLightbox}>
-          <button className="absolute right-6 top-6 text-white hover:text-[#f4b72b]" onClick={closeLightbox}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4" onClick={closeLightbox}>
+          <button className="absolute right-6 top-6 text-[#f2edf7] hover:text-[#f0b849]" onClick={closeLightbox}>
             <X className="h-8 w-8" />
           </button>
           
-          <button className="absolute left-6 text-white hover:text-[#f4b72b]" onClick={prevImage}>
+          <button className="absolute left-6 text-[#f2edf7] hover:text-[#f0b849]" onClick={prevImage}>
             <ChevronLeft className="h-12 w-12" />
           </button>
           
           <img 
             src={galleryImages[lightboxIndex]} 
             alt="Lightbox" 
-            className="max-h-[90vh] max-w-[90vw] object-contain border border-[#49345d] shadow-[7px_7px_0_#f4b72b]" 
+            className="max-h-[90vh] max-w-[90vw] object-contain border-2 border-[#0e0917] shadow-[7px_7px_0_#0e0917]" 
             onClick={(e) => e.stopPropagation()}
           />
           
-          <button className="absolute right-6 text-white hover:text-[#f4b72b]" onClick={nextImage}>
+          <button className="absolute right-6 text-[#f2edf7] hover:text-[#f0b849]" onClick={nextImage}>
             <ChevronRight className="h-12 w-12" />
           </button>
         </div>
