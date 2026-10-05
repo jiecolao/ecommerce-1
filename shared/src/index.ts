@@ -101,3 +101,20 @@ export interface AdminReport {
   }[];
 }
 
+// Steam Login Data
+export interface SteamProfile {
+  steamId: string;
+  personaName?: string;
+  avatar?: string;
+  profileUrl?: string;
+}
+
+// Google Login Data
+export interface GoogleProfile {
+  googleId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  picture: string;
+  accessToken?: string;
+}

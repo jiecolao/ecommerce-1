@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -25,7 +25,7 @@ import SellerOrdersPage from './pages/seller/SellerOrdersPage';
 import CustomersPage from './pages/seller/CustomersPage';
 import ActivityLogsPage from './pages/seller/ActivityLogsPage';
 import { Toaster } from './components/ui/toaster';
-import { Auth } from './pages/auth/Auth';
+import { Auth } from './pages/Auth/Auth';
 import CatalogPageOriginal from './pages/test/CatalogPageOriginal';
 import ProductDetailsPageOriginal from './pages/test/ProductDetailsPageOriginal';
 import CheckoutPageOriginal from './pages/test/CheckoutPageOriginal';
@@ -41,15 +41,17 @@ const DashboardPage = lazy(() => import('./pages/seller/DashboardPage'));
 
 function AppShell() {
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
   const isCatalog = location.pathname === '/catalog' || location.pathname === '/';
   const isAuth = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].includes(location.pathname);
-  const isSeller = location.pathname.startsWith('/seller') || location.pathname.startsWith('/test/seller');
-
   return (
     <>
       <div className="flex min-h-screen flex-col bg-[#1c191f] text-[#f4eef9]">
-        {!isAuth && !isSeller && <Navbar />}
-        <main className={isAuth || isCatalog || isSeller ? 'flex-1' : 'app-page flex-1'}>
+        {!isAuth && <Navbar />}
+        <main className={isAuth || isCatalog ? 'flex-1' : 'app-page flex-1'}>
           <Routes>
             {/* Buyer Routes */}
             <Route path="/" element={<CatalogPage />} />
@@ -99,7 +101,7 @@ function AppShell() {
             <Route path="/test/seller/products/new" element={<CreateProductPageOriginal />} />
           </Routes>
         </main>
-        {!isAuth && !isSeller && <Footer />}
+        {!isAuth && <Footer />}
       </div>
       <Toaster />
     </>

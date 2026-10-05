@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, CircleDollarSign, CreditCard, Info, Plus, QrCode, ShieldCheck, Smartphone, Trash2, WalletCards, X } from 'lucide-react';
+import { Check, CreditCard, Info, Plus, QrCode, ShieldCheck, Smartphone, Trash2, WalletCards, X } from 'lucide-react';
 import AccountSidebar from '../../components/account/AccountSidebar';
 
 type PaymentMethod = {
@@ -17,10 +17,10 @@ const initialMethods: PaymentMethod[] = [
 ];
 
 const channels = [
-  { name: 'GCash', icon: WalletCards },
-  { name: 'Maya', icon: Smartphone },
-  { name: 'PayPal', icon: CircleDollarSign },
-  { name: 'Visa / MC', icon: CreditCard },
+  { name: 'GCash', img: 'https://www.google.com/s2/favicons?domain=gcash.com&sz=128' },
+  { name: 'Maya', img: 'https://www.google.com/s2/favicons?domain=maya.ph&sz=128' },
+  { name: 'PayPal', img: 'https://www.google.com/s2/favicons?domain=paypal.com&sz=128' },
+  { name: 'Visa / MC', img: 'https://www.google.com/s2/favicons?domain=visa.com&sz=128' },
   { name: 'QR PH', icon: QrCode },
   { name: 'G / A Pay', icon: Smartphone },
 ];
@@ -104,9 +104,13 @@ export default function PaymentMethodsPage() {
         <section className="mt-12">
           <h2 className="font-display text-[10px] font-black uppercase text-[#a99bb5]">Supported payment channels at checkout</h2>
           <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
-            {channels.map(({ name, icon: ChannelIcon }) => (
+            {channels.map(({ name, icon: ChannelIcon, img }) => (
               <div key={name} className="flex min-h-28 flex-col items-center justify-center gap-3 border border-[#49345d] bg-[#211d23] text-center">
-                <ChannelIcon className="h-6 w-6 text-[#f4b72b]" />
+                {img ? (
+                  <img src={img} alt={name} className="h-6 w-6 rounded-sm object-contain" />
+                ) : (
+                  ChannelIcon && <ChannelIcon className="h-6 w-6 text-[#f4b72b]" />
+                )}
                 <span className="text-xs font-bold text-[#b9adc4]">{name}</span>
               </div>
             ))}

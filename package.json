@@ -19,6 +19,8 @@
     "test": "turbo run test"
   },
   "devDependencies": {
+    "@types/express-session": "^1.19.0",
+    "@types/passport-steam": "^1.0.6",
     "kill-port": "^2.0.1",
     "turbo": "^2.0.0"
   },
@@ -33,6 +35,10 @@
   "dependencies": {
     "@nestjs/axios": "^12.0.1",
     "@nestjs/mapped-types": "*",
-    "axios": "^1.20.0"
+    "@nestjs/passport": "^12.0.0",
+    "axios": "^1.20.0",
+    "express-session": "^1.19.0",
+    "passport": "^0.7.0",
+    "passport-steam": "^1.0.18"
   }
 }
