@@ -1,5 +1,4 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import type { Product, CheckoutDto } from 'shared';
@@ -7,7 +6,8 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { API_URL } from '../../lib/api';
+import api from '../../lib/api';
+import { CheckoutPageSkeleton } from '../../components/ui/skeleton';
 
 export default function CheckoutPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,19 +21,18 @@ export default function CheckoutPage() {
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
-      const { data } = await axios.get<Product>(`${API_URL}/catalog/products/${id}`);
+      const { data } = await api.get<Product>(`/catalog/products/${id}`);
       return data;
     },
     enabled: !!id,
   });
 
+  const basePrice = product?.productVariants?.[0]?.price ?? 1000;
+  const finalPrice = Math.max(0, basePrice - appliedDiscount);
+
   const checkoutMutation = useMutation({
     mutationFn: async (checkoutData: CheckoutDto) => {
-      const { data } = await axios.post(`${API_URL}/buyer/checkout`, checkoutData, {
-        headers: {
-          'x-actor-id': '11111111-1111-1111-1111-111111111111',
-        },
-      });
+      const { data } = await api.post(`/buyer/checkout`, checkoutData);
       return data;
     },
     onSuccess: () => {
@@ -49,7 +48,6 @@ export default function CheckoutPage() {
     setCouponError('');
     if (!product) return;
 
-    const basePrice = product.productVariants?.[0]?.price ?? 1000;
     if (promoCode.trim().toUpperCase() === 'SAVE10') {
       const discount = Math.round(basePrice * 0.1);
       setAppliedDiscount(discount);
@@ -65,20 +63,19 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!product) return;
 
-    const basePrice = product.productVariants?.[0]?.price ?? 1000;
+    const variantId = product.productVariants?.[0]?.id ?? product.id;
 
     checkoutMutation.mutate({
-      productId: product.id,
-      totalAmount: basePrice,
+      productId: variantId,
+      totalAmount: finalPrice,
       discountCode: couponApplied ? 'SAVE10' : undefined,
     });
   };
 
-  if (isLoading) return <div className="font-display py-16 text-center text-[#f4b72b]">Preparing checkout...</div>;
+  if (isLoading) return <CheckoutPageSkeleton />;
   if (!product) return <div className="font-display py-16 text-center text-[#ff5c80]">Product not found.</div>;
 
-  const originalPrice = product.productVariants?.[0]?.price ?? 1000;
-  const finalPrice = originalPrice - appliedDiscount;
+  const originalPrice = basePrice;
 
   return (
     <div className="mx-auto max-w-2xl py-8">

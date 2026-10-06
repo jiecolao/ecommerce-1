@@ -2,10 +2,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #f4b72b;
-  --color-secondary: #7115c4;
+  --color-primary: #e5a93c;
+  --color-secondary: #581c87;
   --font-display: "Orbitron", sans-serif;
   --font-sans: "Space Grotesk", sans-serif;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @layer base {
@@ -14,13 +23,27 @@
   }
 
   html {
-    background: #1c191f;
+    background-color: #15111c;
   }
 
   body {
-    @apply m-0 bg-[#1c191f] font-sans text-[#f4eef9];
-    background-image: radial-gradient(rgba(244, 183, 43, 0.06) 1px, transparent 1px);
-    background-size: 20px 20px;
+    @apply m-0 font-sans text-[#eee8f5];
+    background-color: #15111c;
+    background-image:
+      radial-gradient(ellipse 70% 45% at 50% 0%, rgba(88, 28, 135, 0.22), transparent 75%),
+      radial-gradient(ellipse 50% 35% at 85% 30%, rgba(229, 169, 60, 0.05), transparent 60%),
+      radial-gradient(circle at 10px 10px, rgba(229, 169, 60, 0.08) 1.5px, transparent 1.6px),
+      radial-gradient(circle at 22px 22px, rgba(168, 85, 247, 0.05) 1.5px, transparent 1.6px),
+      linear-gradient(to right, rgba(229, 169, 60, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(229, 169, 60, 0.02) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      100% 100%,
+      24px 24px,
+      48px 48px,
+      96px 96px,
+      96px 96px;
+    background-attachment: fixed;
   }
 
   button,
@@ -30,78 +53,280 @@
   }
 
   ::selection {
-    background: #f4b72b;
-    color: #09060d;
+    background: #e5a93c;
+    color: #0e0917;
   }
 }
 
 @layer components {
+  .comic-page-bg {
+    background-color: #15111c;
+    background-image:
+      radial-gradient(ellipse 70% 45% at 50% 0%, rgba(88, 28, 135, 0.22), transparent 75%),
+      radial-gradient(ellipse 50% 35% at 85% 30%, rgba(229, 169, 60, 0.05), transparent 60%),
+      radial-gradient(circle at 10px 10px, rgba(229, 169, 60, 0.08) 1.5px, transparent 1.6px),
+      radial-gradient(circle at 22px 22px, rgba(168, 85, 247, 0.05) 1.5px, transparent 1.6px),
+      linear-gradient(to right, rgba(229, 169, 60, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(229, 169, 60, 0.02) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      100% 100%,
+      24px 24px,
+      48px 48px,
+      96px 96px,
+      96px 96px;
+    background-attachment: fixed;
+  }
+
   .app-page {
     @apply mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10;
   }
 
   .comic-title {
-    @apply font-display uppercase text-white;
-    text-shadow: 3px 3px 0 #7115c4;
+    @apply font-display uppercase text-[#f2edf7];
+    text-shadow: 2px 2px 0 #0e0917, 4px 4px 0 #581c87;
+    letter-spacing: 0.03em;
   }
 
   .comic-panel {
-    border: 1px solid #49345d;
-    background: #252028;
-    box-shadow: 7px 7px 0 #2c0c46;
+    position: relative;
+    border: 2px solid #0e0917;
+    background: #1a1424;
+    box-shadow: 5px 5px 0px #0e0917, 7px 7px 0px rgba(88, 28, 135, 0.45);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .comic-panel-interactive {
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                border-color 0.2s ease;
+  }
+
+  .comic-panel-interactive:hover {
+    transform: translate(-3px, -4px);
+    border-color: #e5a93c;
+    box-shadow: 0 0 0 2px #e5a93c, 7px 7px 0px #0e0917, 10px 10px 0px #4e1877;
   }
 
   .comic-kicker {
-    @apply font-display inline-flex bg-[#f4b72b] px-4 py-2 text-[10px] font-black uppercase text-[#09060d];
-    clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%, 7% 50%);
+    @apply font-display inline-flex items-center gap-1.5 border-2 border-[#0e0917] bg-[#e5a93c] px-3.5 py-1.5 text-[11px] font-black uppercase text-[#0e0917];
+    box-shadow: 3px 3px 0px #0e0917;
+    transform: skewX(-8deg);
+  }
+
+  .comic-kicker > * {
+    transform: skewX(8deg);
   }
 
   .catalog-tab {
-    @apply font-display h-12 min-w-32 border border-[#49345d] bg-[#1e1627] px-6 text-[11px] font-bold uppercase text-[#d8d0df] transition-all;
-    clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    @apply font-display h-12 min-w-32 border-2 border-[#0e0917] bg-[#1e172a] px-6 text-[11px] font-black uppercase text-[#d4c8e3] transition-all;
+    box-shadow: 3.5px 3.5px 0px #0e0917;
   }
 
   .catalog-tab:hover {
-    border-color: #f4b72b;
-    color: #ffe29a;
-    box-shadow: inset 0 -3px 0 #f4b72b;
+    transform: translate(-2px, -2px);
+    border-color: #e5a93c;
+    color: #f5c46b;
+    box-shadow: 5px 5px 0px #0e0917;
   }
 
   .catalog-tab-active {
-    border-color: #f4b72b;
-    background: #f4b72b;
-    color: #09060d;
-    box-shadow: 4px 4px 0 #7115c4;
+    border-color: #0e0917;
+    background: #e5a93c;
+    color: #0e0917;
+    box-shadow: 4px 4px 0px #0e0917, 6.5px 6.5px 0px #4e1877;
   }
 
   .catalog-tab-active:hover {
-    border-color: #ffd45e;
-    background: #ffd45e;
-    color: #09060d;
-    box-shadow: 4px 4px 0 #7115c4;
+    transform: translate(-2px, -2px);
+    background: #f0b849;
+    color: #0e0917;
+    box-shadow: 5px 5px 0px #0e0917, 7.5px 7.5px 0px #4e1877;
   }
 
+  /* ==========================================================================
+     COMIC FLAT DESIGN SYSTEM (Warm Amber, Deep Plum, Softer Contrast)
+     ========================================================================== */
+
+  /* Eye-friendly Comic Halftone Dot Patterns */
+  .comic-halftone-yellow {
+    background-color: #e5a93c;
+    background-image: radial-gradient(#b07b1d 1.5px, transparent 1.5px);
+    background-size: 6px 6px;
+  }
+
+  .comic-halftone-white {
+    background-color: #ede7f3;
+    background-image: radial-gradient(#c6b7d6 1.5px, transparent 1.5px);
+    background-size: 6px 6px;
+  }
+
+  .comic-halftone-purple {
+    background-color: #211730;
+    background-image: radial-gradient(rgba(229, 169, 60, 0.08) 1.5px, transparent 1.5px);
+    background-size: 7px 7px;
+  }
+
+  .comic-halftone-dark {
+    background-color: #181222;
+    background-image: radial-gradient(rgba(229, 169, 60, 0.06) 1.5px, transparent 1.5px);
+    background-size: 8px 8px;
+  }
+
+  /* Comic Angled Banner Badge */
+  .comic-angled-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 5px 12px 6px;
+    border: 2px solid #0e0917;
+    box-shadow: 3px 3px 0px #0e0917;
+    transform: skewX(-8deg);
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
+  }
+
+  .comic-angled-badge > * {
+    transform: skewX(8deg);
+  }
+
+  /* Comic Price Bubble / Sticker */
+  .comic-price-sticker {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    padding: 5px 12px;
+    border: 2px solid #0e0917;
+    background-color: #e5a93c;
+    background-image: radial-gradient(#b07b1d 1.5px, transparent 1.5px);
+    background-size: 6px 6px;
+    color: #0e0917;
+    box-shadow: 3.5px 3.5px 0px #0e0917;
+    transform: rotate(-2deg);
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  /* Comic Action Button with Tactile Click */
+  .comic-action-btn {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 2px solid #0e0917;
+    box-shadow: 3.5px 3.5px 0px #0e0917;
+    transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+                background-color 0.15s ease,
+                color 0.15s ease;
+  }
+
+  .comic-action-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #0e0917;
+  }
+
+  .comic-action-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #0e0917;
+  }
+
+  /* Gentle Warm White/Gold Comic Light Streak Sweep */
+  .comic-card-sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    background: linear-gradient(
+      115deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.2) 48%,
+      rgba(240, 184, 73, 0.3) 50%,
+      rgba(255, 255, 255, 0.2) 52%,
+      transparent 60%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    mix-blend-mode: overlay;
+  }
+
+  /* Comic Product Card Master Class */
   .product-card {
     position: relative;
     isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    background: #181222;
+    border: 2px solid #0e0917;
+    box-shadow: 5px 5px 0px #0e0917, 7px 7px 0px rgba(88, 28, 135, 0.45);
+    transform: translate(0, 0) rotate(0deg);
+    transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+                border-color 0.24s ease;
     overflow: hidden;
-    clip-path: polygon(0 20px, 100% 0, 100% 100%, 0 100%);
-    filter: drop-shadow(6px 7px 0 #2c0c46);
-    transition: transform 180ms ease, filter 180ms ease;
   }
 
+  /* Comic Card Hover State - Warm Honey Outline, Gentle Glow & Pop */
   .product-card:hover {
-    z-index: 2;
-    transform: translate(-2px, -7px) rotate(-0.25deg);
-    filter: drop-shadow(9px 11px 0 #2c0c46);
+    z-index: 20;
+    transform: translate(-4px, -6px) rotate(-0.4deg);
+    border-color: #e5a93c;
+    box-shadow:
+      0 0 0 2px #e5a93c,
+      0 0 16px rgba(229, 169, 60, 0.24),
+      8px 8px 0px #0e0917,
+      12px 12px 0px #4e1877;
   }
 
+  /* Comic Card Highlighted / Featured Variant */
+  .product-card.is-featured {
+    border-color: #e5a93c;
+    box-shadow:
+      0 0 0 1.5px #e5a93c,
+      5px 5px 0px #0e0917,
+      8px 8px 0px rgba(88, 28, 135, 0.55);
+  }
+
+  .product-card.is-featured:hover {
+    border-color: #f5c46b;
+    box-shadow:
+      0 0 0 2.5px #f5c46b,
+      0 0 20px rgba(229, 169, 60, 0.3),
+      9px 9px 0px #0e0917,
+      13px 13px 0px #4e1877;
+  }
+
+  /* Interactive Reactions inside Card on Hover */
+  .product-card:hover .comic-card-sheen {
+    transform: translateX(100%);
+  }
+
+  .product-card:hover .comic-price-sticker {
+    transform: rotate(0deg) scale(1.04);
+    box-shadow: 4px 4px 0px #0e0917;
+  }
+
+  .product-card:hover .comic-angled-badge {
+    transform: skewX(-8deg) scale(1.03);
+    box-shadow: 4px 4px 0px #0e0917;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .product-card,
   .product-card::after,
-  .product-card img {
+  .product-card img,
+  .comic-card-sheen,
+  .comic-action-btn,
+  .comic-price-sticker,
+  .comic-angled-badge {
     animation: none !important;
     transition: none !important;
   }

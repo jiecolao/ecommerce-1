@@ -1,73 +1,288 @@
-import { Sparkles, Zap } from 'lucide-react';
-import { Button } from './ui/button';
+import { useId } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './FeaturedPromoBanner.css';
+import {
+  BANNER_PURPLE_SHADOW,
+  BANNER_PURPLE_MAIN,
+  BANNER_PURPLE_FACET,
+  RIBBON_SHADOW,
+  RIBBON_GOLD,
+  RIBBON_FOLD_SHADOW,
+  RIBBON_FOLD_GOLD,
+} from './bannerPaths';
 
-type FeaturedPromoBannerProps = {
+export interface FeaturedPromoBannerProps {
+  badge?: string;
   eyebrow?: string;
   title?: string;
   subtitle?: string;
+  description?: string;
   price?: string;
   imageSrc?: string;
-};
+  buttonText?: string;
+  buyHref?: string;
+  onBuyNow?: () => void;
+  className?: string;
+}
+
+const DEFAULT_TITLE = 'Elden Ring: Shadow of the Erdtree';
+const DEFAULT_SUBTITLE =
+  'Experience the new expansion of the award-winning action RPG. Pre-order now for exclusive bonuses.';
+const DEFAULT_BADGE = 'FEATURED';
+const DEFAULT_PRICE = '₱2,450.00';
+const DEFAULT_BUTTON_TEXT = 'Buy Now';
+const DEFAULT_IMAGE = '/palworld.png';
+const DEFAULT_BUY_HREF = '/product/helldivers-2';
 
 export default function FeaturedPromoBanner({
-  eyebrow = 'Featured',
-  title = 'Elden Ring: Shadow of the Erdtree',
-  subtitle = 'Experience the new expansion of the award-winning action RPG.',
-  price = 'PHP 450.00',
-  imageSrc = '/palworld.png',
+  badge,
+  eyebrow,
+  title = DEFAULT_TITLE,
+  subtitle,
+  description,
+  price = DEFAULT_PRICE,
+  imageSrc = DEFAULT_IMAGE,
+  buttonText = DEFAULT_BUTTON_TEXT,
+  buyHref = DEFAULT_BUY_HREF,
+  onBuyNow,
+  className = '',
 }: FeaturedPromoBannerProps) {
+  const navigate = useNavigate();
+  const rawId = useId();
+  const id = rawId.replace(/[^a-zA-Z0-9_-]/g, '');
+  const shadowFilterId = `one-sided-yellow-shadow-${id}`;
+
+  const badgeText = badge ?? eyebrow ?? DEFAULT_BADGE;
+  const descText = subtitle ?? description ?? DEFAULT_SUBTITLE;
+
+  const handleBuy = () => {
+    if (onBuyNow) {
+      onBuyNow();
+    } else if (buyHref) {
+      navigate(buyHref);
+    }
+  };
+
+  // Format title into emphasized, balanced lines
+  const renderTitleLines = () => {
+    if (title === DEFAULT_TITLE) {
+      return (
+        <>
+          <span>Elden Ring:</span>
+          <br />
+          <span>Shadow of</span>
+          <br />
+          <span>the Erdtree</span>
+        </>
+      );
+    }
+
+    if (title.includes(':')) {
+      const [main, rest] = title.split(':');
+      const restWords = rest?.trim().split(' ') ?? [];
+      if (restWords.length >= 3) {
+        const mid = Math.ceil(restWords.length / 2);
+        return (
+          <>
+            <span>{main}:</span>
+            <br />
+            <span>{restWords.slice(0, mid).join(' ')}</span>
+            <br />
+            <span>{restWords.slice(mid).join(' ')}</span>
+          </>
+        );
+      }
+      return (
+        <>
+          <span>{main}:</span>
+          <br />
+          <span>{rest?.trim()}</span>
+        </>
+      );
+    }
+
+    const words = title.split(' ');
+    if (words.length > 2) {
+      const mid = Math.ceil(words.length / 2);
+      return (
+        <>
+          <span>{words.slice(0, mid).join(' ')}</span>
+          <br />
+          <span>{words.slice(mid).join(' ')}</span>
+        </>
+      );
+    }
+
+    return title;
+  };
+
   return (
-    <section className="comic-panel relative mx-auto aspect-[1082/525] w-full max-w-[1082px] overflow-hidden bg-[#09060d]">
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 1082 525"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <path d="M94.0514 93L0 272.5L20.446 501.5L956.871 525L1034.16 57L1082 0L94.0514 93Z" fill="#600EA8" />
-      </svg>
+    <section className={`featured-promo relative mx-auto w-full max-w-[1243px] overflow-visible py-2 sm:py-4 ${className}`}>
+      <div className="featured-promo__frame">
+        {/* SVG Graphic Layer: Polygons, ribbon geometry, and artwork with comic cel shadow */}
+        <svg
+          viewBox="0 0 1243 697"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlnsXlink="http://www.w3.org/1999/xlink"
+          className="featured-promo__desktop-art absolute inset-0 h-full w-full overflow-visible"
+          aria-hidden="true"
+        >
+          <defs>
+            {/* Comic cel-shaded character shadow: solid ink outline + warm amber rim */}
+            <filter
+              id={shadowFilterId}
+              x="-20%"
+              y="-20%"
+              width="150%"
+              height="150%"
+              colorInterpolationFilters="sRGB"
+            >
+              <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="dilated" />
+              {/* Amber rim shadow */}
+              <feOffset in="dilated" dx="7" dy="6" result="amberShifted" />
+              <feFlood floodColor="#e5a93c" floodOpacity="0.85" result="amberFlood" />
+              <feComposite in="amberFlood" in2="amberShifted" operator="in" result="amberShadow" />
+              {/* Solid comic ink shadow */}
+              <feOffset in="dilated" dx="3.5" dy="3" result="inkShifted" />
+              <feFlood floodColor="#0e0917" floodOpacity="1" result="inkFlood" />
+              <feComposite in="inkFlood" in2="inkShifted" operator="in" result="inkShadow" />
+              {/* Composite layers */}
+              <feMerge>
+                <feMergeNode in="amberShadow" />
+                <feMergeNode in="inkShadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 1082 525"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <path d="M403 109L1034.16 57L956.871 525L246 507L403 109Z" fill="#4B087F" opacity="0.42" />
-      </svg>
+          {/* Layer 1: Background polygon shadow with comic ink stroke */}
+          <path
+            d={BANNER_PURPLE_SHADOW}
+            fill="#46166e"
+            stroke="#0e0917"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
 
-      <div className="absolute left-[2.8%] top-[31%] h-[7.2%] w-[18%] bg-violet-950 [clip-path:polygon(0_0,96%_0,100%_100%,8%_100%)]" />
-      <div className="absolute left-[4.8%] top-[32.3%] z-30 flex h-[6.2%] w-[16.5%] items-center bg-amber-300 pl-[4.2%] text-[clamp(5px,1.05vw,10px)] font-black uppercase tracking-normal text-violet-950 [clip-path:polygon(0_0,83%_0,100%_50%,83%_100%,0_100%,8%_50%)]">
-        <Sparkles className="mr-[4%] h-[0.8em] w-[0.8em]" />
-        {eyebrow}
-      </div>
+          {/* Layer 2: Main plum banner polygon with comic ink stroke */}
+          <path
+            d={BANNER_PURPLE_MAIN}
+            fill="#561b85"
+            stroke="#0e0917"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
 
-      <div className="absolute left-[11%] top-[43%] z-20 w-[31%] text-white">
-        <h1 className="max-w-[250px] text-[clamp(18px,4.05vw,44px)] font-black uppercase leading-[0.82] tracking-normal drop-shadow-[0_2px_0_rgba(45,12,86,0.65)]">
-          {title}
-        </h1>
-        <p className="mt-[5%] max-w-[230px] text-[clamp(5px,1.05vw,11px)] leading-[1.28] text-violet-100">
-          {subtitle}
-        </p>
+          {/* Layer 3: Dark facet overlay polygon */}
+          <path
+            d={BANNER_PURPLE_FACET}
+            fill="#360f54"
+            fillOpacity={0.7}
+            stroke="#0e0917"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
 
-        <div className="mt-[6%] flex items-center gap-[6%]">
-          <Button className="h-auto rounded-none bg-amber-300 px-[9%] py-[4%] text-[clamp(5px,1vw,10px)] font-black uppercase leading-none text-violet-950 hover:bg-amber-200">
-            Buy Now
-          </Button>
-          <div className="flex items-center gap-[5%] whitespace-nowrap text-[clamp(7px,1.4vw,14px)] font-black uppercase text-white">
-            <Zap className="h-[1em] w-[1em] text-amber-300" />
-            {price}
+          {/* Layer 4: Dynamic Character Artwork PNG with comic cel-shaded shadow */}
+          <image
+            href={imageSrc}
+            xlinkHref={imageSrc}
+            x="568"
+            y="-12.7955"
+            width="647"
+            height="647"
+            preserveAspectRatio="xMidYMid meet"
+            filter={`url(#${shadowFilterId})`}
+          />
+
+          {/* Layer 5: Ribbon polygon shapes in top-left with comic ink stroke */}
+          <path d={RIBBON_SHADOW} fill="#2f0a42" stroke="#0e0917" strokeWidth="2" strokeLinejoin="round" />
+          <path d={RIBBON_GOLD} fill="#e5a93c" stroke="#0e0917" strokeWidth="2.5" strokeLinejoin="round" />
+          <path d={RIBBON_FOLD_SHADOW} fill="#280738" stroke="#0e0917" strokeWidth="2" strokeLinejoin="round" />
+          <path d={RIBBON_FOLD_GOLD} fill="#d2982d" stroke="#0e0917" strokeWidth="2.5" strokeLinejoin="round" />
+        </svg>
+
+        {/* The mobile panel stretches with the copy; the artwork keeps its own proportions. */}
+        <svg
+          className="featured-promo__mobile-panel"
+          viewBox="0 0 360 600"
+          preserveAspectRatio="none"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M38 58L358 14L338 134L356 550L314 598L22 574L8 202L38 58Z"
+            fill="#46166e"
+            stroke="#0e0917"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M28 44L348 0L328 120L346 536L304 584L12 560L0 188L28 44Z"
+            fill="#561b85"
+            stroke="#0e0917"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M348 0L238 100L216 210L252 580L304 584L346 536L328 120L348 0Z"
+            fill="#360f54"
+            fillOpacity={0.7}
+            stroke="#0e0917"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+        </svg>
+
+        <img className="featured-promo__mobile-art" src={imageSrc} alt="" />
+
+        <div className="featured-promo__overlay">
+          <div className="featured-promo__badge font-display font-black uppercase text-[#0e0917]">
+            <svg
+              className="featured-promo__mobile-ribbon"
+              viewBox="0 178 230 60"
+              preserveAspectRatio="none"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d={RIBBON_SHADOW} fill="#2f0a42" stroke="#0e0917" strokeWidth="2" strokeLinejoin="round" />
+              <path d={RIBBON_GOLD} fill="#e5a93c" stroke="#0e0917" strokeWidth="2.5" strokeLinejoin="round" />
+              <path d={RIBBON_FOLD_SHADOW} fill="#280738" stroke="#0e0917" strokeWidth="2" strokeLinejoin="round" />
+              <path d={RIBBON_FOLD_GOLD} fill="#d2982d" stroke="#0e0917" strokeWidth="2.5" strokeLinejoin="round" />
+            </svg>
+            <span className="select-text">{badgeText}</span>
+          </div>
+
+          <div className="featured-promo__content">
+            <h2 className="featured-promo__title font-display font-black text-[#f2edf7] select-text">
+              {renderTitleLines()}
+            </h2>
+
+            <p className="featured-promo__description font-sans font-medium text-[#c8bed6] select-text">
+              {descText}
+            </p>
+
+            <div className="featured-promo__actions">
+              <button
+                type="button"
+                onClick={handleBuy}
+                aria-label={buttonText}
+                className="comic-action-btn featured-promo__button bg-[#e5a93c] text-[#0e0917] hover:bg-[#f0b849] active:translate-x-0.5 active:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#e5a93c] cursor-pointer"
+              >
+                {buttonText}
+              </button>
+
+              <div className="featured-promo__price comic-price-sticker comic-halftone-yellow select-text">
+                <span className="text-[9px] font-black uppercase tracking-wider text-black/75">SPECIAL</span>
+                <span className="font-display font-black leading-none text-black">
+                  {price}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <img
-        src={imageSrc}
-        alt="Palworld key art"
-        className="absolute bottom-[0] right-[3%] z-10 h-[91%] w-auto max-w-none object-contain drop-shadow-[0_9px_4px_rgba(32,13,61,0.35)]"
-      />
     </section>
   );
 }
