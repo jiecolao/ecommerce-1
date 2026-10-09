@@ -16,7 +16,12 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/backend/api/index.ts" },
     { "source": "/assets/(.*)", "destination": "/frontend/assets/$1" },
-    { "source": "/vite.svg", "destination": "/frontend/vite.svg" },
+    { "source": "/favicon.svg", "destination": "/frontend/favicon.svg" },
+    { "source": "/icons.svg", "destination": "/frontend/icons.svg" },
+    { "source": "/image.png", "destination": "/frontend/image.png" },
+    { "source": "/palworld-cover.jpg", "destination": "/frontend/palworld-cover.jpg" },
+    { "source": "/palworld.png", "destination": "/frontend/palworld.png" },
+    { "source": "/(.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|json|txt|woff2|woff|ttf|eot))", "destination": "/frontend/$1" },
     { "source": "/(.*)", "destination": "/frontend/index.html" }
   ],
   "env": {
