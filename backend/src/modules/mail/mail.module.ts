@@ -20,7 +20,7 @@ import { MailService } from './mail.service';
         },
         defaults: {
           from: `"No Reply" <${configService.get<string>('SMTP_FROM')}>`,
-        },
+        } as any,
       }),
     }),
   ],
