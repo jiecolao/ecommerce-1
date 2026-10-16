@@ -13,6 +13,7 @@ import { RawgModule } from "./integrations/rawg/rawg.module";
 import { OpencriticModule } from "./integrations/opencritic/opencritic.module";
 import { IgdbModule } from "./integrations/igdb/igdb.module";
 import { MailModule } from "./modules/mail/mail.module";
+import { PaymongoModule } from "./integrations/paymongo/paymongo.module";
 
 @Module({
     imports: [
@@ -32,6 +33,7 @@ import { MailModule } from "./modules/mail/mail.module";
         OpencriticModule,
         IgdbModule,
         MailModule,
+        PaymongoModule
     ],
 })
 export class AppModule {}
