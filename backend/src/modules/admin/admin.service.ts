@@ -144,11 +144,11 @@ export class AdminService {
   }
 
   async uploadProductImage(productId: number, adminId: string, fileName: string, payload: Buffer, mimeType: string) {
-    const upload = await this.blobService.uploadImage(`products/${productId}/${fileName}`, payload, mimeType);
-
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
     if (!product) throw new NotFoundException('Product not found.');
     if (product.adminId !== adminId) throw new ForbiddenException('This product does not belong to the requesting admin.');
+
+    const upload = await this.blobService.uploadImage(`products/${productId}/${fileName}`, payload, mimeType);
 
     // Append to media array
     return this.prisma.product.update({

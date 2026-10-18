@@ -1,10 +1,14 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminService } from './admin.service';
 import { CreateAdminProductDto } from './dto/create-admin-product.dto';
 import { UpdateAdminProductDto } from './dto/update-admin-product.dto';
+import { SupabaseAuthGuard } from '../auth/guards/supabase-auth.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
+import type { AdminRequest } from '../auth/auth.types';
 
 @Controller('admin')
+@UseGuards(SupabaseAuthGuard, AdminGuard)
 export class AdminController {
   constructor(private readonly AdminService: AdminService) {}
 
@@ -14,8 +18,8 @@ export class AdminController {
   }
 
   @Get('products')
-  getProducts(@Req() req: any) {
-    const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+  getProducts(@Req() req: AdminRequest) {
+    const adminId = req.adminId;
     return this.AdminService.getProducts(adminId);
   }
 
@@ -24,7 +28,7 @@ export class AdminController {
   async createProduct(
     @Body('data') dataString: string,
     @UploadedFile() file: any,
-    @Req() req: any
+    @Req() req: AdminRequest
   ) {
     if (!file) throw new BadRequestException('Product must have at least one image.');
     if (!dataString) throw new BadRequestException('Product data is missing.');
@@ -46,13 +50,13 @@ export class AdminController {
       throw new BadRequestException(errors.map((e: any) => Object.values(e.constraints)).flat());
     }
 
-    const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+    const adminId = req.adminId;
     return this.AdminService.createProduct(adminId, dto, file);
   }
 
   @Patch('products/:id')
-  updateProduct(@Param('id') id: string, @Body() dto: UpdateAdminProductDto, @Req() req: any) {
-    const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+  updateProduct(@Param('id') id: string, @Body() dto: UpdateAdminProductDto, @Req() req: AdminRequest) {
+    const adminId = req.adminId;
     return this.AdminService.updateProduct(parseInt(id, 10), adminId, dto);
   }
 
@@ -61,23 +65,23 @@ export class AdminController {
   uploadImage(
     @Param('id') id: string,
     @UploadedFile() file: any,
-    @Req() req: any
+    @Req() req: AdminRequest
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
-    const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+    const adminId = req.adminId;
     return this.AdminService.uploadProductImage(parseInt(id, 10), adminId, file.originalname, file.buffer, file.mimetype);
   }
 
 
   @Delete('products/:id')
-  deleteProduct(@Param('id') id: string, @Req() req: any) {
-    const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+  deleteProduct(@Param('id') id: string, @Req() req: AdminRequest) {
+    const adminId = req.adminId;
     return this.AdminService.deleteProduct(parseInt(id, 10), adminId);
   }
 
   @Get('reports')
-  getReports(@Req() req: any) {
-    const adminId = req.headers['x-actor-id'] ?? '22222222-2222-2222-2222-222222222222';
+  getReports(@Req() req: AdminRequest) {
+    const adminId = req.adminId;
     return this.AdminService.getadminReport(adminId);
   }
 

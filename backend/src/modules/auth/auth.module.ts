@@ -6,6 +6,9 @@ import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { GoogleAuthGuard } from './guards/google.guard';
 import { SteamAuthGuard } from './guards/steam.guard';
+import { SupabaseAuthGuard } from './guards/supabase-auth.guard';
+import { ShopperGuard } from './guards/shopper.guard';
+import { AdminGuard } from './guards/admin.guard';
 
 @Module({
   imports: [PassportModule],
@@ -15,9 +18,12 @@ import { SteamAuthGuard } from './guards/steam.guard';
     SteamStrategy, 
     GoogleStrategy,
     GoogleAuthGuard,
-    SteamAuthGuard
+    SteamAuthGuard,
+    SupabaseAuthGuard,
+    ShopperGuard,
+    AdminGuard,
   ],
-  exports: [PassportModule, GoogleAuthGuard, SteamAuthGuard],
+  exports: [PassportModule, GoogleAuthGuard, SteamAuthGuard, AuthService, SupabaseAuthGuard, ShopperGuard, AdminGuard],
 })
 
 export class AuthModule {}
