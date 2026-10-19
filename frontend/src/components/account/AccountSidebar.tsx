@@ -1,5 +1,6 @@
 import { CreditCard, Heart, History, LogOut, Settings, UserRound } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { authSession } from '../../lib/auth';
 
 const accountLinks = [
   { label: 'Profile information', icon: UserRound, to: '/profile' },
@@ -16,6 +17,14 @@ type AccountSidebarProps = {
 
 export default function AccountSidebar({ email = 'john@example.com', avatarUrl }: AccountSidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    try {
+      const result = await authSession.logout();
+      navigate('/login', { replace: true });
+      if (!result.serverConfirmed) window.alert('Signed out in this browser. Server-side sign out could not be confirmed.');
+    } catch { window.alert('Sign out could not be completed. Please try again.'); }
+  };
 
   return (
     <aside className="lg:sticky lg:top-28">
@@ -48,7 +57,7 @@ export default function AccountSidebar({ email = 'john@example.com', avatarUrl }
         })}
       </nav>
 
-      <button className="mt-7 flex h-12 w-full items-center gap-3 border-t-2 border-[#0e0917] px-4 pt-6 font-display text-xs font-black uppercase tracking-wider text-[#8f8398] hover:text-[#e5a93c] transition-colors cursor-pointer">
+      <button type="button" onClick={handleLogout} className="mt-7 flex h-12 w-full items-center gap-3 border-t-2 border-[#0e0917] px-4 pt-6 font-display text-xs font-black uppercase tracking-wider text-[#8f8398] hover:text-[#e5a93c] transition-colors cursor-pointer">
         <LogOut className="h-4 w-4" /> Logout
       </button>
     </aside>

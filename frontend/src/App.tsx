@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Routes, Route, useLocation } from 'react-router-dom';
+import { useAuthSession } from './lib/auth';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import CatalogPage from './pages/buyer/CatalogPage';
@@ -36,6 +37,14 @@ import AdminOrdersPage from './pages/admin/SellerOrdersPage';
 import AdminCustomersPage from './pages/admin/CustomersPage';
 import ComicPageDecorations from './components/layout/ComicPageDecorations';
 
+function RequireAccount({ capability }: { capability: 'isBuyer' | 'isAdmin' }) {
+  const { user, loading } = useAuthSession();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user[capability]) return <Navigate to={user.isAdmin ? '/admin/dashboard' : '/profile'} replace />;
+  return <Outlet />;
+}
+
 function AppShell() {
   const location = useLocation();
 
@@ -59,11 +68,13 @@ function AppShell() {
             <Route path="/checkout/cart" element={<CartPage />} />
             <Route path="/checkout/success" element={<OrderCompletePage />} />
             <Route path="/checkout/:id" element={<CheckoutPage />} />
-            <Route path="/buyer/orders" element={<OrdersPage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/payment-methods" element={<PaymentMethodsPage />} />
+            <Route element={<RequireAccount capability="isBuyer" />}>
+              <Route path="/buyer/orders" element={<OrdersPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/payment-methods" element={<PaymentMethodsPage />} />
+            </Route>
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/contact" element={<ContactSupportPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -76,6 +87,7 @@ function AppShell() {
             <Route path="/auth" element={<Auth />} />
 
             {/* Seller / Admin Routes (Standardized) */}
+            <Route element={<RequireAccount capability="isAdmin" />}>
             <Route path="/seller" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/seller/dashboard" element={<AdminDashboardPage />} />
             <Route path="/seller/products" element={<AdminProductsPage />} />
@@ -93,6 +105,7 @@ function AppShell() {
             <Route path="/admin/orders" element={<AdminOrdersPage />} />
             <Route path="/admin/customers" element={<AdminCustomersPage />} />
             <Route path="/admin/activity-logs" element={<AdminActivityLogsPage />} />
+            </Route>
 
             {/* Test Routes — original team's pages preserved for reference */}
             <Route path="/test/catalog" element={<CatalogPageOriginal />} />

@@ -27,7 +27,7 @@ export class CatalogService {
   async getProductById(id: number) {
     return this.prisma.product.findUnique({
       where: { id, status: 'ACTIVE' },
-      include: { admin: true, productVariants: true },
+      include: { productVariants: true },
     });
   }
 }

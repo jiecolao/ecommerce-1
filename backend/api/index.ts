@@ -2,6 +2,9 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
+import { createCorsOptions } from '../src/config/http-security';
+import { PRIVATE_API_PATHS, privateResponseCacheControl } from '../src/middleware/private-cache.middleware';
+import { HttpErrorLogFilter } from '../src/filters/http-error-log.filter';
 
 let cachedServer: any;
 
@@ -9,10 +12,9 @@ async function bootstrap() {
   if (!cachedServer) {
     const app = await NestFactory.create(AppModule);
     
-    app.enableCors({
-      origin: true,
-      credentials: true,
-    });
+    app.useGlobalFilters(new HttpErrorLogFilter(app.getHttpAdapter()));
+    app.use(PRIVATE_API_PATHS, privateResponseCacheControl);
+    app.enableCors(createCorsOptions());
 
     app.useGlobalPipes(
       new ValidationPipe({

@@ -1,8 +1,9 @@
 // paymongo.service.ts
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { catchError, firstValueFrom } from 'rxjs';
+import { createProviderException } from '../provider-error';
 
 @Injectable()
 export class PaymongoService {
@@ -59,10 +60,7 @@ export class PaymongoService {
     const { data } = await firstValueFrom(
       this.httpService.post(url, payload, { headers: this.getAuthHeaders() }).pipe(
         catchError((error) => {
-          throw new HttpException(
-            error.response?.data || 'PayMongo API Error',
-            error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-          );
+          throw createProviderException(error, 'paymongo');
         }),
       ),
     );

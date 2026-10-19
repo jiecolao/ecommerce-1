@@ -75,8 +75,8 @@ export class SteamService {
 
         // Respect rate limits (150ms delay between pages)
         await new Promise((resolve) => setTimeout(resolve, 150));
-      } catch (error) {
-        this.logger.error(`Failed to fetch Steam reviews: ${error}`);
+      } catch {
+        this.logger.error('Failed to fetch Steam reviews.');
         break;
       }
     }

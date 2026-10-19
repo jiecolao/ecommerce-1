@@ -24,10 +24,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     try {
       await this.$connect();
       this.logger.log('Prisma connected to Supabase PostgreSQL');
-    } catch (error) {
-      this.logger.error(
-        `Prisma connection unavailable: ${error instanceof Error ? error.message : String(error)}`,
-      );
+    } catch {
+      // Connection errors can contain database credentials or connection strings.
+      this.logger.error('Prisma connection unavailable.');
     }
   }
 

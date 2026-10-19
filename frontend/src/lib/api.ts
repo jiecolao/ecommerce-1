@@ -1,47 +1,16 @@
 import axios from 'axios';
-
-export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3000/api');
-
-export interface StoredUser {
-  id: string;
-  email: string;
-  role?: string;
-  firstName?: string;
-  lastName?: string;
-  [key: string]: any;
-}
-
-export function getStoredUser(): StoredUser | null {
-  try {
-    const raw = localStorage.getItem('auth_user');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function getStoredToken(): string | null {
-  return localStorage.getItem('auth_token');
-}
-
-export function setStoredAuth(token: string, user: StoredUser) {
-  localStorage.setItem('auth_token', token);
-  localStorage.setItem('auth_user', JSON.stringify(user));
-  window.dispatchEvent(new Event('auth-state-change'));
-}
-
-export function clearStoredAuth() {
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('auth_user');
-  window.dispatchEvent(new Event('auth-state-change'));
-}
+import { authSession, getStoredUser } from './auth';
+export { API_URL } from './api-url';
+import { API_URL } from './api-url';
+export { getStoredUser, getStoredToken, clearStoredAuth } from './auth';
+export type { StoredUser } from './auth-session';
 
 export const api = axios.create({
   baseURL: API_URL,
 });
 
-api.interceptors.request.use((config) => {
-  const token = getStoredToken();
+api.interceptors.request.use(async (config) => {
+  const token = await authSession.getAccessToken();
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
@@ -57,6 +26,14 @@ api.interceptors.request.use((config) => {
   }
 
   return config;
+});
+
+api.interceptors.response.use(response => response, error => {
+  const authorization = error.config?.headers?.Authorization;
+  if (error.response?.status === 401 && typeof authorization === 'string' && authorization.startsWith('Bearer ')) {
+    authSession.rejectToken(authorization.slice(7));
+  }
+  return Promise.reject(error);
 });
 
 export default api;

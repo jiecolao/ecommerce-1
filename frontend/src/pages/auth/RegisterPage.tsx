@@ -3,6 +3,7 @@ import { Eye, EyeOff, Gamepad2, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import api, { API_URL } from '../../lib/api';
+import { authSession } from '../../lib/auth';
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState('');
@@ -23,14 +24,19 @@ export default function RegisterPage() {
     setErrorMsg(null);
 
     try {
-      await api.post('/auth/signup', {
+      const response = await api.post('/auth/signup', {
         email,
         password,
         firstName,
         lastName,
         role: 'buyer',
       });
-      navigate('/verify-email', { state: { email } });
+      if (response.data?.session) {
+        const user = await authSession.adopt(response.data.session);
+        navigate(user.isAdmin ? '/admin/dashboard' : '/profile');
+      } else {
+        navigate('/verify-email', { state: { email } });
+      }
     } catch (err: any) {
       setErrorMsg(err.response?.data?.message || err.message || 'Registration failed.');
     } finally {
@@ -38,8 +44,12 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/login/google`;
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try { window.location.assign(await authSession.beginGoogle(window.location.origin)); }
+    catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Unable to start Google sign in.'); }
+    finally { setLoading(false); }
   };
 
   const handleSteamLogin = () => {

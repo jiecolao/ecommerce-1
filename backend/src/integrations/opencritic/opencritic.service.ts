@@ -1,7 +1,8 @@
-import { Injectable, Logger, HttpException, HttpStatus } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
 import { catchError, firstValueFrom } from "rxjs";
 import { ConfigService } from "@nestjs/config";
+import { createProviderException } from '../provider-error';
 
 @Injectable()
 export class OpencriticService {
@@ -27,11 +28,8 @@ export class OpencriticService {
         headers: this.headers,
       }).pipe(
         catchError((error) => {
-          this.logger.error('OpenCritic API Error:', error.message, error.stack);
-          throw new HttpException(
-            error.response?.data || 'Error fetching data from OpenCritic',
-            error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-          ); 
+          this.logger.error('OpenCritic API request failed.');
+          throw createProviderException(error, 'opencritic');
         })
       ),
     ) as any;
@@ -47,11 +45,8 @@ export class OpencriticService {
         headers: this.headers,
       }).pipe(
         catchError((error) => {
-          this.logger.error('OpenCritic API Error:', error.message, error.stack);
-          throw new HttpException(
-            error.response?.data || 'Error fetching data from OpenCritic',
-            error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-          ); 
+          this.logger.error('OpenCritic API request failed.');
+          throw createProviderException(error, 'opencritic');
         })
       ),
     ) as any;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../lib/api';
+import { authSession, useAuthSession } from '../../lib/auth';
 
 export function Auth() {
   const [loading, setLoading] = useState(false);
@@ -16,31 +17,18 @@ export function Auth() {
   
   const navigate = useNavigate();
   const location = useLocation();
+  const session = useAuthSession();
 
   useEffect(() => {
-    // Check for email verification callback (hash fragments)
+    // Never trust a token or a verification claim merely because it is in a URL.
     const hashParams = new URLSearchParams(location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
-    
-    if (accessToken && type === 'signup') {
-      localStorage.setItem('auth_token', accessToken);
-      setAuthStatus('Auth Verified! Email confirmed successfully.');
-      setVerifiedEmail('Verified User');
-      
-      // Clear hash to prevent accidental re-use
-      window.history.replaceState(null, '', location.pathname);
+    if (hashParams.has('access_token') || hashParams.has('refresh_token') || hashParams.has('error')) {
+      window.history.replaceState(null, '', `${location.pathname}${location.search}`);
+      setAuthStatus('Please sign in with your email and password to continue.');
       return;
     }
-
-    // Check general auth status from localStorage for simulation
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      setAuthStatus('Logged in (Simulated Status)');
-    } else {
-      setAuthStatus('Not logged in');
-    }
-  }, [location]);
+    setAuthStatus(session.loading ? 'Checking status...' : session.user ? `Logged in as ${session.user.role}` : 'Not logged in');
+  }, [location, session]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,11 +51,8 @@ export function Auth() {
           password,
         });
         
-        const token = res.data?.session?.access_token || res.data?.token;
-        if (token) {
-          localStorage.setItem('auth_token', token);
-          setAuthStatus(`Logged in successfully as ${role}`);
-        }
+        const user = await authSession.adopt(res.data?.session);
+        setAuthStatus(`Logged in successfully as ${user.role}`);
         
         navigate('/');
       }
@@ -78,10 +63,14 @@ export function Auth() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    setAuthStatus('Logged out');
-    setVerifiedEmail(null);
+  const handleLogout = async () => {
+    try {
+      const result = await authSession.logout();
+      setAuthStatus(result.serverConfirmed ? 'Logged out' : 'Signed out on this browser. Server sign-out could not be confirmed.');
+      setVerifiedEmail(null);
+    } catch {
+      setAuthStatus('Sign out could not be completed. Please try again.');
+    }
   };
 
   return (

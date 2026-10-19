@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Heart, KeyRound, Search, ShoppingCart, ExternalLink, Store, ShieldCheck } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import api, { getStoredUser, type StoredUser } from '../../lib/api';
+import api from '../../lib/api';
+import { useAuthSession } from '../../lib/auth';
 import { Select } from '../ui/select';
 
 export default function Navbar() {
@@ -10,18 +10,11 @@ export default function Navbar() {
   const isAdmin = location.pathname.startsWith('/admin') || location.pathname.startsWith('/seller');
   const isAccountPage = ['/profile', '/wishlist', '/payment-methods', '/buyer/orders'].includes(location.pathname);
 
-  const [user, setUser] = useState<StoredUser | null>(getStoredUser());
-
-  useEffect(() => {
-    const handleAuthChange = () => {
-      setUser(getStoredUser());
-    };
-    window.addEventListener('auth-state-change', handleAuthChange);
-    return () => window.removeEventListener('auth-state-change', handleAuthChange);
-  }, []);
+  const { user } = useAuthSession();
 
   const { data: cartData } = useQuery({
     queryKey: ['cart'],
+    enabled: Boolean(user?.isBuyer),
     queryFn: async () => {
       const res = await api.get('/buyer/cart');
       return res.data;
@@ -31,6 +24,7 @@ export default function Navbar() {
 
   const { data: wishlistData } = useQuery({
     queryKey: ['wishlist'],
+    enabled: Boolean(user?.isBuyer),
     queryFn: async () => {
       const res = await api.get('/buyer/wishlist');
       return res.data;

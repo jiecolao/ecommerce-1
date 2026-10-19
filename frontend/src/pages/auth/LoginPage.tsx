@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Eye, EyeOff, Gamepad2, Info } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
-import api, { API_URL, setStoredAuth } from '../../lib/api';
+import api, { API_URL } from '../../lib/api';
+import { authSession, completeGoogleRedirect } from '../../lib/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,6 +16,20 @@ export default function LoginPage() {
   const resetComplete = searchParams.get('reset') === 'success';
   const verified = searchParams.get('verified') === 'success';
 
+  useEffect(() => {
+    let active = true;
+    const completion = completeGoogleRedirect();
+    if (completion) {
+      setLoading(true);
+      void completion.then(user => {
+        if (active) navigate(user.isAdmin ? '/admin/dashboard' : '/profile', { replace: true });
+      }).catch(() => {
+        if (active) setErrorMsg('Google sign in could not be completed. Please try again.');
+      }).finally(() => { if (active) setLoading(false); });
+    }
+    return () => { active = false; };
+  }, [navigate]);
+
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
@@ -22,20 +37,8 @@ export default function LoginPage() {
 
     try {
       const res = await api.post('/auth/login', { email, password });
-      const session = res.data?.session;
-      const user = res.data?.user;
-      const token = session?.access_token || 'mock_token';
-      
-      const role = user?.user_metadata?.role || (email.toLowerCase().includes('admin') ? 'admin' : 'buyer');
-      setStoredAuth(token, {
-        id: user?.id || (role === 'admin' ? '22222222-2222-2222-2222-222222222222' : '11111111-1111-1111-1111-111111111111'),
-        email: user?.email || email,
-        role,
-        firstName: user?.user_metadata?.first_name || '',
-        lastName: user?.user_metadata?.last_name || '',
-      });
-
-      if (role === 'admin') {
+      const user = await authSession.adopt(res.data?.session);
+      if (user.isAdmin) {
         navigate('/admin/dashboard');
       } else {
         navigate('/profile');
@@ -47,8 +50,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/login/google`;
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try { window.location.assign(await authSession.beginGoogle(window.location.origin)); }
+    catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Unable to start Google sign in.'); }
+    finally { setLoading(false); }
   };
 
   const handleSteamLogin = () => {

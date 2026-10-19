@@ -3,14 +3,16 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import session from 'express-session';
+import { createCorsOptions, requireSteamSessionSecret } from './config/http-security';
+import { PRIVATE_API_PATHS, privateResponseCacheControl } from './middleware/private-cache.middleware';
+import { HttpErrorLogFilter } from './filters/http-error-log.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({
-    origin: true,
-    credentials: true,
-  });
+  app.useGlobalFilters(new HttpErrorLogFilter(app.getHttpAdapter()));
+  app.use(PRIVATE_API_PATHS, privateResponseCacheControl);
+  app.enableCors(createCorsOptions());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,7 +24,7 @@ async function bootstrap() {
 
   app.use(
     session({
-      secret: process.env.STEAM_SESSION_SECRET || 'STEAM_SESSION_SECRET',
+      secret: requireSteamSessionSecret(),
       resave: false,
       saveUninitialized: false,
       cookie: { maxAge: 3600000 },

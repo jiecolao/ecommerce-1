@@ -27,9 +27,10 @@ export class MailService {
         subject: `Invoice for Order #${orderId}`,
         html,
       });
-      this.logger.log(`Invoice sent to ${customerEmail} for order ${orderId}`);
-    } catch (error: any) {
-      this.logger.error(`Failed to send invoice to ${customerEmail}: ${error.message}`);
+      this.logger.log('Invoice sent.');
+    } catch {
+      // SMTP errors can include recipient details and credentials.
+      this.logger.error('Invoice delivery failed.');
     }
   }
 }
