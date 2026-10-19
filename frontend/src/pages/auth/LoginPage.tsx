@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
@@ -21,17 +22,19 @@ export default function LoginPage() {
     const completion = completeGoogleRedirect();
     if (completion) {
       setLoading(true);
+      setGooglePending(true);
       void completion.then(user => {
         if (active) navigate(user.isAdmin ? '/admin/dashboard' : '/profile', { replace: true });
       }).catch(() => {
         if (active) setErrorMsg('Google sign in could not be completed. Please try again.');
-      }).finally(() => { if (active) setLoading(false); });
+      }).finally(() => { if (active) { setLoading(false); setGooglePending(false); } });
     }
     return () => { active = false; };
   }, [navigate]);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (loading) return;
     setLoading(true);
     setErrorMsg(null);
 
@@ -51,14 +54,17 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    if (loading) return;
     setLoading(true);
+    setGooglePending(true);
     setErrorMsg(null);
     try { window.location.assign(await authSession.beginGoogle(window.location.origin)); }
     catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Unable to start Google sign in.'); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setGooglePending(false); }
   };
 
   const handleSteamLogin = () => {
+    if (loading) return;
     window.location.href = `${API_URL}/auth/login/steam`;
   };
 
@@ -74,7 +80,7 @@ export default function LoginPage() {
       </form>
 
       <div className="my-6 flex items-center gap-3"><span className="h-px flex-1 bg-[#49345d]" /><span className="font-display text-[8px] font-bold uppercase text-[#8f8398]">Or</span><span className="h-px flex-1 bg-[#49345d]" /></div>
-      <div className="grid grid-cols-2 gap-3"><button type="button" onClick={handleGoogleLogin} className="flex h-11 items-center justify-center gap-2 border border-[#5b4767] bg-[#211d23] text-sm font-bold text-white hover:border-[#f4b72b]"><strong className="text-[#f4b72b]">G</strong> Google</button><button type="button" onClick={handleSteamLogin} className="flex h-11 items-center justify-center gap-2 border border-[#5b4767] bg-[#211d23] text-sm font-bold text-white hover:border-[#f4b72b]"><Gamepad2 className="h-4 w-4 text-[#f4b72b]" /> Steam</button></div>
+      <div className="grid grid-cols-2 gap-3"><button type="button" onClick={handleGoogleLogin} disabled={loading} aria-busy={googlePending} className="flex h-11 items-center justify-center gap-2 border border-[#5b4767] bg-[#211d23] text-sm font-bold text-white hover:border-[#f4b72b]"><strong className="text-[#f4b72b]">G</strong> {googlePending ? 'Signing in...' : 'Google'}</button><button type="button" onClick={handleSteamLogin} disabled={loading} className="flex h-11 items-center justify-center gap-2 border border-[#5b4767] bg-[#211d23] text-sm font-bold text-white hover:border-[#f4b72b]"><Gamepad2 className="h-4 w-4 text-[#f4b72b]" /> Steam</button></div>
       <div className="mt-6 flex gap-3 bg-[#211d23] p-4 text-xs leading-5 text-[#a99bb5]"><Info className="h-4 w-4 shrink-0 text-[#f4b72b]" /> Buying without an account? Continue as a guest at checkout; keys are sent directly to your email.</div>
       <p className="mt-6 text-center text-sm text-[#a99bb5]">Don't have an account? <Link to="/register" className="font-bold text-white hover:text-[#f4b72b]">Create an account</Link></p>
     </AuthLayout>

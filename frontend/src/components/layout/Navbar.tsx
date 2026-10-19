@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { useAuthSession } from '../../lib/auth';
 import { Select } from '../ui/select';
+import AdminAccountMenu from '../account/AdminAccountMenu';
 
 export default function Navbar() {
   const location = useLocation();
@@ -73,7 +74,7 @@ export default function Navbar() {
             <Store className="h-3.5 w-3.5" />
             <span>Store</span>
           </Link>
-          <Link
+          {user?.isAdmin && <Link
             to="/admin/dashboard"
             className={`font-display px-3 py-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
               isAdmin
@@ -82,7 +83,7 @@ export default function Navbar() {
             }`}
           >
             Admin Panel
-          </Link>
+          </Link>}
         </nav>
 
         {/* ADMIN MODE HEADER VIEW */}
@@ -98,8 +99,7 @@ export default function Navbar() {
             </Link>
 
             {/* Admin User Badge */}
-            <Link
-              to="/profile"
+            {user?.isAdmin && <AdminAccountMenu
               className="flex items-center gap-2.5 sm:gap-3 border-l-2 border-[#0e0917] pl-3"
             >
               <span className="grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#581c87] font-display text-[11px] font-black text-white shadow-[2px_2px_0_#0e0917]">
@@ -109,7 +109,7 @@ export default function Navbar() {
                 <strong className="block text-xs text-[#f2edf7]">{displayName}</strong>
                 <span className="block text-[10px] font-bold text-[#e5a93c]">Administrator</span>
               </span>
-            </Link>
+            </AdminAccountMenu>}
           </div>
         ) : (
           /* STORE MODE HEADER VIEW */
@@ -168,7 +168,17 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-              {user || isAccountPage ? (
+              {user?.isAdmin ? (
+                <AdminAccountMenu className="flex items-center gap-3 border-l-2 border-[#0e0917] pl-3">
+                  <span className="grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#581c87] font-display text-[11px] font-black text-white shadow-[2.5px_2.5px_0_#0e0917]">
+                    {initials}
+                  </span>
+                  <span className="hidden sm:block">
+                    <strong className="block text-sm text-[#f2edf7]">{displayName}</strong>
+                    <span className="block text-[10px] text-[#a99bb5]">Administrator</span>
+                  </span>
+                </AdminAccountMenu>
+              ) : user || isAccountPage ? (
                 <Link
                   to="/profile"
                   className="flex items-center gap-3 border-l-2 border-[#0e0917] pl-3"
