@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, Gamepad2, Info } from 'lucide-react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import api, { API_URL } from '../../lib/api';
 import { authSession, completeGoogleRedirect } from '../../lib/auth';
+import { toast } from '../../lib/toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,6 +15,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath = (location.state as any)?.from;
   const resetComplete = searchParams.get('reset') === 'success';
   const verified = searchParams.get('verified') === 'success';
 
@@ -24,7 +27,10 @@ export default function LoginPage() {
       setLoading(true);
       setGooglePending(true);
       void completion.then(user => {
-        if (active) navigate(user.isAdmin ? '/admin/dashboard' : '/profile', { replace: true });
+        if (active) {
+          toast.success('Signed in with Google!');
+          navigate(fromPath || (user.isAdmin ? '/admin/dashboard' : '/profile'), { replace: true });
+        }
       }).catch(() => {
         if (active) setErrorMsg('Google sign in could not be completed. Please try again.');
       }).finally(() => { if (active) { setLoading(false); setGooglePending(false); } });
@@ -41,13 +47,16 @@ export default function LoginPage() {
     try {
       const res = await api.post('/auth/login', { email, password });
       const user = await authSession.adopt(res.data?.session);
+      toast.success('Logged in successfully!');
       if (user.isAdmin) {
-        navigate('/admin/dashboard');
+        navigate(fromPath && fromPath.startsWith('/admin') ? fromPath : '/admin/dashboard', { replace: true });
       } else {
-        navigate('/profile');
+        navigate(fromPath || '/profile', { replace: true });
       }
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
+      const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

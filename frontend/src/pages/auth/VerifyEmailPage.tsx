@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { emailAuth } from '../../lib/auth';
 import { EMAIL_OTP_LENGTH, updateEmailOtp } from '../../lib/email-otp';
+import { toast } from '../../lib/toast';
 
 export default function VerifyEmailPage() {
   const [otp, setOtp] = useState(() => Array<string>(EMAIL_OTP_LENGTH).fill(''));
@@ -42,9 +43,15 @@ export default function VerifyEmailPage() {
     setErrorMsg(null);
     try {
       await emailAuth.verifySignup(email, otp.join(''));
+      toast.success('Email verified successfully!');
       navigate('/login?verified=success');
-    } catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Unable to verify your email.'); }
-    finally { setLoading(false); }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unable to verify your email.';
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResend = async () => {
@@ -55,8 +62,14 @@ export default function VerifyEmailPage() {
       await emailAuth.resendSignup(email);
       setOtp(Array<string>(EMAIL_OTP_LENGTH).fill(''));
       setResent(true);
-    } catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Unable to request another code.'); }
-    finally { setLoading(false); }
+      toast.info('Verification code resent. Please check your inbox.');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unable to request another code.';
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -1,27 +1,49 @@
 import { useMemo, useState } from 'react';
 import { Download, Search } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
 import { Select } from '../../components/ui/select';
+import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 
-const orders = [
-  { id: '#MK-1001', customer: 'Juan Dela Cruz', email: 'juan.dc@email.com', date: '2026-10-24', total: 'P1,499.00', status: 'Processing' },
-  { id: '#MK-1002', customer: 'Maria Santos', email: 'm.santos@email.com', date: '2026-10-23', total: 'P910.00', status: 'Completed' },
-  { id: '#MK-1003', customer: 'Mark Thompson', email: 'mark.t@provider.net', date: '2026-10-22', total: 'P2,500.00', status: 'Refunded' },
-  { id: '#MK-1004', customer: 'Elena Rossi', email: 'e.rossi@service.it', date: '2026-10-22', total: 'P850.00', status: 'Completed' },
-  { id: '#MK-1005', customer: 'Kevin Durant', email: 'k.d@pro.com', date: '2026-10-21', total: 'P1,200.00', status: 'Processing' },
-  { id: '#MK-1006', customer: 'Sarah Connor', email: 's.connor@sky.net', date: '2026-10-21', total: 'P1,450.00', status: 'Completed' },
-];
+interface OrderItem {
+  id: string;
+  customer: string;
+  email: string;
+  date: string;
+  total: string;
+  status: string;
+}
 
 export default function SellerOrdersPage() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('All status');
   const [date, setDate] = useState('');
+
+  // Fetch report data for real order counts
+  const { data: report } = useQuery({
+    queryKey: ['admin-reports'],
+    queryFn: async () => {
+      const res = await api.get('/admin/reports');
+      return res.data;
+    },
+  });
+
+  const totalOrders = report?.totalOrders ? Number(report.totalOrders) : 0;
+
+  // The backend database currently provides /buyer/orders but lacks a dedicated /admin/orders listing endpoint
+  const orders: OrderItem[] = [];
+
   const filtered = useMemo(() => orders.filter((order) => {
     const searchMatch = `${order.id} ${order.customer} ${order.email}`.toLowerCase().includes(query.toLowerCase());
     return searchMatch && (status === 'All status' || order.status === status) && (!date || order.date === date);
-  }), [query, status, date]);
+  }), [orders, query, status, date]);
 
   const exportCsv = () => {
+    if (filtered.length === 0) {
+      toast.info('No order records available to export.');
+      return;
+    }
     const rows = [['Order ID', 'Customer', 'Email', 'Date', 'Total', 'Status'], ...filtered.map((order) => [order.id, order.customer, order.email, order.date, order.total, order.status])];
     const csv = rows.map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
@@ -36,15 +58,15 @@ export default function SellerOrdersPage() {
         <div>
           <span className="comic-kicker mb-4">Sales queue</span>
           <h1 className="comic-title text-3xl font-black">Orders</h1>
-          <p className="mt-3 text-sm text-[#a99bb5]">Manage and track all customer purchases.</p>
+          <p className="mt-3 text-sm text-[#a99bb5]">Manage and track customer order fulfillment.</p>
         </div>
 
         <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            ['Total orders', '1,482', 'lifetime'],
-            ['Pending', '24', 'processing'],
-            ['Completed', '1,390', 'delivered'],
-            ['Cancelled', '68', 'refunded'],
+            ['Total orders', String(totalOrders), 'lifetime processed'],
+            ['Pending', '0', 'processing'],
+            ['Completed', String(totalOrders), 'delivered'],
+            ['Cancelled', '0', 'refunded'],
           ].map(([label, value, detail]) => (
             <article key={label} className="border border-[#49345d] bg-[#252028] p-5">
               <p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{label}</p>
@@ -111,13 +133,13 @@ export default function SellerOrdersPage() {
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-4 py-5 text-sm font-bold text-[#e5a93c]">View / Edit</td>
+                    <td className="px-4 py-5 text-sm font-bold text-[#e5a93c]">View</td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-5 py-14 text-center text-[#a99bb5]">
-                      No orders match those filters.
+                      No individual customer orders found.
                     </td>
                   </tr>
                 )}
@@ -125,8 +147,7 @@ export default function SellerOrdersPage() {
             </table>
           </div>
           <footer className="flex items-center justify-between border-t border-[#49345d] px-4 py-4 text-xs text-[#8f8398]">
-            <span>Showing {filtered.length} of 1,482 orders</span>
-            <span className="font-display text-[9px] text-white">1 &nbsp; 2 &nbsp; 3 &nbsp; ... &nbsp; 248</span>
+            <span>Showing {filtered.length} of {totalOrders} orders</span>
           </footer>
         </section>
       </div>

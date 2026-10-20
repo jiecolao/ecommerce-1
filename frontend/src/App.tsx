@@ -39,8 +39,9 @@ import ComicPageDecorations from './components/layout/ComicPageDecorations';
 
 function RequireAccount({ capability }: { capability: 'isBuyer' | 'isAdmin' }) {
   const { user, loading } = useAuthSession();
+  const location = useLocation();
   if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   if (!user[capability]) return <Navigate to={user.isAdmin ? '/admin/dashboard' : '/profile'} replace />;
   return <Outlet />;
 }

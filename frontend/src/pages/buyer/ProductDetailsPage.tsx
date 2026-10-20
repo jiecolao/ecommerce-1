@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Heart, MailCheck, QrCode, ShieldCheck, Star, X, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowRight, Check, ChevronLeft, ChevronRight, Heart, MailCheck, QrCode, ShieldCheck, Star, X, ShoppingCart } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
+import { useAuthSession } from '../../lib/auth';
+import { toast } from '../../lib/toast';
 import { Select } from '../../components/ui/select';
 import { ProductDetailsSkeleton } from '../../components/ui/skeleton';
 
-const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+const formatPrice = (price: number) => `₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
 const paymentMethods = [
   { name: 'GCash', img: 'https://www.google.com/s2/favicons?domain=gcash.com&sz=128' },
@@ -16,16 +18,12 @@ const paymentMethods = [
   { name: 'QR PH', icon: QrCode },
 ];
 
-const initialReviews = [
-  { id: 1, name: 'AlexTheGamer', rating: 5, date: '2 days ago', text: 'Amazing game! The graphics and gameplay are top tier. Highly recommend picking this up.' },
-  { id: 2, name: 'S***r', rating: 4, date: '1 week ago', text: 'Really good, but had some minor bugs on launch. Still very enjoyable and worth the price.' },
-  { id: 3, name: 'NoobMaster69', rating: 1, date: '2 weeks ago', text: 'Could not get it to run on my machine. Very disappointed.' }
-];
-
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  const { user } = useAuthSession();
 
   const [selectedPackage, setSelectedPackage] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -53,6 +51,7 @@ export default function ProductDetailsPage() {
 
   const { data: wishlistData } = useQuery({
     queryKey: ['wishlist'],
+    enabled: Boolean(user?.isBuyer),
     queryFn: async () => {
       const res = await api.get('/buyer/wishlist');
       return res.data;
@@ -60,28 +59,34 @@ export default function ProductDetailsPage() {
   });
 
   const variants = serverProduct?.productVariants || [];
-  const packages: Array<{ id: number; label: string; price: number; badge?: string }> = variants.length > 0 
-    ? variants.map((v: any, idx: number) => ({
-        id: v.id,
-        label: v.name || `Edition ${idx + 1}`,
-        price: Number(v.price) || 0,
-        badge: idx === 0 ? 'Standard' : undefined,
-      }))
-    : [{ id: 0, label: 'Standard Edition', price: 999, badge: 'Standard' }];
+  const packages: Array<{ id: number; label: string; price: number; badge?: string }> =
+    variants.map((v: any, idx: number) => ({
+      id: v.id,
+      label: v.name || `Edition ${idx + 1}`,
+      price: Number(v.price) || 0,
+      badge: idx === 0 ? 'Standard' : undefined,
+    }));
 
-  const activePackage = packages[selectedPackage] || packages[0];
-  const isWishlisted = Array.isArray(wishlistData) && wishlistData.some((w: any) => w.id === activePackage.id);
+  const activePackage = packages[selectedPackage] || packages[0] || null;
+  const isWishlisted = activePackage
+    ? Array.isArray(wishlistData) && wishlistData.some((w: any) => w.id === activePackage.id)
+    : false;
 
-  const galleryImages: string[] = serverProduct?.media && serverProduct.media.length > 0
-    ? serverProduct.media
-    : [
-        "/palworld-cover.jpg",
-        "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&w=800&q=80",
-      ];
+  const galleryImages: string[] =
+    serverProduct?.media && serverProduct.media.length > 0
+      ? serverProduct.media
+      : ['/palworld-cover.jpg'];
 
   const handleAddToCart = async () => {
-    if (!activePackage?.id) return;
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to add games to your cart.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+    if (!activePackage?.id) {
+      toast.error('No edition variant selected or available for this product.');
+      return;
+    }
     try {
       await api.post('/buyer/cart/items', {
         productVariantId: activePackage.id,
@@ -91,15 +96,21 @@ export default function ProductDetailsPage() {
       });
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       setAddedToCart(true);
+      toast.success('Product added to cart!');
       setTimeout(() => setAddedToCart(false), 2000);
-    } catch (err: any) {
-      alert('Failed to add to cart: ' + (err.response?.data?.message || err.message));
+    } catch {
+      // Handled by api error interceptor
     }
   };
 
   const handleBuyNow = async () => {
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to proceed with your order.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
     if (!activePackage?.id) {
-      navigate('/checkout/cart');
+      toast.error('No edition variant selected or available for this product.');
       return;
     }
     setBuyingNow(true);
@@ -112,32 +123,39 @@ export default function ProductDetailsPage() {
       });
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       navigate('/checkout/cart');
-    } catch (err: any) {
-      alert('Failed to process buy now: ' + (err.response?.data?.message || err.message));
+    } catch {
+      // Handled by api error interceptor
     } finally {
       setBuyingNow(false);
     }
   };
 
   const handleToggleWishlist = async () => {
-    if (!activePackage?.id) return;
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to save games to your wishlist.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+    if (!activePackage?.id) {
+      toast.error('No edition variant selected.');
+      return;
+    }
     try {
       if (isWishlisted) {
         await api.delete(`/buyer/wishlist/${activePackage.id}`);
+        toast.info('Removed from wishlist');
       } else {
         await api.post('/buyer/wishlist', { productVariantId: activePackage.id });
+        toast.success('Saved to wishlist!');
       }
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-    } catch (err: any) {
-      alert('Wishlist update failed: ' + (err.response?.data?.message || err.message));
+    } catch {
+      // Handled by api error interceptor
     }
   };
 
-  const sortedReviews = [...initialReviews].sort((a, b) => {
-    if (sortBy === 'highest') return b.rating - a.rating;
-    if (sortBy === 'lowest') return a.rating - b.rating;
-    return 0; // recent
-  });
+  const reviews: Array<{ id: number; name: string; rating: number; date: string; text: string }> = [];
+  const sortedReviews = reviews;
 
   const openLightbox = (index: number) => setLightboxIndex(index);
   const closeLightbox = () => setLightboxIndex(null);
@@ -155,6 +173,25 @@ export default function ProductDetailsPage() {
 
   if (isLoading) {
     return <ProductDetailsSkeleton />;
+  }
+
+  if (!serverProduct) {
+    return (
+      <div className="py-24 text-center">
+        <div className="mx-auto max-w-md border-2 border-[#0e0917] bg-[#1e1529] p-8 shadow-[6px_6px_0_#0e0917]">
+          <p className="font-display text-lg font-bold text-[#e5a93c]">Product Not Found</p>
+          <p className="mt-2 text-sm text-[#b2a4c4]">
+            This product could not be located in our database vault.
+          </p>
+          <Link
+            to="/catalog"
+            className="comic-action-btn mt-6 inline-flex h-11 items-center justify-center bg-[#e5a93c] px-6 text-xs font-black uppercase text-[#0e0917]"
+          >
+            Back to Catalog
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -242,22 +279,28 @@ export default function ProductDetailsPage() {
           </div>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {packages.map((item: { id: number; label: string; price: number; badge?: string }, index: number) => (
-              <button
-                key={item.label}
-                onClick={() => setSelectedPackage(index)}
-                className={`relative min-h-28 border-2 border-[#0e0917] p-5 text-left transition-all ${
-                  selectedPackage === index
-                    ? 'bg-[#2b1442] shadow-[4px_4px_0_#e5a93c] -translate-y-0.5'
-                    : 'bg-[#180e25] text-white shadow-[3px_3px_0_#0e0917] hover:bg-[#231438] hover:-translate-y-0.5'
-                }`}
-              >
-                {item.badge && <span className="absolute -top-3 left-4 border border-[#0e0917] bg-[#e5a93c] px-3 py-0.5 font-display text-[8px] font-black uppercase text-[#0e0917] shadow-[1.5px_1.5px_0_#0e0917]">{item.badge}</span>}
-                <span className="block font-semibold text-[#b9adc4] text-sm">{item.label}</span>
-                <span className="font-display mt-2 block text-xl font-black text-[#f2edf7]">{formatPrice(item.price)}</span>
-                {selectedPackage === index && <Check className="absolute right-4 top-4 h-5 w-5 stroke-[3] text-[#e5a93c]" />}
-              </button>
-            ))}
+            {packages.length === 0 ? (
+              <div className="col-span-2 border-2 border-[#0e0917] bg-[#1a1224] p-5 text-sm text-[#b9adc4]">
+                No edition variants currently listed for this product in the vault.
+              </div>
+            ) : (
+              packages.map((item: { id: number; label: string; price: number; badge?: string }, index: number) => (
+                <button
+                  key={item.label}
+                  onClick={() => setSelectedPackage(index)}
+                  className={`relative min-h-28 border-2 border-[#0e0917] p-5 text-left transition-all ${
+                    selectedPackage === index
+                      ? 'bg-[#2b1442] shadow-[4px_4px_0_#e5a93c] -translate-y-0.5'
+                      : 'bg-[#180e25] text-white shadow-[3px_3px_0_#0e0917] hover:bg-[#231438] hover:-translate-y-0.5'
+                  }`}
+                >
+                  {item.badge && <span className="absolute -top-3 left-4 border border-[#0e0917] bg-[#e5a93c] px-3 py-0.5 font-display text-[8px] font-black uppercase text-[#0e0917] shadow-[1.5px_1.5px_0_#0e0917]">{item.badge}</span>}
+                  <span className="block font-semibold text-[#b9adc4] text-sm">{item.label}</span>
+                  <span className="font-display mt-2 block text-xl font-black text-[#f2edf7]">{formatPrice(item.price)}</span>
+                  {selectedPackage === index && <Check className="absolute right-4 top-4 h-5 w-5 stroke-[3] text-[#e5a93c]" />}
+                </button>
+              ))
+            )}
           </div>
 
           {gameUserId && (
@@ -297,21 +340,22 @@ export default function ProductDetailsPage() {
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-semibold text-[#a99bb5] text-sm">Subtotal</p>
-                <p className="font-display mt-2 text-3xl font-black text-[#f2edf7]">{formatPrice(activePackage.price)}</p>
+                <p className="font-display mt-2 text-3xl font-black text-[#f2edf7]">{formatPrice(activePackage?.price ?? 0)}</p>
               </div>
               <div className="flex flex-wrap items-center gap-3 sm:text-right">
                 <button 
                   type="button"
                   onClick={handleAddToCart}
-                  className="comic-action-btn inline-flex h-13 items-center gap-2 border-2 border-[#0e0917] bg-[#25153b] px-6 text-xs font-black uppercase text-[#f2edf7] hover:bg-[#301a4c]"
+                  disabled={!activePackage}
+                  className="comic-action-btn inline-flex h-13 items-center gap-2 border-2 border-[#0e0917] bg-[#25153b] px-6 text-xs font-black uppercase text-[#f2edf7] hover:bg-[#301a4c] disabled:opacity-40"
                 >
                   <ShoppingCart className="h-4 w-4" /> {addedToCart ? 'Added!' : 'Add to cart'}
                 </button>
                 <button 
                   type="button"
                   onClick={handleBuyNow}
-                  disabled={buyingNow}
-                  className="comic-action-btn inline-flex h-13 items-center gap-3 bg-[#e5a93c] px-8 text-xs font-black uppercase text-[#0e0917] hover:bg-[#f0b849] disabled:opacity-50"
+                  disabled={!activePackage || buyingNow}
+                  className="comic-action-btn inline-flex h-13 items-center gap-3 bg-[#e5a93c] px-8 text-xs font-black uppercase text-[#0e0917] hover:bg-[#f0b849] disabled:opacity-40"
                 >
                   {buyingNow ? 'Processing...' : 'Buy now'} <ArrowRight className="h-4 w-4" />
                 </button>
@@ -365,24 +409,31 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sortedReviews.map(review => (
-            <div key={review.id} className="comic-panel p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="font-bold text-[#f2edf7]">{review.name}</p>
-                  <p className="text-xs text-[#a99bb5] mt-0.5">{review.date}</p>
+        {sortedReviews.length === 0 ? (
+          <div className="comic-panel p-8 text-center">
+            <p className="font-display text-base font-bold text-[#e5a93c]">No Player Reviews</p>
+            <p className="mt-1 text-xs text-[#a99bb5]">Public player reviews are not currently recorded for this product in the backend.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {sortedReviews.map(review => (
+              <div key={review.id} className="comic-panel p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="font-bold text-[#f2edf7]">{review.name}</p>
+                    <p className="text-xs text-[#a99bb5] mt-0.5">{review.date}</p>
+                  </div>
+                  <div className="flex text-[#e5a93c] gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-current' : 'text-[#3d2f4f]'}`} />
+                    ))}
+                  </div>
                 </div>
-                <div className="flex text-[#e5a93c] gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-current' : 'text-[#3d2f4f]'}`} />
-                  ))}
-                </div>
+                <p className="text-sm text-[#c8bed6] leading-relaxed">{review.text}</p>
               </div>
-              <p className="text-sm text-[#c8bed6] leading-relaxed">{review.text}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {isReviewModalOpen && (
@@ -436,7 +487,10 @@ export default function ProductDetailsPage() {
               </div>
               
               <button 
-                onClick={() => setIsReviewModalOpen(false)}
+                onClick={() => {
+                  toast.info('Player review submission is not implemented in the backend API.');
+                  setIsReviewModalOpen(false);
+                }}
                 className="comic-action-btn w-full bg-[#e5a93c] py-4 text-sm font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
               >
                 Submit Review

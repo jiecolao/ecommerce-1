@@ -25,35 +25,28 @@ export interface FeaturedPromoBannerProps {
   className?: string;
 }
 
-const DEFAULT_TITLE = 'Elden Ring: Shadow of the Erdtree';
-const DEFAULT_SUBTITLE =
-  'Experience the new expansion of the award-winning action RPG. Pre-order now for exclusive bonuses.';
-const DEFAULT_BADGE = 'FEATURED';
-const DEFAULT_PRICE = '₱2,450.00';
-const DEFAULT_BUTTON_TEXT = 'Buy Now';
-const DEFAULT_IMAGE = '/palworld.png';
-const DEFAULT_BUY_HREF = '/product/helldivers-2';
-
 export default function FeaturedPromoBanner({
-  badge,
+  badge = 'FEATURED',
   eyebrow,
-  title = DEFAULT_TITLE,
+  title,
   subtitle,
   description,
-  price = DEFAULT_PRICE,
-  imageSrc = DEFAULT_IMAGE,
-  buttonText = DEFAULT_BUTTON_TEXT,
-  buyHref = DEFAULT_BUY_HREF,
+  price = '',
+  imageSrc = '/palworld.png',
+  buttonText = 'Buy Now',
+  buyHref,
   onBuyNow,
   className = '',
 }: FeaturedPromoBannerProps) {
+  if (!title) return null;
+
   const navigate = useNavigate();
   const rawId = useId();
   const id = rawId.replace(/[^a-zA-Z0-9_-]/g, '');
   const shadowFilterId = `one-sided-yellow-shadow-${id}`;
 
-  const badgeText = badge ?? eyebrow ?? DEFAULT_BADGE;
-  const descText = subtitle ?? description ?? DEFAULT_SUBTITLE;
+  const badgeText = badge ?? eyebrow ?? 'FEATURED';
+  const descText = subtitle ?? description ?? '';
 
   const handleBuy = () => {
     if (onBuyNow) {
@@ -65,17 +58,6 @@ export default function FeaturedPromoBanner({
 
   // Format title into emphasized, balanced lines
   const renderTitleLines = () => {
-    if (title === DEFAULT_TITLE) {
-      return (
-        <>
-          <span>Elden Ring:</span>
-          <br />
-          <span>Shadow of</span>
-          <br />
-          <span>the Erdtree</span>
-        </>
-      );
-    }
 
     if (title.includes(':')) {
       const [main, rest] = title.split(':');

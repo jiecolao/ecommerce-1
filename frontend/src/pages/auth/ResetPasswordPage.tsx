@@ -3,6 +3,7 @@ import { Eye, EyeOff, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { emailAuth, useRecoverySession } from '../../lib/auth';
+import { toast } from '../../lib/toast';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -23,9 +24,15 @@ export default function ResetPasswordPage() {
       await emailAuth.updatePassword(password);
       setPassword('');
       setConfirmation('');
+      toast.success('Password updated successfully!');
       navigate('/login?reset=success', { replace: true });
-    } catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Unable to update your password.'); }
-    finally { setLoading(false); }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unable to update your password.';
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

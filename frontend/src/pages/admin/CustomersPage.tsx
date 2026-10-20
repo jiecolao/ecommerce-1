@@ -3,25 +3,26 @@ import { Search, UserRound } from 'lucide-react';
 import SellerLayout from '../../components/seller/SellerLayout';
 import { Select } from '../../components/ui/select';
 
-const customers = [
-  ['Juan Dela Cruz', 'juan.dc@email.com', 'Oct 24, 2026', '12 orders', 'P18,450.00', 'Active'],
-  ['Maria Santos', 'm.santos@email.com', 'Oct 20, 2026', '4 orders', 'P3,210.00', 'Active'],
-  ['Mark Thompson', 'mark.t@provider.net', 'Oct 15, 2026', '1 order', 'P850.00', 'Inactive'],
-  ['Elena Rossi', 'e.rossi@service.it', 'Sep 28, 2026', '28 orders', 'P42,100.00', 'Active'],
-  ['Kevin Durant', 'k.d@pro.com', 'Sep 22, 2026', '0 orders', 'P0.00', 'Inactive'],
-  ['Sarah Connor', 's.connor@sky.net', 'Sep 18, 2026', '7 orders', 'P8,120.00', 'Active'],
-] as const;
+type CustomerItem = {
+  name: string;
+  email: string;
+  joinedDate: string;
+  totalOrders: string;
+  totalSpent: string;
+  status: 'Active' | 'Inactive';
+};
 
 export default function CustomersPage() {
+  const [customers] = useState<CustomerItem[]>([]);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('All status');
   const [sortOrder, setSortOrder] = useState('Latest joined');
 
   const filtered = useMemo(() => customers.filter((customer) => {
-    const matchesSearch = `${customer[0]} ${customer[1]}`.toLowerCase().includes(query.toLowerCase());
-    const matchesStatus = status === 'All status' || customer[5] === status;
+    const matchesSearch = `${customer.name} ${customer.email}`.toLowerCase().includes(query.toLowerCase());
+    const matchesStatus = status === 'All status' || customer.status === status;
     return matchesSearch && matchesStatus;
-  }), [query, status]);
+  }), [customers, query, status]);
 
   return (
     <SellerLayout pageName="Customers" contentClassName="p-0">
@@ -34,9 +35,9 @@ export default function CustomersPage() {
 
         <section className="mt-7 grid gap-4 sm:grid-cols-3">
           {[
-            ['Total customers', '12,482', 'registered users'],
-            ['New (30d)', '842', '+12% from last month'],
-            ['Active users', '4,210', 'online in last 7 days'],
+            ['Total customers', String(customers.length), 'registered users'],
+            ['New (30d)', '0', 'last 30 days'],
+            ['Active users', '0', 'online in last 7 days'],
           ].map(([label, value, detail]) => (
             <article key={label} className="border border-[#49345d] bg-[#252028] p-5">
               <p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{label}</p>
@@ -81,36 +82,44 @@ export default function CustomersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#49345d]">
-                {filtered.map((customer) => (
-                  <tr key={customer[1]} className="hover:bg-[#29212d]">
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <span className="grid h-9 w-9 place-items-center bg-[#2b183c] text-[#e5a93c]">
-                          <UserRound className="h-4 w-4" />
-                        </span>
-                        <div>
-                          <p className="font-semibold text-white">{customer[0]}</p>
-                          <p className="text-xs text-[#8f8398]">{customer[1]}</p>
-                        </div>
-                      </div>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-[#8f8398]">
+                      No customers found. Customer listing is currently unavailable from the backend.
                     </td>
-                    <td className="px-4 py-4 text-sm text-[#a99bb5]">{customer[2]}</td>
-                    <td className="px-4 py-4 text-sm text-[#d8cedd]">{customer[3]}</td>
-                    <td className="px-4 py-4 font-display text-xs font-bold text-white">{customer[4]}</td>
-                    <td className="px-4 py-4">
-                      <span className={`px-3 py-1 font-display text-[8px] font-bold uppercase ${customer[5] === 'Active' ? 'bg-[#f4b72b] text-[#171419]' : 'border border-[#5b4767] bg-[#2b2130] text-[#a99bb5]'}`}>
-                        {customer[5]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm font-bold text-[#e5a93c]">View / Edit</td>
                   </tr>
-                ))}
+                ) : (
+                  filtered.map((customer) => (
+                    <tr key={customer.email} className="hover:bg-[#29212d]">
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <span className="grid h-9 w-9 place-items-center bg-[#2b183c] text-[#e5a93c]">
+                            <UserRound className="h-4 w-4" />
+                          </span>
+                          <div>
+                            <p className="font-semibold text-white">{customer.name}</p>
+                            <p className="text-xs text-[#8f8398]">{customer.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-[#a99bb5]">{customer.joinedDate}</td>
+                      <td className="px-4 py-4 text-sm text-[#d8cedd]">{customer.totalOrders}</td>
+                      <td className="px-4 py-4 font-display text-xs font-bold text-white">{customer.totalSpent}</td>
+                      <td className="px-4 py-4">
+                        <span className={`px-3 py-1 font-display text-[8px] font-bold uppercase ${customer.status === 'Active' ? 'bg-[#f4b72b] text-[#171419]' : 'border border-[#5b4767] bg-[#2b2130] text-[#a99bb5]'}`}>
+                          {customer.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-sm font-bold text-[#e5a93c]">View / Edit</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
           <footer className="flex items-center justify-between border-t border-[#49345d] px-4 py-4 text-xs text-[#8f8398]">
-            <span>Showing {filtered.length} of 12,482 customers</span>
-            <span className="font-display text-[9px] text-white">1 &nbsp; 2 &nbsp; 3 &nbsp; ... &nbsp; 2081</span>
+            <span>Showing {filtered.length} of {customers.length} customers</span>
+            <span className="font-display text-[9px] text-white">1</span>
           </footer>
         </section>
       </div>

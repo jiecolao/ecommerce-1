@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { LockKeyhole, ShieldCheck, Trash2, ArrowLeft } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useAuthSession } from '../../lib/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 import { CartPageSkeleton } from '../../components/ui/skeleton';
 
 const paymentMethods = [
@@ -16,12 +18,15 @@ const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minim
 
 export default function CartPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuthSession();
   const queryClient = useQueryClient();
   const [paymentMethod, setPaymentMethod] = useState('gcash');
   const [checkingOut, setCheckingOut] = useState(false);
 
   const { data: cartData, isLoading } = useQuery({
     queryKey: ['cart'],
+    enabled: Boolean(user?.isBuyer),
     queryFn: async () => {
       const res = await api.get('/buyer/cart');
       return res.data;
@@ -47,13 +52,19 @@ export default function CartPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
+      toast.info('Item removed from cart');
     },
-    onError: (err: any) => {
-      alert('Failed to remove item: ' + (err.response?.data?.message || err.message));
+    onError: () => {
+      // api interceptor displays toast
     },
   });
 
   const handleCompletePurchase = async () => {
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to complete checkout.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
     if (orderLines.length === 0) return;
     setCheckingOut(true);
 
@@ -74,9 +85,10 @@ export default function CartPage() {
 
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Order placed successfully!');
       navigate('/checkout/success');
-    } catch (err: any) {
-      alert('Checkout failed: ' + (err.response?.data?.message || err.message));
+    } catch {
+      // api interceptor displays toast
     } finally {
       setCheckingOut(false);
     }
@@ -96,14 +108,31 @@ export default function CartPage() {
 
       {orderLines.length === 0 ? (
         <div className="comic-panel p-12 text-center">
-          <p className="font-display text-xl font-black text-[#f2edf7]">Your cart is empty.</p>
-          <p className="mt-2 text-sm text-[#b2a4c4]">Browse our vault to add games and top-ups.</p>
-          <Link
-            to="/catalog"
-            className="comic-action-btn mt-6 inline-flex h-12 items-center gap-2 bg-[#e5a93c] px-6 text-xs font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
-          >
-            <ArrowLeft className="h-4 w-4" /> Go to Catalog
-          </Link>
+          <p className="font-display text-xl font-black text-[#f2edf7]">
+            {!user ? 'You are not signed in' : 'Your cart is empty'}
+          </p>
+          <p className="mt-2 text-sm text-[#b2a4c4]">
+            {!user
+              ? 'Sign in to access your saved items and proceed with your purchases.'
+              : 'Browse our vault to add games and top-ups.'}
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            {!user && (
+              <Link
+                to="/login"
+                state={{ from: location.pathname }}
+                className="comic-action-btn inline-flex h-12 items-center gap-2 bg-[#e5a93c] px-6 text-xs font-black uppercase text-[#0e0917] hover:bg-[#f0b849]"
+              >
+                Log In to Account
+              </Link>
+            )}
+            <Link
+              to="/catalog"
+              className="comic-action-btn inline-flex h-12 items-center gap-2 border-2 border-[#0e0917] bg-[#25153b] px-6 text-xs font-black uppercase text-[#e0d3ef] hover:bg-[#341d50]"
+            >
+              <ArrowLeft className="h-4 w-4" /> Go to Catalog
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(340px,0.8fr)]">

@@ -1,43 +1,10 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Download, TrendingDown, TrendingUp } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
 import api from '../../lib/api';
 import { DashboardSkeleton } from '../../components/ui/skeleton';
 import { Select } from '../../components/ui/select';
-
-const revenueData = [
-  { day: '1', revenue: 18800 }, { day: '3', revenue: 27600 }, { day: '5', revenue: 24100 }, { day: '7', revenue: 31800 },
-  { day: '9', revenue: 34900 }, { day: '11', revenue: 29200 }, { day: '13', revenue: 38200 }, { day: '15', revenue: 33600 },
-  { day: '17', revenue: 39500 }, { day: '19', revenue: 36100 }, { day: '21', revenue: 40200 }, { day: '23', revenue: 38900 },
-];
-
-const progressGroups = {
-  categories: [['Game Keys','P197,180',46],['Top-Ups','P132,880',31],['Subscriptions','P64,300',15],['Gift Cards','P34,290',8]],
-  platforms: [['PC / Steam','P222,900',52],['PlayStation','P102,880',24],['Xbox','P68,580',16],['Mobile / Other','P34,290',8]],
-  payments: [['GCash','P184,320',43],['Maya','P98,590',23],['Cards','P85,730',20],['PayPal / QR PH','P60,010',14]],
-};
-
-function ProgressPanel({ title, rows }: { title: string; rows: (string | number)[][] }) {
-  return (
-    <section className="border border-[#49345d] bg-[#252028] p-5">
-      <h2 className="font-display text-xs font-black uppercase text-white">{title}</h2>
-      <div className="mt-5 space-y-5">
-        {rows.map(([label, value, percent]) => (
-          <div key={String(label)}>
-            <div className="flex justify-between gap-3 text-xs">
-              <span className="text-[#d8cedd]">{label}</span>
-              <span className="text-[#8f8398]">{value} - {percent}%</span>
-            </div>
-            <div className="mt-2 h-1.5 bg-[#1c191f]">
-              <div className="h-full bg-[#f4b72b]" style={{ width: `${percent}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 export default function AdminDashboardPage() {
   const { data: report, isLoading } = useQuery({
@@ -48,38 +15,36 @@ export default function AdminDashboardPage() {
     },
   });
 
-  const totalRevenue = report ? Number(report.totalRevenueCents || 0) : 428650;
-  const totalOrders = report ? Number(report.totalOrders || 0) : 1284;
-  const topProducts = report?.topSellingProducts || [];
+  const totalRevenue = report?.totalRevenueCents ? Number(report.totalRevenueCents) : 0;
+  const totalOrders = report?.totalOrders ? Number(report.totalOrders) : 0;
+  const topProducts = Array.isArray(report?.topSellingProducts) ? report.topSellingProducts : [];
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+  const chartData = topProducts.map((p: any) => ({
+    name: p.title?.length > 15 ? `${p.title.slice(0, 12)}...` : (p.title || `Product #${p.productId}`),
+    revenue: Number(p.revenueCents || 0),
+  }));
 
   const metricCards = [
     {
       label: 'Gross revenue',
-      value: `P${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`,
-      change: '+12.8%',
-      positive: true,
-      detail: 'from live database',
+      value: `₱${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`,
+      detail: 'from live database orders',
     },
     {
       label: 'Total Orders',
       value: String(totalOrders),
-      change: '+8.4%',
-      positive: true,
-      detail: 'processed orders',
+      detail: 'lifetime processed units',
     },
     {
-      label: 'New customers',
-      value: '386',
-      change: '+6.1%',
-      positive: true,
-      detail: '30.1% first-time buyers',
+      label: 'Top Products',
+      value: String(topProducts.length),
+      detail: 'active revenue generators',
     },
     {
-      label: 'Conversion rate',
-      value: '4.72%',
-      change: '-0.3%',
-      positive: false,
-      detail: 'storefront checkout rate',
+      label: 'Avg Order Value',
+      value: `₱${avgOrderValue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`,
+      detail: 'average revenue per order',
     },
   ];
 
@@ -90,12 +55,12 @@ export default function AdminDashboardPage() {
           <div>
             <span className="comic-kicker mb-4">Store intelligence</span>
             <h1 className="comic-title text-3xl font-black">Analytics</h1>
-            <p className="mt-3 text-sm text-[#a99bb5]">Monitor store performance, revenue, and product demand.</p>
+            <p className="mt-3 text-sm text-[#a99bb5]">Real-time performance and revenue metrics from database reports.</p>
           </div>
           <div className="flex items-center gap-3">
             <Select
-              defaultValue="Last 30 days"
-              options={['Last 30 days', 'Last 90 days']}
+              defaultValue="All Time"
+              options={['All Time']}
               className="min-w-36"
             />
             <button
@@ -107,127 +72,95 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-      {isLoading ? (
-        <div className="mt-7">
-          <DashboardSkeleton />
-        </div>
-      ) : (
-        <>
-          <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {metricCards.map((metric) => (
-              <article key={metric.label} className="border border-[#49345d] bg-[#252028] p-5">
-                <p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{metric.label}</p>
-                <div className="mt-2 flex items-center gap-3">
-                  <strong className="font-display text-2xl font-black text-white">{metric.value}</strong>
-                  <span className={`flex items-center gap-1 text-xs font-bold ${metric.positive ? 'text-[#f4b72b]' : 'text-[#e1a2aa]'}`}>
-                    {metric.positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {metric.change}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-[#8f8398]">{metric.detail}</p>
-              </article>
-            ))}
-          </section>
-
-          <section className="mt-5 grid gap-5 xl:grid-cols-[1.7fr_0.8fr]">
-            <div className="border border-[#49345d] bg-[#252028] p-5">
-              <div className="flex items-start justify-between">
-                <h2 className="font-display text-xs font-black uppercase text-white">Revenue trend</h2>
-                <p className="font-display text-right text-lg font-black text-[#f4b72b]">
-                  {`P${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
-                  <span className="block font-sans text-[10px] font-normal text-[#8f8398]">Gross sales</span>
-                </p>
-              </div>
-              <div className="mt-5 h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={revenueData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                    <CartesianGrid stroke="#3a3040" vertical={false} />
-                    <XAxis dataKey="day" tick={{ fill: '#8f8398', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: '#8f8398', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000}k`} />
-                    <Tooltip cursor={{ fill: '#2b2130' }} contentStyle={{ background: '#1c191f', border: '1px solid #5b4767', color: '#fff' }} formatter={(value) => [`P${Number(value).toLocaleString()}`, 'Revenue']} />
-                    <Bar dataKey="revenue" fill="#f4b72b" radius={[2, 2, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            <ProgressPanel title="Sales by category" rows={progressGroups.categories} />
-          </section>
-
-          <section className="mt-5 grid gap-5 lg:grid-cols-3">
-            <ProgressPanel title="Platform performance" rows={progressGroups.platforms} />
-            <section className="border border-[#49345d] bg-[#252028] p-5">
-              <h2 className="font-display text-xs font-black uppercase text-white">Checkout funnel</h2>
-              <div className="mt-5 space-y-4">
-                {[['100%', 'Store visits', '27,204'], ['36.2%', 'Product views', '9,860'], ['7.5%', 'Checkout started', '2,041'], ['4.7%', 'Completed orders', String(totalOrders)]].map(([rate, label, value]) => (
-                  <div key={label} className="grid grid-cols-[55px_1fr_auto] items-center gap-3">
-                    <span className="bg-[#2b183c] px-2 py-1 text-center font-display text-[8px] font-bold text-[#f4b72b]">{rate}</span>
-                    <span className="text-xs text-[#a99bb5]">{label}</span>
-                    <strong className="text-xs text-white">{value}</strong>
+        {isLoading ? (
+          <div className="mt-7">
+            <DashboardSkeleton />
+          </div>
+        ) : (
+          <>
+            <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {metricCards.map((metric) => (
+                <article key={metric.label} className="border border-[#49345d] bg-[#252028] p-5">
+                  <p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">{metric.label}</p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <strong className="font-display text-2xl font-black text-white">{metric.value}</strong>
                   </div>
-                ))}
+                  <p className="mt-2 text-xs text-[#8f8398]">{metric.detail}</p>
+                </article>
+              ))}
+            </section>
+
+            <section className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+              {/* Product Revenue Bar Chart */}
+              <div className="border border-[#49345d] bg-[#252028] p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="font-display text-xs font-black uppercase text-white">Product Revenue Distribution</h2>
+                    <p className="mt-1 text-xs text-[#8f8398]">Revenue generated by top-selling products</p>
+                  </div>
+                  <p className="font-display text-right text-lg font-black text-[#f4b72b]">
+                    {`₱${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
+                    <span className="block font-sans text-[10px] font-normal text-[#8f8398]">Total sales</span>
+                  </p>
+                </div>
+                <div className="mt-6 h-72">
+                  {chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                        <CartesianGrid stroke="#3a3040" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fill: '#8f8398', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: '#8f8398', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => `₱${value}`} />
+                        <Tooltip cursor={{ fill: '#2b2130' }} contentStyle={{ background: '#1c191f', border: '1px solid #5b4767', color: '#fff' }} formatter={(value) => [`₱${Number(value).toLocaleString()}`, 'Revenue']} />
+                        <Bar dataKey="revenue" fill="#f4b72b" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center border border-dashed border-[#49345d] p-6 text-center text-[#8f8398]">
+                      <p className="font-display text-sm font-bold text-[#e5a93c]">No Revenue Data</p>
+                      <p className="mt-1 text-xs">Complete orders on the storefront to visualize top-selling products here.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Top Selling Products Table */}
+              <div className="overflow-hidden border border-[#49345d] bg-[#252028]">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-[#49345d]">
+                  <h2 className="font-display text-xs font-black uppercase text-white">Top-selling products</h2>
+                  <span className="font-display text-[9px] uppercase text-[#f4b72b]">{topProducts.length} recorded</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b border-[#49345d] bg-[#2b2130] font-display text-[8px] uppercase text-[#8f8398]">
+                      <tr>
+                        <th className="px-5 py-3">Product</th>
+                        <th className="px-5 py-3 text-center">Units Sold</th>
+                        <th className="px-5 py-3 text-right">Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#49345d]">
+                      {topProducts.length > 0 ? (
+                        topProducts.map((p: any) => (
+                          <tr key={p.productId} className="hover:bg-[#2e2633]">
+                            <td className="px-5 py-4 text-white font-bold">{p.title}</td>
+                            <td className="px-5 py-4 text-center text-[#a99bb5]">{p.quantitySold}</td>
+                            <td className="px-5 py-4 text-right font-display font-bold text-[#f4b72b]">{`₱${Number(p.revenueCents).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="px-5 py-16 text-center text-[#8f8398]">
+                            No sales records in database yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </section>
-            <ProgressPanel title="Payment methods" rows={progressGroups.payments} />
-          </section>
-
-          <section className="mt-5 grid gap-5 xl:grid-cols-[1.7fr_0.8fr]">
-            <div className="overflow-hidden border border-[#49345d] bg-[#252028]">
-              <div className="flex items-center justify-between px-5 py-4">
-                <h2 className="font-display text-xs font-black uppercase text-white">Top-selling products</h2>
-              </div>
-              <table className="w-full text-left text-xs">
-                <thead className="border-y border-[#49345d] bg-[#2b2130] font-display text-[8px] uppercase text-[#8f8398]">
-                  <tr>
-                    <th className="px-5 py-3">Product</th>
-                    <th className="px-5 py-3">Units Sold</th>
-                    <th className="px-5 py-3">Revenue</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#49345d]">
-                  {topProducts.length > 0 ? (
-                    topProducts.map((p: any) => (
-                      <tr key={p.productId}>
-                        <td className="px-5 py-4 text-white font-bold">{p.title}</td>
-                        <td className="px-5 py-4 text-[#a99bb5]">{p.quantitySold}</td>
-                        <td className="px-5 py-4 font-display font-bold text-[#f4b72b]">{`P${Number(p.revenueCents).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={3} className="px-5 py-8 text-center text-[#8f8398]">No sales records yet.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="space-y-5">
-              <section className="border border-[#49345d] bg-[#252028] p-5">
-                <h2 className="font-display text-xs font-black uppercase text-white">Inventory alerts</h2>
-                <div className="mt-5 space-y-4">
-                  {[['Mobile Legends: 1000 Diamonds', '0 - Out'], ['Xbox Game Pass Ultimate', '6 - Low'], ['Steam Wallet P500', '6 - Low'], ['Nintendo eShop $20', '7 - Low']].map(([name, count]) => (
-                    <div key={name} className="flex justify-between gap-3 text-xs">
-                      <span className="text-[#b9adc4]">{name}</span>
-                      <strong className="text-[#f4b72b]">{count}</strong>
-                    </div>
-                  ))}
-                </div>
-              </section>
-              <section className="border border-[#49345d] bg-[#252028] p-5">
-                <h2 className="font-display text-xs font-black uppercase text-white">Order health</h2>
-                <div className="mt-5 grid grid-cols-3 gap-3">
-                  {[['96.8%', 'Successful delivery'], ['1.9%', 'Refund rate'], ['1.3%', 'Failed payment']].map(([value, label]) => (
-                    <div key={label}>
-                      <strong className="font-display text-lg text-white">{value}</strong>
-                      <p className="mt-1 text-[10px] leading-4 text-[#8f8398]">{label}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-          </section>
-        </>
-      )}
+          </>
+        )}
       </div>
     </SellerLayout>
   );

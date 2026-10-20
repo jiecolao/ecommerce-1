@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BadgeCheck, Headphones, KeyRound, Mail, Search, Send, UserRound } from 'lucide-react';
+import { toast } from '../lib/toast';
 
 const supportTopics = [
   { id: 'payment', title: 'Payment problems', description: 'Billing, transactions, and failed payments', icon: Headphones },
@@ -15,6 +16,7 @@ export default function ContactSupportPage() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitted(true);
+    toast.info('Message submitted! Our support team will review your inquiry.');
     event.currentTarget.reset();
   };
 
