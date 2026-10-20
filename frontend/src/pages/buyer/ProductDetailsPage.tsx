@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Heart, MailCheck, QrCode, ShieldCheck, Star, X, ShoppingCart } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
+import { useAuthSession } from '../../lib/auth';
 import { toast } from '../../lib/toast';
 import { Select } from '../../components/ui/select';
 import { ProductDetailsSkeleton } from '../../components/ui/skeleton';
@@ -21,6 +22,7 @@ export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuthSession();
 
   const [selectedPackage, setSelectedPackage] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -48,6 +50,7 @@ export default function ProductDetailsPage() {
 
   const { data: wishlistData } = useQuery({
     queryKey: ['wishlist'],
+    enabled: Boolean(user?.isBuyer),
     queryFn: async () => {
       const res = await api.get('/buyer/wishlist');
       return res.data;
@@ -117,6 +120,15 @@ export default function ProductDetailsPage() {
   };
 
   const handleToggleWishlist = async () => {
+    if (!user) {
+      toast.info('Please log in to add items to your wishlist.');
+      navigate('/login');
+      return;
+    }
+    if (!user.isBuyer) {
+      toast.warning('Only buyer accounts can have a wishlist.');
+      return;
+    }
     if (!activePackage?.id) {
       toast.error('No edition variant selected.');
       return;
