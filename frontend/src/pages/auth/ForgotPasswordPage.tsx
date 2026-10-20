@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { Mail, Check, RefreshCw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
+import { toast } from '../../lib/toast';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -44,6 +45,7 @@ export default function ForgotPasswordPage() {
 
   const handleVerify = () => {
     if (otp.every(digit => digit !== '')) {
+      toast.warning('Verification code confirmation is not implemented on the backend.');
       navigate('/reset-password');
     }
   };
@@ -83,7 +85,10 @@ export default function ForgotPasswordPage() {
           </button>
           
           <button 
-            onClick={() => setResent(true)} 
+            onClick={() => {
+              setResent(true);
+              toast.info('Simulated reset code resent locally.');
+            }} 
             className="font-display mt-4 flex h-11 w-full items-center justify-center gap-2 border border-[#5b4767] bg-[#211d23] text-[9px] font-bold uppercase text-[#b9adc4] transition-colors hover:border-[#f4b72b] hover:text-white"
           >
             <RefreshCw className="h-4 w-4" /> Resend code
@@ -92,7 +97,11 @@ export default function ForgotPasswordPage() {
           {resent && <p className="mt-4 text-xs font-bold text-[#f4b72b]">Code resent locally.</p>}
         </div>
       ) : (
-        <form onSubmit={(event) => { event.preventDefault(); setSent(true); }}>
+        <form onSubmit={(event) => {
+          event.preventDefault();
+          setSent(true);
+          toast.info('Simulated reset flow: Backend password recovery endpoint is not yet connected.');
+        }}>
           <label className="block font-display text-[9px] font-bold uppercase text-[#b9adc4]">
             Email address
             <span className="relative mt-2 block">

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from './toast';
 
 export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3000/api');
 
@@ -47,7 +48,8 @@ api.interceptors.request.use((config) => {
   }
 
   const user = getStoredUser();
-  const isAdminRequest = config.url?.startsWith('/admin');
+  const normalizedUrl = config.url || '';
+  const isAdminRequest = normalizedUrl.startsWith('/admin') || normalizedUrl.startsWith('admin');
 
   // Provide fallback actor IDs expected by the backend controllers
   if (isAdminRequest) {
@@ -58,5 +60,24 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const skipToast = (error.config as any)?.skipToast;
+    if (!skipToast && !axios.isCancel(error)) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'An unexpected network error occurred.';
+      const formattedMessage = Array.isArray(message) ? message.join(', ') : String(message);
+      const status = error.response?.status;
+      const title = status ? `HTTP ${status} ERROR` : 'CONNECTION FAILED';
+      toast.error(formattedMessage, title);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

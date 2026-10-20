@@ -3,6 +3,7 @@ import { LockKeyhole, ShieldCheck, Trash2, ArrowLeft } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 import { CartPageSkeleton } from '../../components/ui/skeleton';
 
 const paymentMethods = [
@@ -47,9 +48,10 @@ export default function CartPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
+      toast.info('Item removed from cart');
     },
-    onError: (err: any) => {
-      alert('Failed to remove item: ' + (err.response?.data?.message || err.message));
+    onError: () => {
+      // api interceptor displays toast
     },
   });
 
@@ -74,9 +76,10 @@ export default function CartPage() {
 
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Order placed successfully!');
       navigate('/checkout/success');
-    } catch (err: any) {
-      alert('Checkout failed: ' + (err.response?.data?.message || err.message));
+    } catch {
+      // api interceptor displays toast
     } finally {
       setCheckingOut(false);
     }

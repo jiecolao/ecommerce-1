@@ -3,6 +3,7 @@ import { Eye, EyeOff, Gamepad2, Info } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import api, { API_URL, setStoredAuth } from '../../lib/api';
+import { toast } from '../../lib/toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ export default function LoginPage() {
       const res = await api.post('/auth/login', { email, password });
       const session = res.data?.session;
       const user = res.data?.user;
-      const token = session?.access_token || 'mock_token';
+      const token = session?.access_token || '';
       
       const role = user?.user_metadata?.role || (email.toLowerCase().includes('admin') ? 'admin' : 'buyer');
       setStoredAuth(token, {
@@ -35,13 +36,16 @@ export default function LoginPage() {
         lastName: user?.user_metadata?.last_name || '',
       });
 
+      toast.success('Logged in successfully!');
       if (role === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/profile');
       }
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
+      const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

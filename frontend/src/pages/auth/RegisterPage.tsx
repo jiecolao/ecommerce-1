@@ -3,6 +3,7 @@ import { Eye, EyeOff, Gamepad2, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import api, { API_URL } from '../../lib/api';
+import { toast } from '../../lib/toast';
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState('');
@@ -30,9 +31,12 @@ export default function RegisterPage() {
         lastName,
         role: 'buyer',
       });
+      toast.success('Account created successfully! Check your email for verification.');
       navigate('/verify-email', { state: { email } });
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || err.message || 'Registration failed.');
+      const msg = err.response?.data?.message || err.message || 'Registration failed.';
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

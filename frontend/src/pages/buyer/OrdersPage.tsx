@@ -3,6 +3,7 @@ import { Check, ChevronLeft, ChevronRight, Copy, Download, Filter, Info, KeyRoun
 import { useQuery } from '@tanstack/react-query';
 import AccountSidebar from '../../components/account/AccountSidebar';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 import { TableRowSkeleton } from '../../components/ui/skeleton';
 
 type Purchase = {
@@ -16,7 +17,7 @@ type Purchase = {
 };
 
 const PAGE_SIZE = 4;
-const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+const formatPrice = (price: number) => `₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
 export default function OrdersPage() {
   const [query, setQuery] = useState('');
@@ -31,6 +32,16 @@ export default function OrdersPage() {
       return res.data;
     },
   });
+
+  const { data: wishlistData } = useQuery({
+    queryKey: ['wishlist'],
+    queryFn: async () => {
+      const res = await api.get('/buyer/wishlist');
+      return res.data;
+    },
+  });
+
+  const wishlistCount = Array.isArray(wishlistData) ? wishlistData.length : 0;
 
   const purchases: Purchase[] = useMemo(() => {
     if (!Array.isArray(serverOrders)) return [];
@@ -75,6 +86,7 @@ export default function OrdersPage() {
     try {
       await navigator.clipboard.writeText(selectedPurchase.key);
       setCopied(true);
+      toast.success('Activation key copied to clipboard!');
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopied(false);
@@ -105,8 +117,8 @@ export default function OrdersPage() {
 
         <section className="mt-8 grid gap-5 sm:grid-cols-3">
           <div className="comic-panel p-5"><p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">Total spent</p><p className="font-display mt-2 text-xl font-black text-[#f4b72b]">{formatPrice(totalSpent)}</p></div>
-          <div className="comic-panel p-5"><p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">Total keys</p><p className="font-display mt-2 text-xl font-black text-white">{purchases.length} products</p></div>
-          <div className="comic-panel p-5"><p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">Active wishlist</p><p className="font-display mt-2 text-xl font-black text-white">3 games</p></div>
+          <div className="comic-panel p-5"><p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">Total keys</p><p className="font-display mt-2 text-xl font-black text-white">{purchases.length} {purchases.length === 1 ? 'product' : 'products'}</p></div>
+          <div className="comic-panel p-5"><p className="font-display text-[8px] font-bold uppercase text-[#8f8398]">Active wishlist</p><p className="font-display mt-2 text-xl font-black text-white">{wishlistCount} {wishlistCount === 1 ? 'game' : 'games'}</p></div>
         </section>
 
         <section className="comic-panel mt-8 overflow-hidden">

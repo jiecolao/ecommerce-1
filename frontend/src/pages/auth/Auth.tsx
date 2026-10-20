@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../lib/api';
+import { toast } from '../../lib/toast';
 
 export function Auth() {
   const [loading, setLoading] = useState(false);
@@ -55,7 +56,7 @@ export function Auth() {
           firstName,
           lastName
         });
-        alert('Signup initiated. Please check your email for the verification link if SMTP is configured, otherwise you might need to auto-confirm.');
+        toast.info('Signup initiated. Please check your email for the verification link if SMTP is configured.');
         setAuthStatus('Signup complete. Waiting for verification.');
       } else {
         const res = await axios.post(`${API_URL}/auth/login`, {
@@ -67,12 +68,13 @@ export function Auth() {
         if (token) {
           localStorage.setItem('auth_token', token);
           setAuthStatus(`Logged in successfully as ${role}`);
+          toast.success(`Logged in successfully as ${role}`);
         }
         
         navigate('/');
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || error.message || 'An error occurred during authentication.');
+      toast.error(error.response?.data?.message || error.message || 'An error occurred during authentication.');
     } finally {
       setLoading(false);
     }

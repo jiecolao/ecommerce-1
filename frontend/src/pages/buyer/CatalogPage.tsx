@@ -12,9 +12,9 @@ import {
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 import FeaturedPromoBanner from '../../components/FeaturedPromoBanner';
 import { ProductCardSkeleton } from '../../components/ui/skeleton';
-import { catalogProducts } from '../../data/catalog';
 
 interface CatalogItem {
   id: number | string;
@@ -57,8 +57,7 @@ function ProductCard({ product, highlighted }: { product: CatalogItem; highlight
   const addToCartMutation = useMutation({
     mutationFn: async () => {
       if (!product.variantId) {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        return;
+        throw new Error('This product does not have an active edition variant to purchase.');
       }
       await api.post('/buyer/cart/items', {
         productVariantId: product.variantId,
@@ -68,11 +67,11 @@ function ProductCard({ product, highlighted }: { product: CatalogItem; highlight
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       setAdding(true);
+      toast.success(`"${product.title}" added to cart!`);
       setTimeout(() => setAdding(false), 1500);
     },
     onError: () => {
-      setAdding(true);
-      setTimeout(() => setAdding(false), 1500);
+      setAdding(false);
     },
   });
 
@@ -231,25 +230,38 @@ export default function CatalogPage() {
     retry: 1,
   });
 
-  // Blend server data if present, or fallback seamlessly to catalogProducts
+  const { data: featuredProducts } = useQuery({
+    queryKey: ['featured-products'],
+    queryFn: async () => {
+      const res = await api.get('/buyer/featured');
+      return res.data;
+    },
+    retry: 1,
+  });
+
+  const featuredItem = (featuredProducts && featuredProducts[0]) || (serverProducts && serverProducts[0]);
+
+  // Map server data directly, no fake fallback
   const rawProducts: CatalogItem[] =
-    serverProducts && serverProducts.length > 0
+    Array.isArray(serverProducts)
       ? serverProducts.map((p: any) => {
-          const rawPrice = p.productVariants?.[0]?.price ?? 0;
+          const firstVariant = p.productVariants?.[0];
+          const rawPrice = firstVariant?.price ?? 0;
           const priceNum = Number(rawPrice);
           return {
             id: p.id,
             title: p.title,
             media: p.media,
+            image: p.media?.[0],
             region: 'GLOBAL',
             platform: 'PC',
             price: priceNum,
             priceLabel: `₱${priceNum.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`,
-            variantId: p.productVariants?.[0]?.id,
+            variantId: firstVariant?.id,
             badgeType: 'yellow' as const,
           };
         })
-      : (catalogProducts as unknown as CatalogItem[]);
+      : [];
 
   const filteredProducts = rawProducts
     .filter((p) => {
@@ -282,7 +294,19 @@ export default function CatalogPage() {
   return (
     <div className="min-h-screen bg-transparent px-5 pb-16 font-sans text-[#eee8f5] sm:px-8 lg:px-16">
       <div className="mx-auto max-w-[1440px]">
-        <FeaturedPromoBanner />
+        {featuredItem && (
+          <FeaturedPromoBanner
+            title={featuredItem.title}
+            subtitle={featuredItem.description}
+            price={
+              featuredItem.productVariants?.[0]?.price
+                ? `₱${Number(featuredItem.productVariants[0].price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
+                : undefined
+            }
+            imageSrc={featuredItem.media?.[0]}
+            buyHref={`/product/${featuredItem.id}`}
+          />
+        )}
 
         <div className="mt-10 border-b border-[#372648] pb-8">
           <div className="mb-5 flex items-center gap-3">

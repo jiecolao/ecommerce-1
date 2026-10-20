@@ -18,6 +18,7 @@ import type { CreateProductDto } from 'shared';
 import SellerLayout from '../../components/seller/SellerLayout';
 import { Select } from '../../components/ui/select';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 
 const compressImage = (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
@@ -131,17 +132,13 @@ export default function CreateProductPage() {
     };
   }, [imageFile]);
 
-  // Normalized select options
+  // Normalized select options from backend metadata
   const storeOptions: Array<{ value: string; label: string }> = useMemo(() => {
     return (
       metadata?.stores?.map((s: { id: number | string; name: string }) => ({
         value: String(s.id),
         label: s.name,
-      })) || [
-        { value: '1', label: 'Steam' },
-        { value: '2', label: 'Epic Games' },
-        { value: '3', label: 'PlayStation' },
-      ]
+      })) || []
     );
   }, [metadata]);
 
@@ -150,11 +147,7 @@ export default function CreateProductPage() {
       metadata?.types?.map((t: { id: number | string; name: string }) => ({
         value: String(t.id),
         label: t.name,
-      })) || [
-        { value: '1', label: 'Game Key' },
-        { value: '2', label: 'Top-Up' },
-        { value: '3', label: 'Subscription' },
-      ]
+      })) || []
     );
   }, [metadata]);
 
@@ -163,12 +156,7 @@ export default function CreateProductPage() {
       metadata?.regions?.map((r: { id: number | string; name: string }) => ({
         value: String(r.id),
         label: r.name,
-      })) || [
-        { value: '1', label: 'Global' },
-        { value: '2', label: 'Asia' },
-        { value: '3', label: 'North America' },
-        { value: '4', label: 'Europe' },
-      ]
+      })) || []
     );
   }, [metadata]);
 
@@ -220,10 +208,12 @@ export default function CreateProductPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      toast.success('Product created and listed successfully!');
       navigate('/admin/products');
     },
     onError: (err: any) => {
-      setImageError(err.response?.data?.message || err.message || 'Failed to publish product.');
+      const msg = err.response?.data?.message || err.message || 'Failed to publish product.';
+      setImageError(msg);
     },
   });
 
@@ -231,6 +221,7 @@ export default function CreateProductPage() {
     e.preventDefault();
 
     if (!imageFile) {
+      toast.error('Please choose a product cover image before publishing.');
       setImageError('Please choose a product cover image before publishing.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;

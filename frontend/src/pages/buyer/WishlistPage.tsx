@@ -3,9 +3,10 @@ import { HeartOff, ShoppingCart, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AccountSidebar from '../../components/account/AccountSidebar';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 import { WishlistSkeleton } from '../../components/ui/skeleton';
 
-const formatPrice = (price: number) => `P${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+const formatPrice = (price: number) => `₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
 export default function WishlistPage() {
   const navigate = useNavigate();
@@ -25,9 +26,10 @@ export default function WishlistPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      toast.info('Item removed from wishlist');
     },
-    onError: (err: any) => {
-      alert('Failed to remove item: ' + (err.response?.data?.message || err.message));
+    onError: () => {
+      // api interceptor displays toast
     },
   });
 
@@ -39,10 +41,11 @@ export default function WishlistPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      toast.success('Item moved to cart!');
       navigate('/checkout/cart');
     },
-    onError: (err: any) => {
-      alert('Failed to move item to cart: ' + (err.response?.data?.message || err.message));
+    onError: () => {
+      // api interceptor displays toast
     },
   });
 
@@ -54,6 +57,7 @@ export default function WishlistPage() {
     }
     queryClient.invalidateQueries({ queryKey: ['cart'] });
     queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+    toast.success('All items moved to cart!');
     navigate('/checkout/cart');
   };
 

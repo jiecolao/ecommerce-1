@@ -41,8 +41,8 @@ export default function Navbar() {
   const cartCount = cartData?.orderLines?.reduce((sum: number, line: any) => sum + (line.quantity || 1), 0) ?? 0;
   const wishlistCount = Array.isArray(wishlistData) ? wishlistData.length : 0;
 
-  const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email ? user.email.split('@')[0] : 'Admin User';
-  const initials = user?.firstName ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ''}`.toUpperCase() : 'AU';
+  const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email ? user.email.split('@')[0] : (isAdmin ? 'Admin Console' : 'My Account');
+  const initials = user?.firstName ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ''}`.toUpperCase() : (isAdmin ? 'AD' : 'ME');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b-[2.5px] border-[#0e0917] bg-[#150d22]/95 backdrop-blur shadow-[0_4px_0_#0e0917] print:hidden">

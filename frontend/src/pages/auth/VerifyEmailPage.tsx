@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { RefreshCw, Check } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
+import { toast } from '../../lib/toast';
 
 export default function VerifyEmailPage() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -58,6 +59,7 @@ export default function VerifyEmailPage() {
 
   const handleVerify = () => {
     if (otp.every(digit => digit !== '')) {
+      toast.info('Simulated email verification: Backend OTP verification endpoint is not implemented.');
       navigate('/login?verified=success');
     }
   };
@@ -90,7 +92,10 @@ export default function VerifyEmailPage() {
         </button>
         
         <button 
-          onClick={() => setResent(true)} 
+          onClick={() => {
+            setResent(true);
+            toast.info('Simulated verification code resent locally.');
+          }} 
           className="font-display mt-4 flex h-11 w-full items-center justify-center gap-2 border border-[#5b4767] bg-[#211d23] text-[9px] font-bold uppercase text-[#b9adc4] transition-colors hover:border-[#f4b72b] hover:text-white"
         >
           <RefreshCw className="h-4 w-4" /> Resend code
