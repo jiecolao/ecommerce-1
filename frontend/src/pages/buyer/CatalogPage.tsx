@@ -9,7 +9,8 @@ import {
   Flame,
   Check,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuthSession } from '../../lib/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { toast } from '../../lib/toast';
@@ -52,6 +53,9 @@ function getBadgeHalftoneClass(type?: string) {
 
 function ProductCard({ product, highlighted }: { product: CatalogItem; highlighted?: boolean }) {
   const queryClient = useQueryClient();
+  const { user } = useAuthSession();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [adding, setAdding] = useState(false);
 
   const addToCartMutation = useMutation({
@@ -78,6 +82,11 @@ function ProductCard({ product, highlighted }: { product: CatalogItem; highlight
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to add games to your cart.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
     addToCartMutation.mutate();
   };
 

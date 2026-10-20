@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Heart, MailCheck, QrCode, ShieldCheck, Star, X, ShoppingCart } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
@@ -21,6 +21,7 @@ const paymentMethods = [
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { user } = useAuthSession();
 
@@ -77,6 +78,11 @@ export default function ProductDetailsPage() {
       : ['/palworld-cover.jpg'];
 
   const handleAddToCart = async () => {
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to add games to your cart.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
     if (!activePackage?.id) {
       toast.error('No edition variant selected or available for this product.');
       return;
@@ -98,6 +104,11 @@ export default function ProductDetailsPage() {
   };
 
   const handleBuyNow = async () => {
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to proceed with your order.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
     if (!activePackage?.id) {
       toast.error('No edition variant selected or available for this product.');
       return;
@@ -120,13 +131,9 @@ export default function ProductDetailsPage() {
   };
 
   const handleToggleWishlist = async () => {
-    if (!user) {
-      toast.info('Please log in to add items to your wishlist.');
-      navigate('/login');
-      return;
-    }
-    if (!user.isBuyer) {
-      toast.warning('Only buyer accounts can have a wishlist.');
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to save games to your wishlist.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
       return;
     }
     if (!activePackage?.id) {

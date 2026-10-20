@@ -1,11 +1,17 @@
 export type ToastType = 'error' | 'success' | 'info' | 'warning';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface ToastItem {
   id: string;
   type: ToastType;
   title?: string;
   message: string;
   duration?: number;
+  action?: ToastAction;
 }
 
 type ToastListener = (toasts: ToastItem[]) => void;
@@ -28,25 +34,35 @@ class ToastManager {
     }
   }
 
-  add(type: ToastType, message: string, title?: string, duration: number = 4500) {
+  add(
+    type: ToastType,
+    message: string,
+    title?: string,
+    duration: number = 5000,
+    action?: ToastAction
+  ) {
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const fallbackTitle =
+      type === 'error'
+        ? 'ACTION FAILED'
+        : type === 'success'
+        ? 'SUCCESS'
+        : type === 'warning'
+        ? 'ATTENTION'
+        : 'NOTICE';
+
     const newToast: ToastItem = {
       id,
       type,
-      title: title || (type === 'error' ? 'SYSTEM ERROR' : type === 'success' ? 'SUCCESS' : type === 'warning' ? 'WARNING' : 'NOTICE'),
+      title: title || fallbackTitle,
       message,
       duration,
+      action,
     };
 
     // Keep at most 4 toasts at once to prevent screen overflow
     this.toasts = [...this.toasts.slice(-3), newToast];
     this.notify();
-
-    if (duration > 0) {
-      setTimeout(() => {
-        this.remove(id);
-      }, duration);
-    }
 
     return id;
   }
@@ -61,20 +77,20 @@ class ToastManager {
     this.notify();
   }
 
-  error(message: string, title?: string, duration?: number) {
-    return this.add('error', message, title, duration);
+  error(message: string, title?: string, duration?: number, action?: ToastAction) {
+    return this.add('error', message, title, duration, action);
   }
 
-  success(message: string, title?: string, duration?: number) {
-    return this.add('success', message, title, duration);
+  success(message: string, title?: string, duration?: number, action?: ToastAction) {
+    return this.add('success', message, title, duration, action);
   }
 
-  info(message: string, title?: string, duration?: number) {
-    return this.add('info', message, title, duration);
+  info(message: string, title?: string, duration?: number, action?: ToastAction) {
+    return this.add('info', message, title, duration, action);
   }
 
-  warning(message: string, title?: string, duration?: number) {
-    return this.add('warning', message, title, duration);
+  warning(message: string, title?: string, duration?: number, action?: ToastAction) {
+    return this.add('warning', message, title, duration, action);
   }
 }
 

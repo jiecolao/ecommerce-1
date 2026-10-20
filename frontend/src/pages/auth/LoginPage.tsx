@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, Gamepad2, Info } from 'lucide-react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import api, { API_URL } from '../../lib/api';
 import { authSession, completeGoogleRedirect } from '../../lib/auth';
@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath = (location.state as any)?.from;
   const resetComplete = searchParams.get('reset') === 'success';
   const verified = searchParams.get('verified') === 'success';
 
@@ -27,7 +29,7 @@ export default function LoginPage() {
       void completion.then(user => {
         if (active) {
           toast.success('Signed in with Google!');
-          navigate(user.isAdmin ? '/admin/dashboard' : '/profile', { replace: true });
+          navigate(fromPath || (user.isAdmin ? '/admin/dashboard' : '/profile'), { replace: true });
         }
       }).catch(() => {
         if (active) setErrorMsg('Google sign in could not be completed. Please try again.');
@@ -47,9 +49,9 @@ export default function LoginPage() {
       const user = await authSession.adopt(res.data?.session);
       toast.success('Logged in successfully!');
       if (user.isAdmin) {
-        navigate('/admin/dashboard');
+        navigate(fromPath && fromPath.startsWith('/admin') ? fromPath : '/admin/dashboard', { replace: true });
       } else {
-        navigate('/profile');
+        navigate(fromPath || '/profile', { replace: true });
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';

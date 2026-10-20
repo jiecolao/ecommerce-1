@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useAuthSession } from '../../lib/auth';
 import { useState } from 'react';
 import type { Product, CheckoutDto } from 'shared';
 import { Button } from '../../components/ui/button';
@@ -13,6 +14,8 @@ import { CheckoutPageSkeleton } from '../../components/ui/skeleton';
 export default function CheckoutPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuthSession();
 
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0); // in cents
@@ -68,6 +71,12 @@ export default function CheckoutPage() {
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
     if (!product) return;
+
+    if (!user?.isBuyer) {
+      toast.warning('Please sign in to your account to complete your purchase.', 'SIGN IN REQUIRED');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
 
     const variantId = product.productVariants?.[0]?.id ?? product.id;
 
