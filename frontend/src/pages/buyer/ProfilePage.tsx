@@ -3,6 +3,7 @@ import { BadgeCheck, Info, Save, Upload, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AccountSidebar from '../../components/account/AccountSidebar';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 import { ProfilePageSkeleton } from '../../components/ui/skeleton';
 
 export default function ProfilePage() {
@@ -77,10 +78,13 @@ export default function ProfilePage() {
     onSuccess: () => {
       setSaved(true);
       setErrorMsg(null);
+      toast.success('Your profile details have been saved successfully.');
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
     onError: (err: any) => {
-      setErrorMsg(err.response?.data?.message || err.message || 'Failed to update profile');
+      const msg = err.response?.data?.message || err.message || 'Failed to update profile';
+      setErrorMsg(msg);
+      toast.error(msg);
     },
   });
 

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 import { TableRowSkeleton } from '../../components/ui/skeleton';
 import { Select } from '../../components/ui/select';
 
@@ -36,9 +37,10 @@ export default function AdminProductsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      toast.info('Product listing deleted.');
     },
-    onError: (err: any) => {
-      alert('Delete failed: ' + (err.response?.data?.message || err.message));
+    onError: () => {
+      // api interceptor displays toast
     },
   });
 
@@ -52,8 +54,8 @@ export default function AdminProductsPage() {
         title: p.title,
         sku: `MK-PRD-${p.id}`,
         category: 'Game Keys',
-        price: `P${priceNum.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`,
-        stock: firstVariant?.keys?.length ?? 10,
+        price: `₱${priceNum.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`,
+        stock: firstVariant?.keys?.length ?? 0,
         status: p.status || 'ACTIVE',
       };
     });

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, CreditCard, Info, Plus, QrCode, ShieldCheck, Smartphone, Trash2, WalletCards, X } from 'lucide-react';
 import AccountSidebar from '../../components/account/AccountSidebar';
 import { Select } from '../../components/ui/select';
+import { toast } from '../../lib/toast';
 
 type PaymentMethod = {
   id: number;
@@ -11,11 +12,8 @@ type PaymentMethod = {
   isDefault: boolean;
 };
 
-const initialMethods: PaymentMethod[] = [
-  { id: 1, name: 'GCash', details: 'Phone number: **** 1234', type: 'wallet', isDefault: true },
-  { id: 2, name: 'Visa card', details: '**** **** **** 5678 | Expires 12/28', type: 'card', isDefault: false },
-  { id: 3, name: 'Maya', details: 'Phone number: **** 5678', type: 'wallet', isDefault: false },
-];
+// Real database currently has no shopper payment methods endpoint
+const initialMethods: PaymentMethod[] = [];
 
 const channels = [
   { name: 'GCash', img: 'https://www.google.com/s2/favicons?domain=gcash.com&sz=128' },
@@ -27,13 +25,14 @@ const channels = [
 ];
 
 export default function PaymentMethodsPage() {
-  const [methods, setMethods] = useState(initialMethods);
+  const [methods, setMethods] = useState<PaymentMethod[]>(initialMethods);
   const [showAddMethod, setShowAddMethod] = useState(false);
   const [methodType, setMethodType] = useState<'GCash' | 'Maya' | 'Visa card'>('GCash');
   const [accountEnding, setAccountEnding] = useState('');
 
   const setDefault = (id: number) => {
     setMethods((current) => current.map((method) => ({ ...method, isDefault: method.id === id })));
+    toast.success('Default payment method updated.');
   };
 
   const removeMethod = (id: number) => {
@@ -42,6 +41,7 @@ export default function PaymentMethodsPage() {
       if (next.length > 0 && !next.some((method) => method.isDefault)) next[0] = { ...next[0], isDefault: true };
       return next;
     });
+    toast.info('Payment method removed.');
   };
 
   const addMethod = (event: React.FormEvent) => {
@@ -60,6 +60,7 @@ export default function PaymentMethodsPage() {
     ]);
     setAccountEnding('');
     setShowAddMethod(false);
+    toast.info('Payment method added locally. (Backend endpoint for saved payment methods is not available).');
   };
 
   return (

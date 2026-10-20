@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../lib/api';
 import { authSession, useAuthSession } from '../../lib/auth';
+import { toast } from '../../lib/toast';
 
 export function Auth() {
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,7 @@ export function Auth() {
           firstName,
           lastName
         });
-        alert('Signup initiated. Please check your email for the verification link if SMTP is configured, otherwise you might need to auto-confirm.');
+        toast.info('Signup initiated. Please check your email for the verification link if SMTP is configured.');
         setAuthStatus('Signup complete. Waiting for verification.');
       } else {
         const res = await axios.post(`${API_URL}/auth/login`, {
@@ -53,11 +54,12 @@ export function Auth() {
         
         const user = await authSession.adopt(res.data?.session);
         setAuthStatus(`Logged in successfully as ${user.role}`);
+        toast.success(`Logged in successfully as ${user.role}`);
         
         navigate('/');
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || error.message || 'An error occurred during authentication.');
+      toast.error(error.response?.data?.message || error.message || 'An error occurred during authentication.');
     } finally {
       setLoading(false);
     }
@@ -68,8 +70,10 @@ export function Auth() {
       const result = await authSession.logout();
       setAuthStatus(result.serverConfirmed ? 'Logged out' : 'Signed out on this browser. Server sign-out could not be confirmed.');
       setVerifiedEmail(null);
+      toast.info('Logged out.');
     } catch {
       setAuthStatus('Sign out could not be completed. Please try again.');
+      toast.error('Sign out could not be completed.');
     }
   };
 
@@ -181,4 +185,3 @@ export function Auth() {
     </div>
   );
 }
-

@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { emailAuth } from '../../lib/auth';
 import { EMAIL_OTP_LENGTH, updateEmailOtp } from '../../lib/email-otp';
+import { toast } from '../../lib/toast';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -34,9 +35,15 @@ export default function ForgotPasswordPage() {
     setErrorMsg(null);
     try {
       await emailAuth.verifyRecovery(email, otp.join(''));
+      toast.success('Code verified successfully.');
       navigate('/reset-password');
-    } catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Unable to verify the reset code.'); }
-    finally { setLoading(false); }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unable to verify the reset code.';
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRequest = async (resend = false) => {
@@ -48,8 +55,18 @@ export default function ForgotPasswordPage() {
       setSent(true);
       setResent(resend);
       setOtp(Array<string>(EMAIL_OTP_LENGTH).fill(''));
-    } catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Unable to request a reset code.'); }
-    finally { setLoading(false); }
+      if (resend) {
+        toast.info('Reset code resent. Please check your inbox.');
+      } else {
+        toast.success('Reset code sent. Please check your inbox.');
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unable to request a reset code.';
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const subtitle = sent ? (

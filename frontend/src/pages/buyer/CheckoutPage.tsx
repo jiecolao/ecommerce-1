@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import api from '../../lib/api';
+import { toast } from '../../lib/toast';
 import { CheckoutPageSkeleton } from '../../components/ui/skeleton';
 
 export default function CheckoutPage() {
@@ -27,7 +28,7 @@ export default function CheckoutPage() {
     enabled: !!id,
   });
 
-  const basePrice = product?.productVariants?.[0]?.price ?? 1000;
+  const basePrice = Number(product?.productVariants?.[0]?.price || 0);
   const finalPrice = Math.max(0, basePrice - appliedDiscount);
 
   const checkoutMutation = useMutation({
@@ -35,11 +36,16 @@ export default function CheckoutPage() {
       const { data } = await api.post(`/buyer/checkout`, checkoutData);
       return data;
     },
-    onSuccess: () => {
-      navigate('/buyer/orders');
+    onSuccess: (data: any) => {
+      toast.success('Order placed successfully!');
+      if (data?.order?.id) {
+        navigate(`/checkout/success?orderId=${data.order.id}`);
+      } else {
+        navigate('/buyer/orders');
+      }
     },
-    onError: (error) => {
-      alert('Checkout failed: ' + ((error as any).response?.data?.message || (error as any).message));
+    onError: () => {
+      // api interceptor displays toast
     },
   });
 
@@ -91,11 +97,11 @@ export default function CheckoutPage() {
             <div className="flex flex-col items-end">
               {couponApplied ? (
                 <>
-                  <span className="line-through text-slate-400 text-sm">${(originalPrice / 100).toFixed(2)}</span>
-                  <span className="font-bold text-green-600 text-lg">${(finalPrice / 100).toFixed(2)}</span>
+                  <span className="line-through text-slate-400 text-sm">₱{originalPrice.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                  <span className="font-bold text-green-500 text-lg">₱{finalPrice.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                 </>
               ) : (
-                <span className="font-display font-bold text-[#f4b72b]">${(originalPrice / 100).toFixed(2)}</span>
+                <span className="font-display font-bold text-[#f4b72b]">₱{originalPrice.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
               )}
             </div>
           </div>
@@ -115,13 +121,13 @@ export default function CheckoutPage() {
                   Apply
                 </Button>
               </div>
-              {couponApplied && <p className="text-sm text-green-600 font-semibold">10% discount applied successfully!</p>}
+              {couponApplied && <p className="text-sm text-green-500 font-semibold">10% discount applied successfully!</p>}
               {couponError && <p className="text-sm text-red-500 font-semibold">{couponError}</p>}
             </div>
 
             <CardFooter className="px-0 pt-6">
-              <Button type="submit" className="w-full text-white bg-purple-600 hover:bg-purple-700" size="lg" disabled={checkoutMutation.isPending}>
-                {checkoutMutation.isPending ? 'Processing...' : `Pay $${(finalPrice / 100).toFixed(2)}`}
+              <Button type="submit" className="w-full text-white bg-purple-600 hover:bg-purple-700" size="lg" disabled={checkoutMutation.isPending || basePrice <= 0}>
+                {checkoutMutation.isPending ? 'Processing...' : `Pay ₱${finalPrice.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
               </Button>
             </CardFooter>
           </form>
