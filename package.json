@@ -31,8 +31,11 @@
     },
     "multer": "^2.4.0",
     "mysql2": "^3.24.4",
-    "nodemailer": "^10.1.2",
-    "mailparser": "^3.9.40",
+    "nodemailer": "^10.1.7",
+    "mailparser": "^3.10.0",
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "^4.3.2"
+    },
     "argparse": "^2.0.1",
     "js-yaml": "^4.3.2"
   },
@@ -45,7 +48,6 @@
     "class-validator": "0.14.4",
     "express-session": "^1.19.0",
     "passport": "^0.7.0",
-    "passport-steam": "^1.0.18",
-    "vercel": "^63.1.2"
+    "passport-steam": "^1.0.18"
   }
 }
