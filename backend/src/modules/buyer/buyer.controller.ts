@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BuyerService } from './buyer.service';
 import { CheckoutDto } from './dto/checkout.dto';
@@ -25,12 +25,16 @@ export class BuyerController {
 
   @Put('profile')
   @UseGuards(SupabaseAuthGuard, ShopperGuard)
-  @UseInterceptors(FileInterceptor('profilePic'))
+  @UseInterceptors(FileInterceptor('profilePic', { limits: { fileSize: 5 * 1024 * 1024 } }))
   updateProfile(
     @Req() req: ShopperRequest,
     @Body() body: any,
     @UploadedFile() file?: any
   ) {
+    const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    if (file && !allowedImageTypes.has(file.mimetype)) {
+      throw new BadRequestException('Profile picture must be a PNG, JPG, or WEBP image.');
+    }
     const shopperId = req.shopperId;
     return this.buyerService.updateProfile(shopperId, body, file);
   }

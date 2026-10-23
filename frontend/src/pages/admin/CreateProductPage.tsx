@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Upload,
   Plus,
@@ -13,8 +13,10 @@ import {
   ShieldCheck,
   Globe,
   Monitor,
+  Pin,
+  Star,
 } from 'lucide-react';
-import type { CreateProductDto } from 'shared';
+import type { CreateProductDto, Product } from 'shared';
 import SellerLayout from '../../components/seller/SellerLayout';
 import { Select } from '../../components/ui/select';
 import api from '../../lib/api';
@@ -69,9 +71,16 @@ const compressImage = (file: File): Promise<Blob> => {
   });
 };
 
+const existingImageKey = (url: string) => `existing:${url}`;
+const newImageKey = (file: File) => `new:${file.name}:${file.size}:${file.lastModified}`;
+
 export default function CreateProductPage() {
+  const { id } = useParams<{ id: string }>();
+  const productId = id ? Number(id) : null;
+  const isEditing = productId !== null;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const initializedProductId = useRef<number | null>(null);
 
   const { data: metadata } = useQuery({
     queryKey: ['admin-metadata'],
@@ -79,6 +88,20 @@ export default function CreateProductPage() {
       const res = await api.get('/admin/metadata');
       return res.data;
     },
+  });
+
+  const {
+    data: product,
+    isLoading: isProductLoading,
+    isError: isProductError,
+  } = useQuery<Product>({
+    queryKey: ['admin-product', productId],
+    queryFn: async () => {
+      const res = await api.get(`/admin/products/${productId}`);
+      return res.data;
+    },
+    enabled: isEditing && Number.isInteger(productId),
+    retry: 1,
   });
 
   // Product fields
@@ -90,9 +113,12 @@ export default function CreateProductPage() {
   const [tags, setTags] = useState('');
   const [status, setStatus] = useState('ACTIVE');
   const [rating, setRating] = useState('9.2 / 10');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [pinnedImageKey, setPinnedImageKey] = useState<string | null>(null);
 
   // Variant fields
   const [variantName, setVariantName] = useState('Standard Edition');
@@ -103,6 +129,36 @@ export default function CreateProductPage() {
   const [activationGuide, setActivationGuide] = useState('');
   const [stagedKeys, setStagedKeys] = useState<string[]>([]);
   const [currentKey, setCurrentKey] = useState('');
+  const [existingKeyCount, setExistingKeyCount] = useState(0);
+
+  useEffect(() => {
+    if (!product || !productId || initializedProductId.current === productId) return;
+    const firstVariant = product.productVariants?.[0] as (NonNullable<Product['productVariants']>[number] & {
+      regionId?: number;
+      _count?: { keys?: number };
+    }) | undefined;
+    setTitle(product.title ?? '');
+    setDescription(product.description ?? '');
+    setDeveloper(product.developer ?? '');
+    setPublisher(product.publisher ?? '');
+    setSystemRequirements(product.systemRequirements ?? '');
+    setTags(product.tags?.filter(tag => tag !== '__mystikeys_featured__').join(', ') ?? '');
+    setStatus(product.status || 'DRAFT');
+    setRating(product.rating ?? '');
+    setExistingImages(product.media ?? []);
+    setIsFeatured(Boolean(product.isFeatured));
+    setPinnedImageKey(product.media?.[0] ? existingImageKey(product.media[0]) : null);
+    if (firstVariant) {
+      setVariantName(firstVariant.name ?? 'Standard Edition');
+      setPrice((Number(firstVariant.price ?? 0) / 100).toFixed(2));
+      setStoreId(String(firstVariant.storeId ?? ''));
+      setTypeId(String(firstVariant.typeId ?? ''));
+      setRegion(String(firstVariant.regionId ?? firstVariant.region ?? ''));
+      setActivationGuide(firstVariant.activationGuide ?? '');
+      setExistingKeyCount(firstVariant._count?.keys ?? 0);
+    }
+    initializedProductId.current = productId;
+  }, [product, productId]);
 
   // Auto-select first metadata options
   useEffect(() => {
@@ -117,20 +173,16 @@ export default function CreateProductPage() {
     }
   }, [metadata, storeId, typeId, region]);
 
-  // Clean up preview object URL on unmount or change
+  // Clean up preview object URLs on unmount or whenever the selected files change.
   useEffect(() => {
-    if (!imageFile) {
-      setImagePreviewUrl(null);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(imageFile);
-    setImagePreviewUrl(objectUrl);
-    setImageError(null);
+    const objectUrls = imageFiles.map(file => URL.createObjectURL(file));
+    setImagePreviewUrls(objectUrls);
+    if (imageFiles.length > 0) setImageError(null);
 
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      objectUrls.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [imageFile]);
+  }, [imageFiles]);
 
   // Normalized select options from backend metadata
   const storeOptions: Array<{ value: string; label: string }> = useMemo(() => {
@@ -182,37 +234,50 @@ export default function CreateProductPage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setImageError('Please select a valid image file (PNG, JPG, WEBP).');
-        return;
-      }
-      setImageFile(file);
+    const selectedFiles = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (selectedFiles.length === 0) return;
+    if (selectedFiles.some(file => !file.type.startsWith('image/'))) {
+      setImageError('Please select valid image files (PNG, JPG, or WEBP).');
+      return;
     }
+    if (existingImages.length + imageFiles.length + selectedFiles.length > 8) {
+      setImageError('A product can have up to 8 images.');
+      return;
+    }
+    setImageFiles(current => {
+      const known = new Set(current.map(file => `${file.name}:${file.size}:${file.lastModified}`));
+      return [...current, ...selectedFiles.filter(file => !known.has(`${file.name}:${file.size}:${file.lastModified}`))];
+    });
   };
 
-  const createMutation = useMutation({
+  const saveMutation = useMutation({
     mutationFn: async (dto: CreateProductDto) => {
       const formData = new FormData();
       formData.append('data', JSON.stringify(dto));
 
-      if (imageFile) {
-        const compressedBlob = await compressImage(imageFile);
-        formData.append('file', compressedBlob, imageFile.name);
-      } else {
-        throw new Error('Please select a product image.');
+      for (const file of imageFiles) {
+        const compressedBlob = await compressImage(file);
+        formData.append('files', compressedBlob, file.name);
       }
 
-      await api.post('/admin/products', formData);
+      if (isEditing) {
+        await api.patch(`/admin/products/${productId}`, formData);
+      } else {
+        await api.post('/admin/products', formData);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      toast.success('Product created and listed successfully!');
+      queryClient.invalidateQueries({ queryKey: ['admin-product', productId] });
+      queryClient.invalidateQueries({ queryKey: ['catalog-products'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-details', String(productId)] });
+      toast.success(isEditing ? 'Product details updated successfully!' : 'Product created and listed successfully!');
       navigate('/admin/products');
     },
     onError: (err: any) => {
-      const msg = err.response?.data?.message || err.message || 'Failed to publish product.';
+      const msg = err.response?.data?.message || err.message || `Failed to ${isEditing ? 'update' : 'publish'} product.`;
       setImageError(msg);
     },
   });
@@ -220,14 +285,20 @@ export default function CreateProductPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!imageFile) {
-      toast.error('Please choose a product cover image before publishing.');
-      setImageError('Please choose a product cover image before publishing.');
+    if (existingImages.length + imageFiles.length === 0) {
+      toast.error('Please add at least one product image before saving.');
+      setImageError('Please add at least one product image before saving.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    createMutation.mutate({
+    const imageChoices = [
+      ...existingImages.map(url => existingImageKey(url)),
+      ...imageFiles.map(file => newImageKey(file)),
+    ];
+    const featuredImageIndex = Math.max(0, imageChoices.indexOf(pinnedImageKey ?? imageChoices[0]));
+
+    saveMutation.mutate({
       title,
       description,
       developer,
@@ -236,6 +307,9 @@ export default function CreateProductPage() {
       tags,
       status,
       rating,
+      isFeatured,
+      featuredImageIndex,
+      ...(isEditing ? { media: existingImages } : {}),
       variants: [
         {
           name: variantName,
@@ -254,17 +328,54 @@ export default function CreateProductPage() {
   const inputClass =
     'h-11 w-full border-2 border-[#0e0917] bg-[#1a1224] px-4 text-sm font-medium text-white outline-none placeholder:text-[#786b88] focus:border-[#e5a93c] shadow-[2.5px_2.5px_0_#0e0917] transition-all';
   const labelClass = 'block font-display text-[9px] font-bold uppercase tracking-wider text-[#bcaecf] mb-1.5';
+  const imageChoices = [
+    ...existingImages.map(url => ({ key: existingImageKey(url), preview: url })),
+    ...imageFiles.map((file, index) => ({ key: newImageKey(file), preview: imagePreviewUrls[index] })),
+  ];
+  const effectivePinnedImage = imageChoices.find(image => image.key === pinnedImageKey) ?? imageChoices[0];
+  const coverImage = effectivePinnedImage?.preview ?? null;
+  const totalImageCount = existingImages.length + imageFiles.length;
+
+  if (isEditing && (!Number.isInteger(productId) || isProductError)) {
+    return (
+      <SellerLayout pageName="Edit product" contentClassName="p-0">
+        <div className="mx-auto w-full max-w-3xl px-5 py-16 text-center">
+          <div className="border-2 border-[#0e0917] bg-[#3a1a23] p-8 shadow-[6px_6px_0_#0e0917]">
+            <p className="font-display text-lg font-black uppercase text-[#ff8c98]">Product unavailable</p>
+            <p className="mt-3 text-sm text-[#d6c7ea]">This product could not be loaded or does not belong to your admin account.</p>
+            <button type="button" onClick={() => navigate('/admin/products')} className="comic-action-btn mt-6 h-11 bg-[#e5a93c] px-5 font-display text-[10px] font-black uppercase text-[#0e0917]">
+              Back to products
+            </button>
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  if (isEditing && isProductLoading) {
+    return (
+      <SellerLayout pageName="Edit product" contentClassName="p-0">
+        <div className="grid min-h-[55vh] place-items-center">
+          <div className="flex items-center gap-3 font-display text-[10px] font-black uppercase text-[#e5a93c]">
+            <Loader2 className="h-5 w-5 animate-spin" /> Loading product editor...
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
 
   return (
-    <SellerLayout pageName="Add product" contentClassName="p-0">
+    <SellerLayout pageName={isEditing ? 'Edit product' : 'Add product'} contentClassName="p-0">
       <div className="w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-24 2xl:px-36 3xl:px-48 py-6 sm:py-8 max-w-[1760px]">
         {/* Header Bar */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="comic-kicker mb-3">Inventory management</span>
-            <h1 className="comic-title text-3xl sm:text-4xl font-black">Add New Product</h1>
+            <h1 className="comic-title text-3xl sm:text-4xl font-black">{isEditing ? 'Edit Product' : 'Add New Product'}</h1>
             <p className="mt-2 text-sm text-[#a99bb5]">
-              Upload artwork, configure editions, and stage activation keys for your storefront.
+              {isEditing
+                ? 'Update storefront details, manage artwork, and add new activation keys.'
+                : 'Upload artwork, configure editions, and stage activation keys for your storefront.'}
             </p>
           </div>
           <button
@@ -296,9 +407,9 @@ export default function CreateProductPage() {
                 <div className="comic-panel overflow-hidden border-2 border-[#0e0917] bg-[#140c1e] shadow-[6px_6px_0_#0e0917]">
                   {/* Top Image Frame */}
                   <div className="relative min-h-[380px] sm:min-h-[440px] flex items-center justify-center bg-[#170e24] overflow-hidden">
-                    {imagePreviewUrl ? (
+                    {coverImage ? (
                       <img
-                        src={imagePreviewUrl}
+                        src={coverImage}
                         alt={title || 'Product preview'}
                         className="h-full w-full object-cover min-h-[380px] sm:min-h-[440px]"
                       />
@@ -378,37 +489,118 @@ export default function CreateProductPage() {
                 </div>
               </div>
 
+              {/* Catalog Feature Controls */}
+              <div className="comic-panel p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <span className={labelClass}>Catalog Feature</span>
+                    <p className="text-[10px] leading-relaxed text-[#8f8398]">
+                      Feature this product in the storefront banner. Saving it replaces the current featured product.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isFeatured}
+                    disabled={status !== 'ACTIVE'}
+                    onClick={() => setIsFeatured(value => !value)}
+                    className={`relative mt-0.5 h-7 w-12 shrink-0 border-2 border-[#0e0917] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${isFeatured ? 'bg-[#e5a93c]' : 'bg-[#2b2130]'}`}
+                  >
+                    <span className={`absolute top-0.5 grid h-5 w-5 place-items-center bg-[#f2edf7] text-[#0e0917] transition-transform ${isFeatured ? 'translate-x-5' : 'translate-x-0.5'}`}>
+                      <Star className={`h-3 w-3 ${isFeatured ? 'fill-current' : ''}`} />
+                    </span>
+                  </button>
+                </div>
+                {status !== 'ACTIVE' && (
+                  <p className="mt-3 text-[9px] font-bold uppercase text-[#ff9aaa]">Set the listing status to Active before featuring it.</p>
+                )}
+              </div>
+
               {/* Upload Controls */}
               <div className="comic-panel p-5 space-y-3">
-                <span className={labelClass}>Upload Artwork File</span>
+                <div className="flex items-center justify-between gap-3">
+                  <span className={labelClass}>Product Images</span>
+                  <span className="font-display text-[8px] font-bold uppercase text-[#e5a93c]">{totalImageCount} / 8</span>
+                </div>
                 <label className="comic-action-btn flex h-11 w-full cursor-pointer items-center justify-center gap-2 border-2 border-[#0e0917] bg-[#e5a93c] px-4 text-[10px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849] shadow-[2.5px_2.5px_0_#0e0917]">
                   <Upload className="h-4 w-4 stroke-[2.5]" />
-                  <span>{imageFile ? 'Change Cover Artwork' : 'Upload Cover Artwork'}</span>
+                  <span>{totalImageCount > 0 ? 'Add More Artwork' : 'Upload Product Artwork'}</span>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleFileChange}
                     className="hidden"
                   />
                 </label>
 
-                {imageFile && (
-                  <div className="flex items-center justify-between border-2 border-[#0e0917] bg-[#221437] p-3 text-xs">
-                    <div className="min-w-0 flex-1 truncate pr-2">
-                      <p className="font-bold text-white truncate">{imageFile.name}</p>
-                      <p className="text-[10px] text-[#a99bb5]">{(imageFile.size / 1024).toFixed(0)} KB</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setImageFile(null)}
-                      className="text-[#ff5c80] hover:text-white font-display text-[10px] uppercase font-bold"
-                    >
-                      Remove
-                    </button>
+                {totalImageCount > 0 && (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
+                    {existingImages.map((url, index) => {
+                      const imageKey = existingImageKey(url);
+                      const isPinned = effectivePinnedImage?.key === imageKey;
+                      return (
+                        <div key={url} className="relative aspect-[4/3] overflow-hidden border-2 border-[#0e0917] bg-[#140c1e] shadow-[2px_2px_0_#0e0917]">
+                          <img src={url} alt={`Existing product artwork ${index + 1}`} className="h-full w-full object-cover" />
+                          {isPinned && <span className="absolute left-1.5 top-1.5 bg-[#e5a93c] px-1.5 py-0.5 font-display text-[7px] font-black uppercase text-[#0e0917]">Pinned</span>}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExistingImages(images => images.filter(image => image !== url));
+                              if (pinnedImageKey === imageKey) setPinnedImageKey(null);
+                            }}
+                            aria-label={`Remove existing image ${index + 1}`}
+                            className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center border-2 border-[#0e0917] bg-[#3a1a23] text-[#ff8c98] hover:bg-[#ff5c80] hover:text-[#0e0917]"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                          {!isPinned && (
+                            <button
+                              type="button"
+                              onClick={() => setPinnedImageKey(imageKey)}
+                              className="absolute bottom-1.5 left-1.5 flex h-7 items-center gap-1 border-2 border-[#0e0917] bg-[#211533] px-2 font-display text-[7px] font-black uppercase text-white hover:bg-[#e5a93c] hover:text-[#0e0917]"
+                            >
+                              <Pin className="h-3 w-3" /> Pin
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {imagePreviewUrls.map((url, index) => {
+                      const file = imageFiles[index];
+                      const imageKey = file ? newImageKey(file) : `new:${index}`;
+                      const isPinned = effectivePinnedImage?.key === imageKey;
+                      return (
+                        <div key={`${imageFiles[index]?.name}-${index}`} className="relative aspect-[4/3] overflow-hidden border-2 border-[#0e0917] bg-[#140c1e] shadow-[2px_2px_0_#0e0917]">
+                          <img src={url} alt={`New product artwork ${index + 1}`} className="h-full w-full object-cover" />
+                          {isPinned && <span className="absolute left-1.5 top-1.5 bg-[#e5a93c] px-1.5 py-0.5 font-display text-[7px] font-black uppercase text-[#0e0917]">Pinned</span>}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImageFiles(files => files.filter((_, fileIndex) => fileIndex !== index));
+                              if (pinnedImageKey === imageKey) setPinnedImageKey(null);
+                            }}
+                            aria-label={`Remove new image ${index + 1}`}
+                            className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center border-2 border-[#0e0917] bg-[#3a1a23] text-[#ff8c98] hover:bg-[#ff5c80] hover:text-[#0e0917]"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                          {!isPinned && (
+                            <button
+                              type="button"
+                              onClick={() => setPinnedImageKey(imageKey)}
+                              className="absolute bottom-1.5 left-1.5 flex h-7 items-center gap-1 border-2 border-[#0e0917] bg-[#211533] px-2 font-display text-[7px] font-black uppercase text-white hover:bg-[#e5a93c] hover:text-[#0e0917]"
+                            >
+                              <Pin className="h-3 w-3" /> Pin
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
                 <p className="text-[10px] text-[#8f8398]">
-                  Recommended size: 600x800 or 1200x1600. Automatically compressed and optimized before publishing.
+                  Add up to 8 images. Pin one for the featured banner; newly uploaded pinned artwork is saved with a featured filename.
                 </p>
               </div>
 
@@ -418,7 +610,9 @@ export default function CreateProductPage() {
                   <span className="text-[#a99bb5] flex items-center gap-1.5 font-bold">
                     <KeyRound className="h-3.5 w-3.5 text-[#e5a93c]" /> Staged Keys
                   </span>
-                  <strong className="font-display font-black text-white">{stagedKeys.length} Keys</strong>
+                  <strong className="font-display font-black text-white">
+                    {isEditing ? `${existingKeyCount} Existing + ${stagedKeys.length} New` : `${stagedKeys.length} Keys`}
+                  </strong>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[#a99bb5] flex items-center gap-1.5 font-bold">
@@ -491,7 +685,10 @@ export default function CreateProductPage() {
                     <label className={labelClass}>Listing Status *</label>
                     <Select
                       value={status}
-                      onChange={setStatus}
+                      onChange={(value) => {
+                        setStatus(value);
+                        if (value !== 'ACTIVE') setIsFeatured(false);
+                      }}
                       options={statusOptions}
                       className="w-full"
                       triggerClassName="h-11 bg-[#1a1224] text-white border-2 border-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]"
@@ -625,7 +822,9 @@ export default function CreateProductPage() {
                 </div>
 
                 <p className="text-xs text-[#a99bb5]">
-                  Add activation keys for automatic instant delivery. You can add more keys later from the inventory management view.
+                  {isEditing
+                    ? 'Stage additional activation keys for this edition. Existing keys remain securely stored and are not exposed in the editor.'
+                    : 'Add activation keys for automatic instant delivery. You can add more keys later from the inventory management view.'}
                 </p>
 
                 <div className="flex gap-2">
@@ -683,18 +882,18 @@ export default function CreateProductPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={createMutation.isPending}
+                  disabled={saveMutation.isPending}
                   className="comic-action-btn flex h-12 items-center justify-center gap-2 border-2 border-[#0e0917] bg-[#e5a93c] px-8 text-[11px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849] disabled:opacity-50"
                 >
-                  {createMutation.isPending ? (
+                  {saveMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin text-[#0e0917]" />
-                      <span>Publishing...</span>
+                      <span>{isEditing ? 'Saving...' : 'Publishing...'}</span>
                     </>
                   ) : (
                     <>
                       <Check className="h-4 w-4 stroke-[3]" />
-                      <span>Publish Product to Store</span>
+                      <span>{isEditing ? 'Save Product Changes' : 'Publish Product to Store'}</span>
                     </>
                   )}
                 </button>

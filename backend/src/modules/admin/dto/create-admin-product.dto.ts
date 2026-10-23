@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsInt, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 
 export class CreateProductVariantDto {
   @IsInt()
@@ -72,6 +72,16 @@ export class CreateAdminProductDto {
   @IsArray()
   @IsString({ each: true })
   media?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(7)
+  featuredImageIndex?: number;
 
   @IsOptional()
   @IsArray()

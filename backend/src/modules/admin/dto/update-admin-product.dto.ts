@@ -1,4 +1,6 @@
-import { IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
+import { CreateProductVariantDto } from './create-admin-product.dto';
 
 export class UpdateAdminProductDto {
   @IsOptional()
@@ -38,6 +40,22 @@ export class UpdateAdminProductDto {
   @IsArray()
   @IsString({ each: true })
   media?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(7)
+  featuredImageIndex?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProductVariantDto)
+  variants?: CreateProductVariantDto[];
 }
 
 

@@ -1,4 +1,4 @@
-import { Gamepad2, KeyRound, Mail } from 'lucide-react';
+import { Gamepad2, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const socialIcons = [
@@ -13,9 +13,7 @@ export default function Footer() {
       <div className="mx-auto grid max-w-[1440px] gap-10 px-5 py-12 sm:px-8 md:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_0.8fr_1.4fr]">
         <div>
           <Link to="/catalog" className="flex items-center gap-3 text-white group w-fit">
-            <span className="grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#e5a93c] text-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917] transition-transform group-hover:-translate-y-0.5 group-hover:shadow-[3.5px_3.5px_0_#0e0917]">
-              <KeyRound className="h-5 w-5 stroke-[2.5]" />
-            </span>
+            <img src="/favicon.svg" alt="" className="h-10 w-10 shadow-[2.5px_2.5px_0_#0e0917] transition-transform group-hover:-translate-y-0.5 group-hover:shadow-[3.5px_3.5px_0_#0e0917]" />
             <span className="font-display text-base font-black uppercase tracking-wider text-[#f2edf7] drop-shadow-[2px_2px_0_#0e0917] group-hover:text-[#f0b849] transition-colors">
               MystiKeys
             </span>

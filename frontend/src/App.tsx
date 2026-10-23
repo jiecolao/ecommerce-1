@@ -103,6 +103,7 @@ function AppShell() {
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/products" element={<AdminProductsPage />} />
             <Route path="/admin/products/new" element={<AdminCreateProductPage />} />
+            <Route path="/admin/products/:id/edit" element={<AdminCreateProductPage />} />
             <Route path="/admin/orders" element={<AdminOrdersPage />} />
             <Route path="/admin/customers" element={<AdminCustomersPage />} />
             <Route path="/admin/activity-logs" element={<AdminActivityLogsPage />} />

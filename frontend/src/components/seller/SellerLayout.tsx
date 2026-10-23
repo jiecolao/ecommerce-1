@@ -54,14 +54,7 @@ export default function SellerLayout({ children, pageName: _pageName, contentCla
     <div className="w-full flex-1 flex flex-col lg:flex-row text-[#eee8f5] min-h-[calc(100vh-72px)]">
       {/* Sidebar */}
       <aside className="w-full lg:w-60 xl:w-64 shrink-0 border-b-2 lg:border-b-0 lg:border-r-2 border-[#0e0917] bg-[#140c1f]/95 backdrop-blur flex flex-col lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)]">
-        <div className="hidden lg:flex items-center justify-between px-5 py-4 border-b-2 border-[#0e0917] bg-[#1d122d]">
-          <span className="font-display text-[10px] font-black uppercase tracking-wider text-[#e5a93c]">Console Nav</span>
-          <span className="border border-[#0e0917] bg-[#581c87] px-2 py-0.5 font-display text-[8px] font-bold text-white uppercase shadow-[1.5px_1.5px_0_#0e0917]">
-            Active
-          </span>
-        </div>
-
-        <nav className="flex gap-2 overflow-x-auto p-3 lg:mt-2 lg:flex-col lg:overflow-visible lg:px-3">
+        <nav className="flex gap-2 overflow-x-auto p-3 lg:flex-col lg:overflow-visible lg:px-3 lg:py-4">
           {navItems.map(({ label, icon: Icon, to }) => {
             const isActive = isItemActive(to);
             return (

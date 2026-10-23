@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Heart, KeyRound, Search, ShoppingCart, ExternalLink, Store, ShieldCheck } from 'lucide-react';
+import { Heart, Search, ShoppingCart } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { useAuthSession } from '../../lib/auth';
@@ -36,7 +36,7 @@ export default function Navbar() {
   const cartCount = cartData?.orderLines?.reduce((sum: number, line: any) => sum + (line.quantity || 1), 0) ?? 0;
   const wishlistCount = Array.isArray(wishlistData) ? wishlistData.length : 0;
 
-  const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email ? user.email.split('@')[0] : (isAdmin ? 'Admin Console' : 'My Account');
+  const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email ? user.email.split('@')[0] : (isAdmin ? 'Administrator' : 'My Account');
   const initials = user?.firstName ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ''}`.toUpperCase() : (isAdmin ? 'AD' : 'ME');
 
   return (
@@ -44,60 +44,21 @@ export default function Navbar() {
       <div className="mx-auto flex min-h-[72px] items-center gap-3 sm:gap-4 px-4 sm:px-8 max-w-[1440px]">
         {/* Brand Logo */}
         <div className="flex items-center gap-2.5">
-          <Link to="/catalog" className="flex shrink-0 items-center gap-2.5 sm:gap-3 text-white group">
-            <span className="grid h-10 w-10 place-items-center border-2 border-[#0e0917] bg-[#e5a93c] text-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917] transition-transform group-hover:-translate-y-0.5 group-hover:shadow-[3.5px_3.5px_0_#0e0917]">
-              <KeyRound className="h-5 w-5 stroke-[2.5]" />
-            </span>
+          <Link to="/catalog" className="group flex shrink-0 items-center gap-2.5 text-white sm:gap-3" aria-label="MystiKeys home">
+            <img
+              src="/favicon.svg"
+              alt=""
+              className="h-10 w-10 shadow-[2.5px_2.5px_0_#0e0917] transition-transform group-hover:-translate-y-0.5 group-hover:shadow-[3.5px_3.5px_0_#0e0917]"
+            />
             <span className="font-display text-base font-black uppercase tracking-wider text-[#f2edf7] drop-shadow-[2px_2px_0_#0e0917] group-hover:text-[#f0b849] transition-colors">
               MystiKeys
             </span>
           </Link>
-
-          {isAdmin && (
-            <span className="hidden sm:inline-flex items-center gap-1 border-2 border-[#0e0917] bg-[#581c87] px-2 py-0.5 font-display text-[9px] font-black uppercase text-[#e5a93c] shadow-[1.5px_1.5px_0_#0e0917] tracking-wider">
-              <ShieldCheck className="h-3 w-3" />
-              Console
-            </span>
-          )}
         </div>
-
-        {/* Unified Mode Switcher: Store & Admin Panel */}
-        <nav className="flex items-center gap-1.5 sm:gap-2">
-          <Link
-            to="/catalog"
-            className={`font-display flex items-center gap-1.5 px-3 py-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
-              !isAdmin
-                ? 'border-2 border-[#0e0917] bg-[#e5a93c] text-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]'
-                : 'border-2 border-[#0e0917] bg-[#221437] text-[#d6c7ea] hover:bg-[#301b4c] hover:text-white hover:border-[#e5a93c] shadow-[2px_2px_0_#0e0917]'
-            }`}
-          >
-            <Store className="h-3.5 w-3.5" />
-            <span>Store</span>
-          </Link>
-          {user?.isAdmin && <Link
-            to="/admin/dashboard"
-            className={`font-display px-3 py-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all ${
-              isAdmin
-                ? 'border-2 border-[#0e0917] bg-[#e5a93c] text-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]'
-                : 'border-2 border-[#0e0917]/0 text-[#bdaecf] hover:border-[#0e0917] hover:bg-[#25153b] hover:text-white hover:shadow-[2.5px_2.5px_0_#0e0917]'
-            }`}
-          >
-            Admin Panel
-          </Link>}
-        </nav>
 
         {/* ADMIN MODE HEADER VIEW */}
         {isAdmin ? (
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
-            {/* Live Store Quick Preview */}
-            <Link
-              to="/catalog"
-              className="comic-action-btn flex h-10 items-center gap-2 border-2 border-[#0e0917] bg-[#25153b] px-3.5 text-[10px] font-black uppercase text-[#e5a93c] hover:bg-[#341b52] hover:text-[#ffd45e] shadow-[2.5px_2.5px_0_#0e0917]"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">View Live Store</span>
-            </Link>
-
             {/* Admin User Badge */}
             {user?.isAdmin && <AdminAccountMenu
               className="flex items-center gap-2.5 sm:gap-3 border-l-2 border-[#0e0917] pl-3"

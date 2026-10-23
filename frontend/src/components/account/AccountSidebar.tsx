@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { CreditCard, Heart, History, LogOut, Settings, UserRound } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { authSession, getStoredUser } from '../../lib/auth';
@@ -21,6 +22,11 @@ export default function AccountSidebar({ name, email, avatarUrl }: AccountSideba
   const location = useLocation();
   const navigate = useNavigate();
   const stored = getStoredUser();
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [avatarUrl]);
 
   const displayName = name || (stored?.firstName ? `${stored.firstName} ${stored.lastName || ''}`.trim() : 'Account');
   const displayEmail = email || stored?.email || 'No email registered';
@@ -49,7 +55,9 @@ export default function AccountSidebar({ name, email, avatarUrl }: AccountSideba
     <aside className="lg:sticky lg:top-28">
       <div className="flex items-center gap-4 border-b-2 border-[#0e0917] pb-7">
         <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden border-2 border-[#0e0917] bg-[#581c87] font-display text-lg font-black text-[#f2edf7] shadow-[3.5px_3.5px_0_#0e0917]">
-          {avatarUrl ? <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" /> : initials}
+          {avatarUrl && !avatarFailed
+            ? <img src={avatarUrl} alt="" onError={() => setAvatarFailed(true)} className="h-full w-full object-cover" />
+            : initials}
         </span>
         <div className="min-w-0">
           <p className="font-display font-black text-[#f2edf7] text-base truncate">{displayName}</p>

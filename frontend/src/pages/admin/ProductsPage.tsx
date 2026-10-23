@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, Pencil, Plus, RefreshCw, Search, Star, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import SellerLayout from '../../components/seller/SellerLayout';
@@ -16,6 +16,7 @@ type ManagedProduct = {
   price: string;
   stock: number;
   status: 'ACTIVE' | 'INACTIVE' | 'DRAFT';
+  isFeatured: boolean;
 };
 
 export default function AdminProductsPage() {
@@ -23,12 +24,14 @@ export default function AdminProductsPage() {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  const { data: serverProducts, isLoading } = useQuery({
+  const { data: serverProducts, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-products'],
     queryFn: async () => {
       const res = await api.get('/admin/products');
+      if (!Array.isArray(res.data)) throw new Error('Invalid products response.');
       return res.data;
     },
+    retry: 1,
   });
 
   const deleteMutation = useMutation({
@@ -55,17 +58,18 @@ export default function AdminProductsPage() {
         sku: `MK-PRD-${p.id}`,
         category: 'Game Keys',
         price: `₱${priceNum.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`,
-        stock: firstVariant?.keys?.length ?? 0,
+        stock: firstVariant?._count?.keys ?? firstVariant?.keys?.length ?? 0,
         status: p.status || 'ACTIVE',
+        isFeatured: Boolean(p.isFeatured),
       };
     });
   }, [serverProducts]);
 
   const stats = [
-    { label: 'Total products', value: String(products.length), detail: 'all listings' },
-    { label: 'Active', value: String(products.filter(p => p.status === 'ACTIVE').length), detail: 'published' },
-    { label: 'Draft', value: String(products.filter(p => p.status === 'DRAFT').length), detail: 'unpublished' },
-    { label: 'Inactive', value: String(products.filter(p => p.status === 'INACTIVE').length), detail: 'disabled' },
+    { label: 'Total products', value: isError ? '—' : String(products.length), detail: 'all listings' },
+    { label: 'Active', value: isError ? '—' : String(products.filter(p => p.status === 'ACTIVE').length), detail: 'published' },
+    { label: 'Draft', value: isError ? '—' : String(products.filter(p => p.status === 'DRAFT').length), detail: 'unpublished' },
+    { label: 'Inactive', value: isError ? '—' : String(products.filter(p => p.status === 'INACTIVE').length), detail: 'disabled' },
   ];
 
   const filteredProducts = useMemo(() => products.filter((product) => {
@@ -148,9 +152,38 @@ export default function AdminProductsPage() {
             </thead>
             <tbody className="divide-y divide-[#49345d]">
               {isLoading && <TableRowSkeleton columns={5} rows={6} />}
-              {!isLoading && filteredProducts.map((product) => (
+              {!isLoading && isError && (
+                <tr>
+                  <td colSpan={5} className="px-5 py-12">
+                    <div className="mx-auto flex max-w-md flex-col items-center text-center">
+                      <AlertTriangle className="h-7 w-7 text-[#ff8b97]" />
+                      <p className="mt-3 font-display text-xs font-black uppercase text-white">Could not load products</p>
+                      <p className="mt-2 text-sm text-[#a99bb5]">The catalog request failed. Try fetching the list again.</p>
+                      <button
+                        type="button"
+                        onClick={() => void refetch()}
+                        disabled={isFetching}
+                        className="comic-action-btn mt-5 flex h-10 items-center gap-2 bg-[#e5a93c] px-4 text-[9px] font-black uppercase text-[#0e0917] hover:bg-[#f0b849] disabled:cursor-wait disabled:opacity-60"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+                        Retry
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {!isLoading && !isError && filteredProducts.map((product) => (
                 <tr key={product.id} className="bg-[#211d23] hover:bg-[#27212a]">
-                  <td className="px-5 py-4 font-bold text-white">{product.title}</td>
+                  <td className="px-5 py-4 font-bold text-white">
+                    <div className="flex items-center gap-2">
+                      <span>{product.title}</span>
+                      {product.isFeatured && (
+                        <span className="inline-flex items-center gap-1 bg-[#e5a93c] px-2 py-1 font-display text-[7px] font-black uppercase text-[#0e0917]">
+                          <Star className="h-3 w-3 fill-current" /> Featured
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-5 py-4 font-mono text-xs text-[#a99bb5]">{product.sku}</td>
                   <td className="px-5 py-4 font-display font-bold text-white">{product.price}</td>
                   <td className="px-5 py-4">
@@ -159,22 +192,33 @@ export default function AdminProductsPage() {
                     </span>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`Delete product "${product.title}"?`)) {
-                          deleteMutation.mutate(product.id);
-                        }
-                      }}
-                      className="text-[#a99bb5] hover:text-[#ff6f7d] transition-colors p-1"
-                      title="Delete product"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <Link
+                        to={`/admin/products/${product.id}/edit`}
+                        aria-label={`Edit ${product.title}`}
+                        className="grid h-9 w-9 place-items-center border border-[#5b4767] text-[#b9adc4] transition-colors hover:border-[#f4b72b] hover:text-[#f4b72b]"
+                        title="Edit product"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Delete product "${product.title}"?`)) {
+                            deleteMutation.mutate(product.id);
+                          }
+                        }}
+                        className="grid h-9 w-9 place-items-center border border-[#5b4767] text-[#a99bb5] transition-colors hover:border-[#ff6f7d] hover:text-[#ff6f7d]"
+                        title="Delete product"
+                        aria-label={`Delete ${product.title}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
-              {!isLoading && filteredProducts.length === 0 && (
+              {!isLoading && !isError && filteredProducts.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-5 py-12 text-center text-[#8f8398]">
                     No products found.

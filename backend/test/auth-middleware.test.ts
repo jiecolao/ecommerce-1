@@ -136,6 +136,7 @@ const buyers = {
 const admins = {
   getMetadata() { calls.push({ name: 'metadata' }); return { stores: [], regions: [], types: [] }; },
   getProducts(id: string) { calls.push({ name: 'products', id }); return [{ adminId: id }]; },
+  getProduct(productId: number, id: string) { calls.push({ name: `product-${productId}`, id }); return { id: productId, adminId: id }; },
   getadminReport(id: string) { calls.push({ name: 'reports', id }); return { adminId: id }; },
   getLogs() { calls.push({ name: 'logs' }); return []; },
 };
@@ -181,7 +182,7 @@ const protectedRoutes = [
   ['GET', '/buyer/profile'], ['PUT', '/buyer/profile'], ['GET', '/buyer/cart'],
   ['POST', '/buyer/cart/items'], ['DELETE', '/buyer/cart/items/7'], ['GET', '/buyer/orders'],
   ['GET', '/buyer/orders/7'], ['POST', '/buyer/wishlist'], ['DELETE', '/buyer/wishlist/7'], ['GET', '/buyer/wishlist'],
-  ['GET', '/admin/metadata'], ['GET', '/admin/products'], ['POST', '/admin/products'],
+  ['GET', '/admin/metadata'], ['GET', '/admin/products'], ['GET', '/admin/products/7'], ['POST', '/admin/products'],
   ['PATCH', '/admin/products/7'], ['POST', '/admin/products/7/image'], ['DELETE', '/admin/products/7'],
   ['GET', '/admin/reports'], ['GET', '/admin/logs'],
 ];
@@ -270,7 +271,7 @@ test('public featured listing remains accessible without authentication', async 
   assert.deepEqual(result.body, []);
 });
 
-test('non-owner and missing products are rejected before a Blob upload', async () => {
+test('store admins can upload to any existing product, while missing products fail before Blob upload', async () => {
   let uploads = 0;
   let writes = 0;
   const db = { product: {
@@ -279,10 +280,28 @@ test('non-owner and missing products are rejected before a Blob upload', async (
   } };
   const blob = { async uploadImage() { uploads++; return { url: 'https://example.invalid/audit.png' }; } };
   const service = new AdminService(db as unknown as PrismaService, blob as unknown as BlobService);
-  await assert.rejects(service.uploadProductImage(7, adminB, 'audit.png', Buffer.from('synthetic'), 'image/png'), { status: 403 });
+  await service.uploadProductImage(7, adminB, 'audit.png', Buffer.from('synthetic'), 'image/png');
   await assert.rejects(service.uploadProductImage(8, adminA, 'audit.png', Buffer.from('synthetic'), 'image/png'), { status: 404 });
-  assert.equal(uploads, 0);
-  assert.equal(writes, 0);
+  assert.equal(uploads, 1);
+  assert.equal(writes, 1);
+});
+
+test('admin product listing fetches the complete store catalog without creator filtering', async () => {
+  let findManyArgs: any;
+  const expected = [{ id: 7, title: 'Store-wide product' }];
+  const db = { product: {
+    async findMany(args: any) {
+      findManyArgs = args;
+      return expected;
+    },
+  } };
+  const service = new AdminService(db as unknown as PrismaService, {} as BlobService);
+
+  const result = await service.getProducts(adminB);
+
+  assert.deepEqual(result, [{ ...expected[0], isFeatured: false, tags: [] }]);
+  assert.equal(findManyArgs.where, undefined);
+  assert.deepEqual(findManyArgs.orderBy, { createdAt: 'desc' });
 });
 
 test('an authorized image upload retains the existing append behavior', async () => {
@@ -296,4 +315,175 @@ test('an authorized image upload retains the existing append behavior', async ()
   const result = await service.uploadProductImage(7, adminA, 'audit.png', Buffer.from('synthetic'), 'image/png');
   assert.deepEqual(steps, ['read', 'upload', 'update']);
   assert.deepEqual(result, { where: { id: 7 }, data: { media: { push: 'https://example.invalid/audit.png' } } });
+});
+
+test('product creation persists every uploaded image', async () => {
+  let createArgs: any;
+  const tx = {
+    product: {
+      async create(args: any) {
+        createArgs = args;
+        return { id: 7, ...args.data };
+      },
+    },
+    logs: { async create() {} },
+  };
+  const db = { async $transaction(work: (client: typeof tx) => Promise<unknown>) { return work(tx); } };
+  let uploadNumber = 0;
+  const blob = {
+    async uploadImage() {
+      uploadNumber++;
+      return { url: `https://example.invalid/image-${uploadNumber}.jpg` };
+    },
+    async deleteImages() {},
+  };
+  const service = new AdminService(db as unknown as PrismaService, blob as unknown as BlobService);
+
+  await service.createProduct(adminA, {
+    title: 'Multi-image product',
+    description: 'Synthetic product',
+  }, [
+    { originalname: 'cover.jpg', mimetype: 'image/jpeg', buffer: Buffer.from('cover') },
+    { originalname: 'gallery.jpg', mimetype: 'image/jpeg', buffer: Buffer.from('gallery') },
+  ]);
+
+  assert.equal(uploadNumber, 2);
+  assert.deepEqual(createArgs.data.media, [
+    'https://example.invalid/image-1.jpg',
+    'https://example.invalid/image-2.jpg',
+  ]);
+});
+
+test('product editing retains selected images, appends uploads, and removes deleted blobs', async () => {
+  const current = {
+    id: 7,
+    adminId: adminA,
+    title: 'Old title',
+    media: ['https://example.invalid/keep.jpg', 'https://example.invalid/remove.jpg'],
+    productVariants: [{ id: 11 }],
+  };
+  let updateArgs: any;
+  let logWrites = 0;
+  const db = {
+    product: { async findUnique() { return current; } },
+    async $transaction(work: (tx: any) => Promise<unknown>) {
+      return work({
+        product: {
+          async update(args: any) {
+            updateArgs = args;
+            return { ...current, ...args.data };
+          },
+        },
+        logs: { async create() { logWrites++; } },
+      });
+    },
+  };
+  const deleted: string[][] = [];
+  const blob = {
+    async uploadImage() { return { url: 'https://example.invalid/new.jpg' }; },
+    async deleteImages(urls: string[]) { deleted.push(urls); },
+  };
+  const service = new AdminService(db as unknown as PrismaService, blob as unknown as BlobService);
+
+  const result = await service.updateProduct(7, adminA, {
+    title: 'New title',
+    media: ['https://example.invalid/keep.jpg'],
+    tags: 'Action, RPG',
+    variants: [{
+      storeId: 1,
+      typeId: 2,
+      name: 'Standard Edition',
+      region: 3,
+      languageSupport: ['English'],
+      price: 4999,
+      keys: ['NEW-KEY'],
+    }],
+  }, [{ originalname: 'new image.png', mimetype: 'image/png', buffer: Buffer.from('image') }]);
+
+  assert.equal(result.title, 'New title');
+  assert.deepEqual(updateArgs.data.media, ['https://example.invalid/keep.jpg', 'https://example.invalid/new.jpg']);
+  assert.deepEqual(updateArgs.data.tags, ['Action', 'RPG']);
+  assert.deepEqual(updateArgs.data.productVariants.update.where, { id: 11 });
+  assert.deepEqual(updateArgs.data.productVariants.update.data.keys, { create: [{ code: 'NEW-KEY' }] });
+  assert.deepEqual(deleted, [['https://example.invalid/remove.jpg']]);
+  assert.equal(logWrites, 1);
+});
+
+test('product editing rejects removal of every image before uploading or writing', async () => {
+  let uploads = 0;
+  let writes = 0;
+  const db = {
+    product: {
+      async findUnique() {
+        return { id: 7, adminId: adminA, media: ['https://example.invalid/only.jpg'], productVariants: [] };
+      },
+    },
+    async $transaction() { writes++; },
+  };
+  const blob = { async uploadImage() { uploads++; }, async deleteImages() {} };
+  const service = new AdminService(db as unknown as PrismaService, blob as unknown as BlobService);
+
+  await assert.rejects(service.updateProduct(7, adminA, { media: [] }), { status: 400 });
+  assert.equal(uploads, 0);
+  assert.equal(writes, 0);
+});
+
+test('profile picture replacement stores the new URL before deleting the old blob', async () => {
+  const steps: string[] = [];
+  let updateArgs: any;
+  const db = {
+    shopper: {
+      async findUnique() {
+        steps.push('read');
+        return { id: buyerA, profilePic: 'https://blob.example.invalid/old.jpg' };
+      },
+      async update(args: any) {
+        steps.push('update');
+        updateArgs = args;
+        return { id: buyerA, ...args.data };
+      },
+    },
+  };
+  const blob = {
+    async uploadImage() {
+      steps.push('upload');
+      return { url: 'https://blob.example.invalid/new.jpg' };
+    },
+    async deleteImages(urls: string[]) {
+      steps.push(`delete:${urls.join(',')}`);
+    },
+  };
+  const service = new BuyerService(db as unknown as PrismaService, blob as unknown as BlobService);
+
+  const result = await service.updateProfile(buyerA, { firstName: 'Ada' }, {
+    originalname: 'new avatar.png',
+    mimetype: 'image/png',
+    buffer: Buffer.from('image'),
+  });
+
+  assert.deepEqual(steps, ['read', 'upload', 'update', 'delete:https://blob.example.invalid/old.jpg']);
+  assert.equal(updateArgs.data.profilePic, 'https://blob.example.invalid/new.jpg');
+  assert.equal(result.profilePic, 'https://blob.example.invalid/new.jpg');
+});
+
+test('clearing a profile picture persists the initials fallback and removes the old blob', async () => {
+  let updateArgs: any;
+  const deleted: string[][] = [];
+  const db = {
+    shopper: {
+      async findUnique() { return { id: buyerA, profilePic: 'https://blob.example.invalid/avatar.jpg' }; },
+      async update(args: any) {
+        updateArgs = args;
+        return { id: buyerA, ...args.data };
+      },
+    },
+  };
+  const blob = { async deleteImages(urls: string[]) { deleted.push(urls); } };
+  const service = new BuyerService(db as unknown as PrismaService, blob as unknown as BlobService);
+
+  const result = await service.updateProfile(buyerA, { removeProfilePic: 'true' });
+
+  assert.equal(updateArgs.data.profilePic, '');
+  assert.equal(result.profilePic, '');
+  assert.deepEqual(deleted, [['https://blob.example.invalid/avatar.jpg']]);
 });

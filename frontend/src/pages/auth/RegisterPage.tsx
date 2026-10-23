@@ -35,7 +35,7 @@ export default function RegisterPage() {
       if (response.data?.session) {
         const user = await authSession.adopt(response.data.session);
         toast.success('Account created and logged in!');
-        navigate(user.isAdmin ? '/admin/dashboard' : '/profile');
+        navigate(user.isAdmin ? '/admin/dashboard' : '/catalog');
       } else {
         toast.success('Account created! Please verify your email.');
         navigate('/verify-email', { state: { email } });

@@ -29,7 +29,7 @@ export default function LoginPage() {
       void completion.then(user => {
         if (active) {
           toast.success('Signed in with Google!');
-          navigate(fromPath || (user.isAdmin ? '/admin/dashboard' : '/profile'), { replace: true });
+          navigate(fromPath || (user.isAdmin ? '/admin/dashboard' : '/catalog'), { replace: true });
         }
       }).catch(() => {
         if (active) setErrorMsg('Google sign in could not be completed. Please try again.');
@@ -51,7 +51,7 @@ export default function LoginPage() {
       if (user.isAdmin) {
         navigate(fromPath && fromPath.startsWith('/admin') ? fromPath : '/admin/dashboard', { replace: true });
       } else {
-        navigate(fromPath || '/profile', { replace: true });
+        navigate(fromPath || '/catalog', { replace: true });
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
