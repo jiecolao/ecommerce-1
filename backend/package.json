@@ -37,7 +37,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@nestjs-modules/mailer": "^2.3.7",
+    "@nestjs-modules/mailer": "^3.0.2",
     "@nestjs/axios": "^12.0.1",
     "@nestjs/common": "^12.0.0",
     "@nestjs/config": "^12.0.1",
@@ -58,7 +58,7 @@
     "express-session": "^1.19.0",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.18.1",
-    "nodemailer": "^10.1.2",
+    "nodemailer": "^10.1.7",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-steam": "^1.0.18",
@@ -96,8 +96,11 @@
     "deepmerge-ts": "^8.1.1",
     "multer": "^2.4.0",
     "mysql2": "^3.24.4",
-    "nodemailer": "^10.1.2",
-    "mailparser": "^3.9.40",
+    "nodemailer": "^10.1.7",
+    "mailparser": "^3.10.0",
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "^4.3.2"
+    },
     "argparse": "^2.0.1",
     "js-yaml": "^4.3.2"
   }
