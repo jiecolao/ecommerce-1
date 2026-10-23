@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { BlobService } from '../../integrations/blob/blob.service';
 import { CheckoutDto } from './dto/checkout.dto';
-import { FEATURED_PRODUCT_TAG } from '../catalog/catalog.constants';
+import { cleanProductMedia, FEATURED_PRODUCT_TAG, getFeaturedImage } from '../catalog/catalog.constants';
 
 @Injectable()
 export class BuyerService {
@@ -143,7 +143,11 @@ export class BuyerService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return products.map(({ tags: _tags, ...product }) => product);
+    return products.map(({ tags: _tags, ...product }) => ({
+      ...product,
+      featuredImage: getFeaturedImage(product.media),
+      media: cleanProductMedia(product.media),
+    }));
   }
 
   async checkout(buyerId: string, dto: CheckoutDto) {

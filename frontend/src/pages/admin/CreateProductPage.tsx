@@ -9,6 +9,9 @@ import {
   Check,
   Loader2,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  GripVertical,
   KeyRound,
   ShieldCheck,
   Globe,
@@ -115,10 +118,12 @@ export default function CreateProductPage() {
   const [rating, setRating] = useState('9.2 / 10');
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageOrder, setImageOrder] = useState<string[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const [isFeatured, setIsFeatured] = useState(false);
   const [pinnedImageKey, setPinnedImageKey] = useState<string | null>(null);
+  const [draggedImageKey, setDraggedImageKey] = useState<string | null>(null);
 
   // Variant fields
   const [variantName, setVariantName] = useState('Standard Edition');
@@ -145,9 +150,16 @@ export default function CreateProductPage() {
     setTags(product.tags?.filter(tag => tag !== '__mystikeys_featured__').join(', ') ?? '');
     setStatus(product.status || 'DRAFT');
     setRating(product.rating ?? '');
-    setExistingImages(product.media ?? []);
+    const productImages = product.media ?? [];
+    setExistingImages(productImages);
+    setImageOrder(productImages.map(existingImageKey));
     setIsFeatured(Boolean(product.isFeatured));
-    setPinnedImageKey(product.media?.[0] ? existingImageKey(product.media[0]) : null);
+    const featuredImageIndex = product.featuredImageIndex ?? 0;
+    setPinnedImageKey(
+      product.isFeatured && productImages[featuredImageIndex]
+        ? existingImageKey(productImages[featuredImageIndex])
+        : null,
+    );
     if (firstVariant) {
       setVariantName(firstVariant.name ?? 'Standard Edition');
       setPrice((Number(firstVariant.price ?? 0) / 100).toFixed(2));
@@ -245,10 +257,51 @@ export default function CreateProductPage() {
       setImageError('A product can have up to 8 images.');
       return;
     }
-    setImageFiles(current => {
-      const known = new Set(current.map(file => `${file.name}:${file.size}:${file.lastModified}`));
-      return [...current, ...selectedFiles.filter(file => !known.has(`${file.name}:${file.size}:${file.lastModified}`))];
+    const known = new Set(imageFiles.map(file => `${file.name}:${file.size}:${file.lastModified}`));
+    const uniqueFiles = selectedFiles.filter(file => !known.has(`${file.name}:${file.size}:${file.lastModified}`));
+    if (uniqueFiles.length === 0) return;
+
+    setImageFiles(current => [...current, ...uniqueFiles]);
+    const newKeys = uniqueFiles.map(newImageKey);
+    setImageOrder(current => [...current, ...newKeys]);
+    if (isFeatured && !pinnedImageKey) setPinnedImageKey(newKeys[0]);
+  };
+
+  const moveImage = (sourceKey: string, targetKey: string) => {
+    if (sourceKey === targetKey) return;
+    setImageOrder(current => {
+      const sourceIndex = current.indexOf(sourceKey);
+      const targetIndex = current.indexOf(targetKey);
+      if (sourceIndex < 0 || targetIndex < 0) return current;
+      const next = [...current];
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
     });
+  };
+
+  const moveImageBy = (imageKey: string, offset: number) => {
+    setImageOrder(current => {
+      const currentIndex = current.indexOf(imageKey);
+      const nextIndex = currentIndex + offset;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= current.length) return current;
+      const next = [...current];
+      [next[currentIndex], next[nextIndex]] = [next[nextIndex], next[currentIndex]];
+      return next;
+    });
+  };
+
+  const removeImage = (imageKey: string) => {
+    const remainingOrder = imageOrder.filter(key => key !== imageKey);
+    setImageOrder(remainingOrder);
+    if (imageKey.startsWith('existing:')) {
+      setExistingImages(images => images.filter(url => existingImageKey(url) !== imageKey));
+    } else {
+      setImageFiles(files => files.filter(file => newImageKey(file) !== imageKey));
+    }
+    if (pinnedImageKey === imageKey) {
+      setPinnedImageKey(isFeatured ? (remainingOrder[0] ?? null) : null);
+    }
   };
 
   const saveMutation = useMutation({
@@ -292,11 +345,15 @@ export default function CreateProductPage() {
       return;
     }
 
-    const imageChoices = [
-      ...existingImages.map(url => existingImageKey(url)),
-      ...imageFiles.map(file => newImageKey(file)),
-    ];
-    const featuredImageIndex = Math.max(0, imageChoices.indexOf(pinnedImageKey ?? imageChoices[0]));
+    const featuredImageIndex = Math.max(0, imageChoices.findIndex(image => image.key === (pinnedImageKey ?? imageChoices[0]?.key)));
+    const orderedExistingImages = imageChoices
+      .filter(image => image.kind === 'existing')
+      .map(image => image.url);
+    const serializedImageOrder = imageChoices.map(image => (
+      image.kind === 'existing'
+        ? image.url
+        : `new:${imageFiles.findIndex(file => newImageKey(file) === image.key)}`
+    ));
 
     saveMutation.mutate({
       title,
@@ -308,8 +365,9 @@ export default function CreateProductPage() {
       status,
       rating,
       isFeatured,
-      featuredImageIndex,
-      ...(isEditing ? { media: existingImages } : {}),
+      ...(isFeatured ? { featuredImageIndex } : {}),
+      imageOrder: serializedImageOrder,
+      ...(isEditing ? { media: orderedExistingImages } : {}),
       variants: [
         {
           name: variantName,
@@ -328,13 +386,25 @@ export default function CreateProductPage() {
   const inputClass =
     'h-11 w-full border-2 border-[#0e0917] bg-[#1a1224] px-4 text-sm font-medium text-white outline-none placeholder:text-[#786b88] focus:border-[#e5a93c] shadow-[2.5px_2.5px_0_#0e0917] transition-all';
   const labelClass = 'block font-display text-[9px] font-bold uppercase tracking-wider text-[#bcaecf] mb-1.5';
-  const imageChoices = [
-    ...existingImages.map(url => ({ key: existingImageKey(url), preview: url })),
-    ...imageFiles.map((file, index) => ({ key: newImageKey(file), preview: imagePreviewUrls[index] })),
+  const formSelectTriggerClass = 'h-11 w-full bg-[#1a1224] text-white border-2 border-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]';
+  const availableImageChoices = [
+    ...existingImages.map(url => ({ key: existingImageKey(url), preview: url, kind: 'existing' as const, url })),
+    ...imageFiles.map((file, index) => ({ key: newImageKey(file), preview: imagePreviewUrls[index], kind: 'new' as const, file })),
   ];
-  const effectivePinnedImage = imageChoices.find(image => image.key === pinnedImageKey) ?? imageChoices[0];
-  const coverImage = effectivePinnedImage?.preview ?? null;
-  const totalImageCount = existingImages.length + imageFiles.length;
+  const imageChoiceMap = new Map(availableImageChoices.map(image => [image.key, image]));
+  const orderedImageChoices = imageOrder
+    .map(key => imageChoiceMap.get(key))
+    .filter(Boolean) as typeof availableImageChoices;
+  const orderedKeys = new Set(orderedImageChoices.map(image => image.key));
+  const imageChoices = [
+    ...orderedImageChoices,
+    ...availableImageChoices.filter(image => !orderedKeys.has(image.key)),
+  ];
+  const effectivePinnedImage = isFeatured
+    ? imageChoices.find(image => image.key === pinnedImageKey) ?? imageChoices[0]
+    : undefined;
+  const coverImage = imageChoices[0]?.preview ?? null;
+  const totalImageCount = imageChoices.length;
 
   if (isEditing && (!Number.isInteger(productId) || isProductError)) {
     return (
@@ -503,7 +573,11 @@ export default function CreateProductPage() {
                     role="switch"
                     aria-checked={isFeatured}
                     disabled={status !== 'ACTIVE'}
-                    onClick={() => setIsFeatured(value => !value)}
+                    onClick={() => {
+                      const nextFeatured = !isFeatured;
+                      setIsFeatured(nextFeatured);
+                      setPinnedImageKey(nextFeatured ? (pinnedImageKey ?? imageChoices[0]?.key ?? null) : null);
+                    }}
                     className={`relative mt-0.5 h-7 w-12 shrink-0 border-2 border-[#0e0917] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${isFeatured ? 'bg-[#e5a93c]' : 'bg-[#2b2130]'}`}
                   >
                     <span className={`absolute top-0.5 grid h-5 w-5 place-items-center bg-[#f2edf7] text-[#0e0917] transition-transform ${isFeatured ? 'translate-x-5' : 'translate-x-0.5'}`}>
@@ -536,71 +610,83 @@ export default function CreateProductPage() {
 
                 {totalImageCount > 0 && (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
-                    {existingImages.map((url, index) => {
-                      const imageKey = existingImageKey(url);
-                      const isPinned = effectivePinnedImage?.key === imageKey;
+                    {imageChoices.map((image, index) => {
+                      const isPinned = effectivePinnedImage?.key === image.key;
                       return (
-                        <div key={url} className="relative aspect-[4/3] overflow-hidden border-2 border-[#0e0917] bg-[#140c1e] shadow-[2px_2px_0_#0e0917]">
-                          <img src={url} alt={`Existing product artwork ${index + 1}`} className="h-full w-full object-cover" />
-                          {isPinned && <span className="absolute left-1.5 top-1.5 bg-[#e5a93c] px-1.5 py-0.5 font-display text-[7px] font-black uppercase text-[#0e0917]">Pinned</span>}
+                        <div
+                          key={image.key}
+                          draggable
+                          onDragStart={(event) => {
+                            setDraggedImageKey(image.key);
+                            event.dataTransfer.effectAllowed = 'move';
+                            event.dataTransfer.setData('text/plain', image.key);
+                          }}
+                          onDragOver={(event) => {
+                            event.preventDefault();
+                            event.dataTransfer.dropEffect = 'move';
+                          }}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            const sourceKey = event.dataTransfer.getData('text/plain') || draggedImageKey;
+                            if (sourceKey) moveImage(sourceKey, image.key);
+                            setDraggedImageKey(null);
+                          }}
+                          onDragEnd={() => setDraggedImageKey(null)}
+                          className={`relative aspect-[4/3] overflow-hidden border-2 border-[#0e0917] bg-[#140c1e] shadow-[2px_2px_0_#0e0917] transition-opacity ${draggedImageKey === image.key ? 'opacity-50' : ''}`}
+                        >
+                          <img src={image.preview} alt={`Product artwork ${index + 1}`} className="h-full w-full object-cover" />
+                          <span className="absolute left-1.5 top-1.5 grid h-7 w-7 cursor-grab place-items-center border-2 border-[#0e0917] bg-[#211533] text-white active:cursor-grabbing" aria-hidden="true">
+                            <GripVertical className="h-3.5 w-3.5" />
+                          </span>
+                          {isPinned && (
+                            <span className="absolute left-10 top-1.5 bg-[#e5a93c] px-1.5 py-1 font-display text-[7px] font-black uppercase text-[#0e0917]">
+                              Featured art
+                            </span>
+                          )}
                           <button
                             type="button"
-                            onClick={() => {
-                              setExistingImages(images => images.filter(image => image !== url));
-                              if (pinnedImageKey === imageKey) setPinnedImageKey(null);
-                            }}
-                            aria-label={`Remove existing image ${index + 1}`}
+                            onClick={() => removeImage(image.key)}
+                            aria-label={`Remove image ${index + 1}`}
                             className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center border-2 border-[#0e0917] bg-[#3a1a23] text-[#ff8c98] hover:bg-[#ff5c80] hover:text-[#0e0917]"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
-                          {!isPinned && (
+                          {isFeatured && !isPinned && (
                             <button
                               type="button"
-                              onClick={() => setPinnedImageKey(imageKey)}
+                              onClick={() => setPinnedImageKey(image.key)}
                               className="absolute bottom-1.5 left-1.5 flex h-7 items-center gap-1 border-2 border-[#0e0917] bg-[#211533] px-2 font-display text-[7px] font-black uppercase text-white hover:bg-[#e5a93c] hover:text-[#0e0917]"
                             >
-                              <Pin className="h-3 w-3" /> Pin
+                              <Pin className="h-3 w-3" /> Use for feature
                             </button>
                           )}
-                        </div>
-                      );
-                    })}
-                    {imagePreviewUrls.map((url, index) => {
-                      const file = imageFiles[index];
-                      const imageKey = file ? newImageKey(file) : `new:${index}`;
-                      const isPinned = effectivePinnedImage?.key === imageKey;
-                      return (
-                        <div key={`${imageFiles[index]?.name}-${index}`} className="relative aspect-[4/3] overflow-hidden border-2 border-[#0e0917] bg-[#140c1e] shadow-[2px_2px_0_#0e0917]">
-                          <img src={url} alt={`New product artwork ${index + 1}`} className="h-full w-full object-cover" />
-                          {isPinned && <span className="absolute left-1.5 top-1.5 bg-[#e5a93c] px-1.5 py-0.5 font-display text-[7px] font-black uppercase text-[#0e0917]">Pinned</span>}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setImageFiles(files => files.filter((_, fileIndex) => fileIndex !== index));
-                              if (pinnedImageKey === imageKey) setPinnedImageKey(null);
-                            }}
-                            aria-label={`Remove new image ${index + 1}`}
-                            className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center border-2 border-[#0e0917] bg-[#3a1a23] text-[#ff8c98] hover:bg-[#ff5c80] hover:text-[#0e0917]"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                          {!isPinned && (
+                          <div className="absolute bottom-1.5 right-1.5 flex">
                             <button
                               type="button"
-                              onClick={() => setPinnedImageKey(imageKey)}
-                              className="absolute bottom-1.5 left-1.5 flex h-7 items-center gap-1 border-2 border-[#0e0917] bg-[#211533] px-2 font-display text-[7px] font-black uppercase text-white hover:bg-[#e5a93c] hover:text-[#0e0917]"
+                              onClick={() => moveImageBy(image.key, -1)}
+                              disabled={index === 0}
+                              aria-label={`Move image ${index + 1} earlier`}
+                              className="grid h-7 w-7 place-items-center border-2 border-r-0 border-[#0e0917] bg-[#211533] text-white hover:bg-[#e5a93c] hover:text-[#0e0917] disabled:cursor-not-allowed disabled:opacity-35"
                             >
-                              <Pin className="h-3 w-3" /> Pin
+                              <ChevronLeft className="h-3.5 w-3.5" />
                             </button>
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => moveImageBy(image.key, 1)}
+                              disabled={index === imageChoices.length - 1}
+                              aria-label={`Move image ${index + 1} later`}
+                              className="grid h-7 w-7 place-items-center border-2 border-[#0e0917] bg-[#211533] text-white hover:bg-[#e5a93c] hover:text-[#0e0917] disabled:cursor-not-allowed disabled:opacity-35"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 )}
                 <p className="text-[10px] text-[#8f8398]">
-                  Add up to 8 images. Pin one for the featured banner; newly uploaded pinned artwork is saved with a featured filename.
+                  Drag artwork to reorder it. The first image is used on product cards and the product page. When this product is featured, choose separate artwork for the featured banner.
                 </p>
               </div>
 
@@ -687,11 +773,14 @@ export default function CreateProductPage() {
                       value={status}
                       onChange={(value) => {
                         setStatus(value);
-                        if (value !== 'ACTIVE') setIsFeatured(false);
+                        if (value !== 'ACTIVE') {
+                          setIsFeatured(false);
+                          setPinnedImageKey(null);
+                        }
                       }}
                       options={statusOptions}
                       className="w-full"
-                      triggerClassName="h-11 bg-[#1a1224] text-white border-2 border-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]"
+                      triggerClassName={formSelectTriggerClass}
                     />
                   </div>
                   <div>
@@ -772,7 +861,7 @@ export default function CreateProductPage() {
                       onChange={setStoreId}
                       options={storeOptions}
                       className="w-full"
-                      triggerClassName="h-11 bg-[#1a1224] text-white border-2 border-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]"
+                      triggerClassName={formSelectTriggerClass}
                     />
                   </div>
                   <div>
@@ -782,7 +871,7 @@ export default function CreateProductPage() {
                       onChange={setTypeId}
                       options={typeOptions}
                       className="w-full"
-                      triggerClassName="h-11 bg-[#1a1224] text-white border-2 border-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]"
+                      triggerClassName={formSelectTriggerClass}
                     />
                   </div>
                   <div>
@@ -792,7 +881,7 @@ export default function CreateProductPage() {
                       onChange={setRegion}
                       options={regionOptions}
                       className="w-full"
-                      triggerClassName="h-11 bg-[#1a1224] text-white border-2 border-[#0e0917] shadow-[2.5px_2.5px_0_#0e0917]"
+                      triggerClassName={formSelectTriggerClass}
                     />
                   </div>
                 </div>

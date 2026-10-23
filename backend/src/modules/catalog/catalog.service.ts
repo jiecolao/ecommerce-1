@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { ListCatalogQueryDto } from './dto/list-catalog-query.dto';
+import { cleanProductMedia } from './catalog.constants';
 
 @Injectable()
 export class CatalogService {
@@ -9,7 +10,7 @@ export class CatalogService {
   async listProducts(query: ListCatalogQueryDto) {
     const limit = query.limit ?? 20;
 
-    return this.prisma.product.findMany({
+    const products = await this.prisma.product.findMany({
       where: {
         status: 'ACTIVE',
         ...(query.search
@@ -22,12 +23,17 @@ export class CatalogService {
       select: { id: true, title: true, media: true, productVariants: { select: { price: true } } },
       orderBy: { title: 'desc' },
     });
+    return products.map(product => ({
+      ...product,
+      media: cleanProductMedia(product.media),
+    }));
   }
 
   async getProductById(id: number) {
-    return this.prisma.product.findUnique({
+    const product = await this.prisma.product.findUnique({
       where: { id, status: 'ACTIVE' },
       include: { productVariants: true },
     });
+    return product ? { ...product, media: cleanProductMedia(product.media) } : null;
   }
 }

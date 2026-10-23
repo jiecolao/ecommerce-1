@@ -4,7 +4,12 @@ import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { BlobService } from '../../integrations/blob/blob.service';
 import { CreateAdminProductDto } from './dto/create-admin-product.dto';
 import { UpdateAdminProductDto } from './dto/update-admin-product.dto';
-import { FEATURED_PRODUCT_TAG } from '../catalog/catalog.constants';
+import {
+  cleanProductMedia,
+  FEATURED_PRODUCT_TAG,
+  getFeaturedImageIndex,
+  markFeaturedImage,
+} from '../catalog/catalog.constants';
 
 @Injectable()
 export class AdminService {
@@ -47,11 +52,14 @@ export class AdminService {
     return this.toAdminProduct(product);
   }
 
-  private toAdminProduct<T extends { tags?: string[] }>(product: T) {
+  private toAdminProduct<T extends { tags?: string[]; media?: string[] }>(product: T) {
     const productTags = product.tags ?? [];
+    const media = product.media ?? [];
     return {
       ...product,
       isFeatured: productTags.includes(FEATURED_PRODUCT_TAG),
+      ...(media.length > 0 ? { featuredImageIndex: getFeaturedImageIndex(media) } : {}),
+      ...(product.media ? { media: cleanProductMedia(media) } : {}),
       tags: productTags.filter(tag => tag !== FEATURED_PRODUCT_TAG),
     };
   }
@@ -61,16 +69,43 @@ export class AdminService {
     return [...new Set(tags.split(',').map(tag => tag.trim()).filter(tag => tag && tag !== FEATURED_PRODUCT_TAG))];
   }
 
-  private pinImage(media: string[], featuredImageIndex?: number) {
-    if (featuredImageIndex === undefined) return media;
-    if (featuredImageIndex < 0 || featuredImageIndex >= media.length) {
-      throw new BadRequestException('The selected featured image is invalid.');
+  private orderProductMedia(retainedMedia: string[], uploadedUrls: string[], imageOrder?: string[]) {
+    if (imageOrder === undefined) return [...retainedMedia, ...uploadedUrls];
+    if (imageOrder.length !== retainedMedia.length + uploadedUrls.length) {
+      throw new BadRequestException('The product image order is invalid.');
     }
-    return [media[featuredImageIndex], ...media.filter((_, index) => index !== featuredImageIndex)];
+
+    const retained = new Set(retainedMedia);
+    const usedExisting = new Set<string>();
+    const usedUploads = new Set<number>();
+    const ordered = imageOrder.map(token => {
+      const uploadMatch = /^new:(\d+)$/.exec(token);
+      if (uploadMatch) {
+        const uploadIndex = Number(uploadMatch[1]);
+        if (uploadIndex >= uploadedUrls.length || usedUploads.has(uploadIndex)) {
+          throw new BadRequestException('The product image order is invalid.');
+        }
+        usedUploads.add(uploadIndex);
+        return uploadedUrls[uploadIndex];
+      }
+
+      if (!retained.has(token) || usedExisting.has(token)) {
+        throw new BadRequestException('The product image order is invalid.');
+      }
+      usedExisting.add(token);
+      return token;
+    });
+
+    if (usedExisting.size !== retainedMedia.length || usedUploads.size !== uploadedUrls.length) {
+      throw new BadRequestException('The product image order is invalid.');
+    }
+    return ordered;
   }
 
   private async clearOtherFeaturedProducts(prisma: Prisma.TransactionClient, exceptId?: number) {
-    await prisma.$queryRaw`SELECT pg_advisory_xact_lock(hashtext('mystikeys_featured_product'))`;
+    await prisma.$queryRaw<Array<{ lockResult: string }>>`
+      SELECT pg_advisory_xact_lock(hashtext('mystikeys_featured_product'))::text AS "lockResult"
+    `;
     const featuredProducts = await prisma.product.findMany({
       where: {
         tags: { has: FEATURED_PRODUCT_TAG },
@@ -114,13 +149,25 @@ export class AdminService {
     if (dto.isFeatured && status !== 'ACTIVE') {
       throw new BadRequestException('Only an active product can be featured.');
     }
-    if (dto.featuredImageIndex !== undefined && dto.featuredImageIndex >= files.length) {
+    const featuredImageIndex = dto.isFeatured ? (dto.featuredImageIndex ?? 0) : undefined;
+    if (featuredImageIndex !== undefined && featuredImageIndex >= files.length) {
       throw new BadRequestException('The selected featured image is invalid.');
     }
+    this.orderProductMedia([], files.map((_, index) => `pending-upload-${index}`), dto.imageOrder);
 
     const tempId = Date.now().toString();
-    const uploadedUrls = await this.uploadProductImages(`products/tmp_${tempId}`, files, dto.featuredImageIndex);
-    const orderedMedia = this.pinImage(uploadedUrls, dto.featuredImageIndex);
+    const selectedToken = featuredImageIndex === undefined ? undefined : dto.imageOrder?.[featuredImageIndex];
+    const selectedUploadMatch = selectedToken ? /^new:(\d+)$/.exec(selectedToken) : null;
+    const featuredUploadIndex = featuredImageIndex === undefined
+      ? -1
+      : selectedUploadMatch
+        ? Number(selectedUploadMatch[1])
+        : dto.imageOrder === undefined
+          ? featuredImageIndex
+          : -1;
+    const uploadedUrls = await this.uploadProductImages(`products/tmp_${tempId}`, files, featuredUploadIndex);
+    const orderedMedia = this.orderProductMedia([], uploadedUrls, dto.imageOrder);
+    const storedMedia = markFeaturedImage(orderedMedia, featuredImageIndex);
     const tags = this.parseProductTags(dto.tags);
     if (dto.isFeatured) tags.push(FEATURED_PRODUCT_TAG);
 
@@ -136,7 +183,7 @@ export class AdminService {
             publisher: dto.publisher,
             systemRequirements: dto.systemRequirements,
             tags,
-            media: orderedMedia,
+            media: storedMedia,
             status,
             rating: dto.rating || null,
             productVariants: dto.variants ? {
@@ -184,8 +231,9 @@ export class AdminService {
     });
     if (!product) throw new NotFoundException('Product not found.');
 
-    const retainedMedia = dto.media === undefined ? product.media : [...new Set(dto.media)];
-    if (retainedMedia.some(url => !product.media.includes(url))) {
+    const productMedia = cleanProductMedia(product.media);
+    const retainedMedia = dto.media === undefined ? productMedia : [...new Set(dto.media)];
+    if (retainedMedia.some(url => !productMedia.includes(url))) {
       throw new BadRequestException('Existing product images are invalid.');
     }
     if (retainedMedia.length + files.length === 0) {
@@ -199,8 +247,10 @@ export class AdminService {
     if (dto.featuredImageIndex !== undefined && dto.featuredImageIndex >= totalImages) {
       throw new BadRequestException('The selected featured image is invalid.');
     }
+    this.orderProductMedia(retainedMedia, files.map((_, index) => `pending-upload-${index}`), dto.imageOrder);
 
     const currentIsFeatured = (product.tags ?? []).includes(FEATURED_PRODUCT_TAG);
+    const currentFeaturedImage = productMedia[getFeaturedImageIndex(product.media)];
     const nextStatus = dto.status ?? product.status;
     if (dto.isFeatured && nextStatus !== 'ACTIVE') {
       throw new BadRequestException('Only an active product can be featured.');
@@ -211,12 +261,23 @@ export class AdminService {
       : this.parseProductTags(dto.tags);
     const nextTags = shouldFeature ? [...visibleTags, FEATURED_PRODUCT_TAG] : visibleTags;
 
-    const featuredUploadIndex = dto.featuredImageIndex !== undefined && dto.featuredImageIndex >= retainedMedia.length
-      ? dto.featuredImageIndex - retainedMedia.length
+    const selectedToken = dto.featuredImageIndex === undefined ? undefined : dto.imageOrder?.[dto.featuredImageIndex];
+    const selectedUploadMatch = selectedToken ? /^new:(\d+)$/.exec(selectedToken) : null;
+    const featuredUploadIndex = shouldFeature && dto.featuredImageIndex !== undefined
+      ? selectedUploadMatch
+        ? Number(selectedUploadMatch[1])
+        : dto.imageOrder === undefined && dto.featuredImageIndex >= retainedMedia.length
+          ? dto.featuredImageIndex - retainedMedia.length
+          : -1
       : -1;
     const uploadedUrls = await this.uploadProductImages(`products/${id}/${Date.now()}`, files, featuredUploadIndex);
-    const orderedMedia = this.pinImage([...retainedMedia, ...uploadedUrls], dto.featuredImageIndex);
-    const removedUrls = product.media.filter(url => !retainedMedia.includes(url));
+    const orderedMedia = this.orderProductMedia(retainedMedia, uploadedUrls, dto.imageOrder);
+    const preservedFeaturedIndex = currentFeaturedImage ? orderedMedia.indexOf(currentFeaturedImage) : -1;
+    const nextFeaturedImageIndex = shouldFeature
+      ? dto.featuredImageIndex ?? (preservedFeaturedIndex >= 0 ? preservedFeaturedIndex : 0)
+      : undefined;
+    const storedMedia = markFeaturedImage(orderedMedia, nextFeaturedImageIndex);
+    const removedUrls = productMedia.filter(url => !retainedMedia.includes(url));
     const firstVariant = dto.variants?.[0];
     const existingVariant = product.productVariants[0];
     const variantData = firstVariant ? {
@@ -238,6 +299,7 @@ export class AdminService {
       status,
       rating,
       media: _media,
+      imageOrder: _imageOrder,
       variants: _variants,
       isFeatured: _isFeatured,
       featuredImageIndex: _featuredImageIndex,
@@ -250,7 +312,7 @@ export class AdminService {
           where: { id },
           data: {
             ...rest,
-            media: orderedMedia,
+            media: storedMedia,
             status: status ? (status === 'ACTIVE' ? 'ACTIVE' : status === 'INACTIVE' ? 'INACTIVE' : 'DRAFT') : undefined,
             rating: rating !== undefined ? rating : undefined,
             tags: nextTags,
@@ -303,7 +365,7 @@ export class AdminService {
     });
     
     if (product.media && product.media.length > 0) {
-      await this.blobService.deleteImages(product.media);
+      await this.blobService.deleteImages(cleanProductMedia(product.media));
     }
 
     return product;

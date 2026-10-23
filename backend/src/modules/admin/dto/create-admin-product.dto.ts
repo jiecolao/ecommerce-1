@@ -74,6 +74,11 @@ export class CreateAdminProductDto {
   media?: string[];
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  imageOrder?: string[];
+
+  @IsOptional()
   @IsBoolean()
   isFeatured?: boolean;
 
