@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BadgeCheck, Info, Save, Upload, Loader2 } from 'lucide-react';
+import { BadgeCheck, Info, Save, Upload, Loader2, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AccountSidebar from '../../components/account/AccountSidebar';
 import api from '../../lib/api';
@@ -18,6 +18,8 @@ export default function ProfilePage() {
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const [saved, setSaved] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -39,9 +41,9 @@ export default function ProfilePage() {
         email: serverProfile.email || '',
         address: serverProfile.address || '',
       });
-      if (serverProfile.profilePic) {
-        setAvatarUrl(serverProfile.profilePic);
-      }
+      setAvatarUrl(serverProfile.profilePic || null);
+      setAvatarFailed(false);
+      setRemoveAvatar(false);
     }
   }, [serverProfile]);
 
@@ -52,10 +54,31 @@ export default function ProfilePage() {
 
   const handleAvatar = (file?: File) => {
     if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setErrorMsg('Please choose a PNG, JPG, or WEBP image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('Profile pictures must be 5MB or smaller.');
+      return;
+    }
     setAvatarFile(file);
+    setRemoveAvatar(false);
+    setAvatarFailed(false);
+    setSaved(false);
+    setErrorMsg(null);
     const reader = new FileReader();
     reader.onload = () => setAvatarUrl(typeof reader.result === 'string' ? reader.result : null);
     reader.readAsDataURL(file);
+  };
+
+  const handleClearAvatar = () => {
+    setAvatarFile(null);
+    setAvatarUrl(null);
+    setAvatarFailed(false);
+    setRemoveAvatar(true);
+    setSaved(false);
+    setErrorMsg(null);
   };
 
   const updateMutation = useMutation({
@@ -69,16 +92,24 @@ export default function ProfilePage() {
       if (avatarFile) {
         formData.append('profilePic', avatarFile);
       }
+      if (removeAvatar) {
+        formData.append('removeProfilePic', 'true');
+      }
 
       const res = await api.put('/buyer/profile', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (updatedProfile) => {
+      setAvatarFile(null);
+      setAvatarUrl(updatedProfile.profilePic || null);
+      setAvatarFailed(false);
+      setRemoveAvatar(false);
       setSaved(true);
       setErrorMsg(null);
       toast.success('Your profile details have been saved successfully.');
+      queryClient.setQueryData(['profile'], updatedProfile);
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
     onError: (err: any) => {
@@ -94,6 +125,15 @@ export default function ProfilePage() {
   };
 
   const fieldClass = 'mt-2 h-12 w-full border border-[#5b4767] bg-[#1c191f] px-4 text-sm text-white outline-none placeholder:text-[#756b7b] focus:border-[#f4b72b]';
+  const profileName = `${profile.firstName} ${profile.lastName}`.trim();
+  const initials = [profile.firstName, profile.lastName]
+    .filter(Boolean)
+    .map(part => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'U';
+  const showAvatar = Boolean(avatarUrl && !avatarFailed);
+  const canClearAvatar = Boolean(avatarFile || (!removeAvatar && serverProfile?.profilePic));
 
   if (isLoading) {
     return <ProfilePageSkeleton />;
@@ -101,7 +141,7 @@ export default function ProfilePage() {
 
   return (
     <div className="grid items-start gap-10 pb-10 lg:grid-cols-[270px_1fr]">
-      <AccountSidebar email={profile.email} avatarUrl={avatarUrl} />
+      <AccountSidebar name={profileName} email={profile.email} avatarUrl={avatarUrl} />
 
       <main className="min-w-0">
         <span className="comic-kicker mb-5">Account center</span>
@@ -125,20 +165,37 @@ export default function ProfilePage() {
         <form onSubmit={handleSubmit} className="mt-9 space-y-8">
           <section className="comic-panel flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:p-8">
             <span className="grid h-28 w-28 shrink-0 place-items-center overflow-hidden border-2 border-[#f4b72b] bg-[#6b2fa2] font-display text-2xl font-black text-white shadow-[5px_5px_0_#2c0c46]">
-              {avatarUrl ? <img src={avatarUrl} alt="Profile preview" className="h-full w-full object-cover" /> : (profile.firstName?.[0] || 'U')}
+              {showAvatar
+                ? <img src={avatarUrl!} alt="" onError={() => setAvatarFailed(true)} className="h-full w-full object-cover" />
+                : initials}
             </span>
             <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="font-display text-lg font-black uppercase text-white">Avatar</h2>
-                <span className="flex items-center gap-1 border border-[#5b4767] bg-[#1c191f] px-3 py-1 font-display text-[8px] font-bold uppercase text-[#f4b72b]">
-                  <BadgeCheck className="h-3 w-3" /> PNG / JPG
-                </span>
-              </div>
+              <h2 className="font-display text-lg font-black uppercase text-white">Avatar</h2>
               <p className="mt-2 text-sm text-[#a99bb5]">Upload a new profile picture. Max file size is 5MB.</p>
-              <label className="font-display mt-4 inline-flex h-11 cursor-pointer items-center gap-2 border border-[#5b4767] bg-[#211d23] px-5 text-[9px] font-bold uppercase text-white hover:border-[#f4b72b]">
-                <Upload className="h-4 w-4 text-[#f4b72b]" /> Choose image
-                <input type="file" accept="image/*" onChange={(e) => handleAvatar(e.target.files?.[0])} className="hidden" />
-              </label>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <label className="font-display inline-flex h-11 cursor-pointer items-center gap-2 border border-[#5b4767] bg-[#211d23] px-5 text-[9px] font-bold uppercase text-white hover:border-[#f4b72b]">
+                  <Upload className="h-4 w-4 text-[#f4b72b]" /> Choose image
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) => {
+                      handleAvatar(event.currentTarget.files?.[0]);
+                      event.currentTarget.value = '';
+                    }}
+                    className="hidden"
+                  />
+                </label>
+                {canClearAvatar && (
+                  <button
+                    type="button"
+                    onClick={handleClearAvatar}
+                    className="font-display inline-flex h-11 items-center gap-2 border border-[#74434d] bg-[#2e1d22] px-5 text-[9px] font-bold uppercase text-[#ff9daa] hover:border-[#ff6f7d] hover:text-white"
+                  >
+                    <Trash2 className="h-4 w-4" /> Clear image
+                  </button>
+                )}
+              </div>
+              {removeAvatar && <p className="mt-3 text-xs text-[#e5a93c]">The initials avatar will be restored when you save changes.</p>}
             </div>
           </section>
 

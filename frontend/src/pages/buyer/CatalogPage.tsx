@@ -248,7 +248,7 @@ export default function CatalogPage() {
     retry: 1,
   });
 
-  const featuredItem = (featuredProducts && featuredProducts[0]) || (serverProducts && serverProducts[0]);
+  const featuredItem = Array.isArray(featuredProducts) ? featuredProducts[0] : undefined;
 
   // Map server data directly, no fake fallback
   const rawProducts: CatalogItem[] =

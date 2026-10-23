@@ -17,6 +17,6 @@ export default defineConfig({
     url: process.env.DIRECT_URL,
   },
   migrations: {
-    seed: "npx ts-node prisma/seed.ts",
+    seed: "tsx --tsconfig tsconfig.json prisma/seed.ts",
   },
 });

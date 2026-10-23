@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ArrowLeft, KeyRound } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 type AuthLayoutProps = {
@@ -16,7 +16,7 @@ export default function AuthLayout({ title, subtitle, children }: AuthLayoutProp
 
       <div className="w-full max-w-md">
         <Link to="/catalog" className="mb-6 flex items-center justify-center gap-3 text-white">
-          <span className="grid h-11 w-11 place-items-center bg-[#f4b72b] text-[#171419] [clip-path:polygon(12%_0,100%_0,88%_100%,0_100%)]"><KeyRound className="h-5 w-5" /></span>
+          <img src="/favicon.svg" alt="" className="h-11 w-11 shadow-[3px_3px_0_#0e0917]" />
           <span className="font-display text-base font-black uppercase">MystiKeys</span>
         </Link>
 

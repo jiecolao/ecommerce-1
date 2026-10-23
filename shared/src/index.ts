@@ -17,6 +17,7 @@ export interface Product {
   tags?: string[];
   status: string;
   rating?: string;
+  isFeatured?: boolean;
   createdAt: string;
   updatedAt: string;
   productVariants?: ProductVariant[];
@@ -47,6 +48,8 @@ export interface CreateProductDto {
   status?: string;
   rating?: string;
   media?: string[];
+  isFeatured?: boolean;
+  featuredImageIndex?: number;
   variants?: {
     storeId: number;
     typeId: number;

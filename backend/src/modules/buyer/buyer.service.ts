@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../integrations/prisma/prisma.service';
 import { BlobService } from '../../integrations/blob/blob.service';
 import { CheckoutDto } from './dto/checkout.dto';
+import { FEATURED_PRODUCT_TAG } from '../catalog/catalog.constants';
 
 @Injectable()
 export class BuyerService {
@@ -31,21 +32,39 @@ export class BuyerService {
       phone: body.phone,
       address: body.address,
     };
-
-    if (file) {
-      if (shopper.profilePic && !shopper.profilePic.includes('example.com') && !shopper.profilePic.includes('placeholder.local')) {
-        await this.blobService.deleteImages([shopper.profilePic]).catch(() => {});
-      }
-      const ext = file.originalname.split('.').pop() || 'jpg';
-      const path = `avatars/${shopperId}-${Date.now()}.${ext}`;
-      const upload = await this.blobService.uploadImage(path, file.buffer, file.mimetype);
-      updateData.profilePic = upload.url;
+    const removeProfilePic = body.removeProfilePic === true || body.removeProfilePic === 'true';
+    if (file && removeProfilePic) {
+      throw new BadRequestException('Choose a new profile picture or remove the current one, not both.');
     }
 
-    return this.prisma.shopper.update({
-      where: { id: shopperId },
-      data: updateData,
-    });
+    let uploadedUrl: string | null = null;
+    if (file) {
+      const safeName = (file.originalname || 'profile.jpg').replace(/[^a-zA-Z0-9._-]+/g, '-');
+      const path = `avatars/${shopperId}-${Date.now()}-${safeName}`;
+      const upload = await this.blobService.uploadImage(path, file.buffer, file.mimetype);
+      uploadedUrl = upload.url;
+      updateData.profilePic = uploadedUrl;
+    } else if (removeProfilePic) {
+      updateData.profilePic = '';
+    }
+
+    try {
+      const updatedShopper = await this.prisma.shopper.update({
+        where: { id: shopperId },
+        data: updateData,
+      });
+
+      const replacedProfilePic = (uploadedUrl || removeProfilePic) ? shopper.profilePic : '';
+      if (replacedProfilePic && !replacedProfilePic.includes('example.com') && !replacedProfilePic.includes('placeholder.local')) {
+        await this.blobService.deleteImages([replacedProfilePic]).catch(() => undefined);
+      }
+      return updatedShopper;
+    } catch (error) {
+      if (uploadedUrl) {
+        await this.blobService.deleteImages([uploadedUrl]).catch(() => undefined);
+      }
+      throw error;
+    }
   }
 
   async getCart(shopperId: string) {
@@ -114,10 +133,17 @@ export class BuyerService {
   }
 
   async getFeaturedProducts() {
-    return this.prisma.product.findMany({
-      take: 10,
+    const products = await this.prisma.product.findMany({
+      where: {
+        status: 'ACTIVE',
+        tags: { has: FEATURED_PRODUCT_TAG },
+      },
+      include: { productVariants: true },
+      take: 1,
       orderBy: { updatedAt: 'desc' },
     });
+
+    return products.map(({ tags: _tags, ...product }) => product);
   }
 
   async checkout(buyerId: string, dto: CheckoutDto) {
