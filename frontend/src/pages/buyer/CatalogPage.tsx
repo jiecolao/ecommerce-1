@@ -312,7 +312,7 @@ export default function CatalogPage() {
                 ? `₱${Number(featuredItem.productVariants[0].price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
                 : undefined
             }
-            imageSrc={featuredItem.media?.[0]}
+            imageSrc={featuredItem.featuredImage || featuredItem.media?.[0]}
             buyHref={`/product/${featuredItem.id}`}
           />
         )}

@@ -42,6 +42,11 @@ export class UpdateAdminProductDto {
   media?: string[];
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  imageOrder?: string[];
+
+  @IsOptional()
   @IsBoolean()
   isFeatured?: boolean;
 

@@ -18,6 +18,8 @@ export interface Product {
   status: string;
   rating?: string;
   isFeatured?: boolean;
+  featuredImage?: string;
+  featuredImageIndex?: number;
   createdAt: string;
   updatedAt: string;
   productVariants?: ProductVariant[];
@@ -48,6 +50,7 @@ export interface CreateProductDto {
   status?: string;
   rating?: string;
   media?: string[];
+  imageOrder?: string[];
   isFeatured?: boolean;
   featuredImageIndex?: number;
   variants?: {
