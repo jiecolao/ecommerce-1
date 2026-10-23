@@ -27,6 +27,9 @@ import { toast } from '../../lib/toast';
 
 const compressImage = (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
+    const outputType = file.type === 'image/png' || file.type === 'image/webp'
+      ? file.type
+      : 'image/jpeg';
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -54,7 +57,11 @@ const compressImage = (file: File): Promise<Blob> => {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+        if (!ctx) {
+          reject(new Error('Canvas context is unavailable'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
           (blob) => {
@@ -64,8 +71,8 @@ const compressImage = (file: File): Promise<Blob> => {
               reject(new Error('Canvas to Blob failed'));
             }
           },
-          'image/jpeg',
-          0.85 // 85% quality
+          outputType,
+          outputType === 'image/png' ? undefined : 0.85,
         );
       };
       img.onerror = (err) => reject(err);
